@@ -15,6 +15,7 @@ interface StoreState {
   library: LibraryItem[];
   toasts: Toast[];
   quickViewId: number | null;
+  adUnlockBookId: number | null;
 }
 
 export interface Toast {
@@ -32,7 +33,8 @@ type Action =
   | { type: 'DOWNLOAD_FREE'; id: number }
   | { type: 'ADD_TOAST'; toast: Toast }
   | { type: 'REMOVE_TOAST'; id: string }
-  | { type: 'SET_QUICK_VIEW'; id: number | null };
+  | { type: 'SET_QUICK_VIEW'; id: number | null }
+  | { type: 'SET_AD_UNLOCK'; id: number | null };
 
 const initialState: StoreState = {
   cart: {},
@@ -43,6 +45,7 @@ const initialState: StoreState = {
   ],
   toasts: [],
   quickViewId: null,
+  adUnlockBookId: null,
 };
 
 function reducer(state: StoreState, action: Action): StoreState {
@@ -77,6 +80,8 @@ function reducer(state: StoreState, action: Action): StoreState {
       return { ...state, toasts: state.toasts.filter(t => t.id !== action.id) };
     case 'SET_QUICK_VIEW':
       return { ...state, quickViewId: action.id };
+    case 'SET_AD_UNLOCK':
+      return { ...state, adUnlockBookId: action.id };
     default:
       return state;
   }
@@ -88,6 +93,7 @@ interface StoreContextValue {
   cartQty: () => number;
   addToCart: (id: number, qty?: number, silent?: boolean) => void;
   downloadFree: (id: number) => void;
+  triggerDirectDownload: (id: number, customUrl?: string) => void;
   openPartner: (id: number) => void;
   toast: (title: string, sub?: string, warn?: boolean) => void;
 }
@@ -112,11 +118,32 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     if (!silent) toast('Added to Cart', `${p.title} · ${p.type === 'free' ? 'Free' : '$' + p.price.toFixed(2)}`);
   }, [toast]);
 
+  // When clicking free download, open the ad-gated unlock modal
   const downloadFree = useCallback((id: number) => {
     const p = byId(id);
     if (!p) return;
+    dispatch({ type: 'SET_AD_UNLOCK', id });
+  }, []);
+
+  // Called after ad is watched or direct unlock
+  const triggerDirectDownload = useCallback((id: number, customUrl?: string) => {
+    const p = byId(id);
+    if (!p) return;
     dispatch({ type: 'DOWNLOAD_FREE', id });
-    toast('Download started ⤓', `${p.title}.pdf — check your inbox too`);
+    toast('Download starting ⤓', `${p.title}.pdf — saved to My Library`);
+
+    const targetUrl = customUrl || (p.driveUrl ? p.driveUrl : `https://drive.google.com/uc?export=download&id=SAMPLE_${p.slug}`);
+
+    // If Google Drive link, format correctly or open direct download
+    if (typeof window !== 'undefined') {
+      const link = document.createElement('a');
+      link.href = targetUrl;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
   }, [toast]);
 
   const openPartner = useCallback((id: number) => {
@@ -126,7 +153,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }, [toast]);
 
   return (
-    <StoreContext.Provider value={{ state, dispatch, cartQty, addToCart, downloadFree, openPartner, toast }}>
+    <StoreContext.Provider value={{ state, dispatch, cartQty, addToCart, downloadFree, triggerDirectDownload, openPartner, toast }}>
       {children}
     </StoreContext.Provider>
   );

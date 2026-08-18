@@ -24,6 +24,9 @@ export interface Product {
   desc: string;
   partner?: string;
   partnerUrl?: string;
+  driveUrl?: string;
+  downloads?: number;
+  createdAt?: string;
 }
 
 export const P: Product[] = [
@@ -45,7 +48,7 @@ export const P: Product[] = [
   {id:6, slug:'javascript-patterns-2e', title:'JavaScript Patterns, 2nd Ed.', sub:'Modern architecture for real-world apps', author:'Tomas Lindqvist', cat:'Programming', type:'paid', price:24.50, list:39.99, rating:4.7, reviews:1976, pages:398, badge:'Deal', bought:'2.2K bought in past month', bg:'#212529', fg:'#f8f9fa', ac:'#ffa94d', pat:'p-blocks',
    blurb:'The classic patterns book, fully rewritten for the modern stack — modules, streams, signals and edge runtimes.', feat:['47 patterns with runnable examples','Architecture decision flowcharts','Migration guides from legacy code','Interview-prep pattern index'],
    desc:'<p>From composition to concurrency, this second edition treats JavaScript as the serious application language it has become.</p>'},
-  {id:7, slug:'100-ai-prompts', title:'100 AI Prompts That Work', sub:'Copy-paste prompts for writing, code & analysis', author:'The InkShelf Lab', cat:'Technology', type:'free', price:0, list:9.99, rating:4.8, reviews:8730, pages:56, badge:'Free', bought:'24K downloaded this month', bg:'#364fc7', fg:'#edf2ff', ac:'#ffd814', pat:'p-dots',
+  {id:7, slug:'100-ai-prompts', title:'100 AI Prompts That Work', sub:'Copy-paste prompts for writing, code & analysis', author:'The Bookshelf Lab', cat:'Technology', type:'free', price:0, list:9.99, rating:4.8, reviews:8730, pages:56, badge:'Free', bought:'24K downloaded this month', bg:'#364fc7', fg:'#edf2ff', ac:'#ffd814', pat:'p-dots',
    blurb:'One hundred battle-tested prompts with before/after examples. Updated for the 2026 model generation.', feat:['100 categorized prompts','Before/after output examples','Prompt-chaining recipes'],
    desc:'<p>The free starter edition of our annual AI Handbook. If it saves you ten minutes, tell a friend.</p>'},
   {id:8, slug:'personal-finance-blueprint', title:'Personal Finance Blueprint', sub:'Automate your money in one weekend', author:'Jordan Ellis', cat:'Finance', type:'paid', price:9.99, list:16.99, rating:4.6, reviews:1543, pages:158, badge:null, bought:'1.4K bought in past month', bg:'#5c940d', fg:'#f8ffe5', ac:'#232f3e', pat:'p-lines',
@@ -57,7 +60,7 @@ export const P: Product[] = [
   {id:10, slug:'typography-for-screens', title:'Typography for Screens', sub:'Type systems for apps, dashboards & the web', author:'Ana Beatriz Costa', cat:'Design', type:'paid', price:15.00, list:null, rating:4.8, reviews:987, pages:174, badge:"Editor's Choice", bought:'980 bought in past month', bg:'#862e9c', fg:'#f8f0fc', ac:'#ffd814', pat:'p-rings',
    blurb:'Practical typographic systems: scales, hierarchy, variable fonts and accessibility — with 60 annotated screens.', feat:['Modular scale calculator tables','60 annotated UI screens','Variable font pairing guide','WCAG-safe contrast recipes'],
    desc:'<p>Stop guessing font sizes. This book gives you a repeatable system for type that reads beautifully at every breakpoint.</p>'},
-  {id:11, slug:'habit-tracker-kit', title:'Habit Tracker Starter Kit', sub:'Printable trackers, streaks & reviews', author:'The InkShelf Lab', cat:'Self-Help', type:'free', price:0, list:7.99, rating:4.7, reviews:4102, pages:38, badge:'Free', bought:'9K downloaded this month', bg:'#e67700', fg:'#fff9db', ac:'#232f3e', pat:'p-dots',
+  {id:11, slug:'habit-tracker-kit', title:'Habit Tracker Starter Kit', sub:'Printable trackers, streaks & reviews', author:'The Bookshelf Lab', cat:'Self-Help', type:'free', price:0, list:7.99, rating:4.7, reviews:4102, pages:38, badge:'Free', bought:'9K downloaded this month', bg:'#e67700', fg:'#fff9db', ac:'#232f3e', pat:'p-dots',
    blurb:'Beautiful printable habit trackers, monthly reviews and streak calendars. Print at home, start today.', feat:['12 tracker layouts','Monthly review pages','Streak calendar system'],
    desc:'<p>The printable companion to The Morning Reset — free for everyone, forever.</p>'},
   {id:12, slug:'python-for-analysts', title:'Python for Analysts', sub:'From spreadsheets to scripts in 30 days', author:'Dr. Samuel Adeyemi', cat:'Programming', type:'paid', price:21.99, list:29.99, rating:4.8, reviews:2870, pages:342, badge:'Best Seller', bought:'2.6K bought in past month', bg:'#0c8599', fg:'#e3fafc', ac:'#ffd814', pat:'p-blocks',
@@ -78,13 +81,13 @@ export const P: Product[] = [
   {id:17, slug:'the-sleep-fix', title:'The Sleep Fix', sub:'Sleep better in 14 nights — without supplements', author:'Dr. Amara Diallo', cat:'Health', type:'paid', price:8.99, list:14.99, rating:4.6, reviews:2054, pages:132, badge:null, bought:'2.1K bought in past month', bg:'#3b5bdb', fg:'#edf2ff', ac:'#febd69', pat:'p-dots',
    blurb:'A CBT-I based 14-night protocol: wind-down routines, light hygiene and the 20-minute rule that actually works.', feat:['14-night guided protocol','Printable sleep diary','The 20-minute rule, explained'],
    desc:'<p>Based on cognitive behavioral therapy for insomnia — the gold standard — minus the clinic waitlist.</p>'},
-  {id:18, slug:'sql-cheat-sheets', title:'SQL Cheat Sheet Collection', sub:'Every query pattern on one beautiful page', author:'The InkShelf Lab', cat:'Programming', type:'free', price:0, list:6.99, rating:4.8, reviews:6540, pages:24, badge:'Free', bought:'15K downloaded this month', bg:'#495057', fg:'#e9ecef', ac:'#ffa94d', pat:'p-grid',
+  {id:18, slug:'sql-cheat-sheets', title:'SQL Cheat Sheet Collection', sub:'Every query pattern on one beautiful page', author:'The Bookshelf Lab', cat:'Programming', type:'free', price:0, list:6.99, rating:4.8, reviews:6540, pages:24, badge:'Free', bought:'15K downloaded this month', bg:'#495057', fg:'#e9ecef', ac:'#ffa94d', pat:'p-grid',
    blurb:'Eight gorgeous one-page cheat sheets: joins, window functions, CTEs, performance and more. Print & pin.', feat:['8 one-page reference sheets','Window function visualizer','Index & performance quick rules'],
    desc:'<p>The sheets pinned above 40,000 desks worldwide. Free, printable, forever.</p>'},
   {id:19, slug:'email-sequences-that-sell', title:'Email Sequences That Sell', sub:'12 plug-and-play flows for product businesses', author:'Marcus Webb', cat:'Marketing', type:'paid', price:17.99, list:27.99, rating:4.7, reviews:1420, pages:168, badge:null, bought:'1.2K bought in past month', bg:'#087f5b', fg:'#e6fcf5', ac:'#ffd814', pat:'p-blocks',
    blurb:'Welcome, launch, cart-abandon, win-back: 12 complete flows with subject lines tested on 2M subscribers.', feat:['12 complete sequence flows','94 tested subject lines','Deliverability quick-start guide'],
    desc:'<p>Copy the flows, swap in your voice, ship this week. Median reported lift: +31% email revenue in 60 days.</p>'},
-  {id:20, slug:'ai-handbook-2026', title:'The 2026 AI Handbook', sub:'Models, prompts & workflows that matter this year', author:'The InkShelf Lab', cat:'Technology', type:'paid', price:27.00, list:45.00, rating:4.9, reviews:3890, pages:512, badge:'#1 New Release', bought:'5.6K bought in past month', bg:'#0f2a43', fg:'#a5d8ff', ac:'#ff9900', pat:'p-blocks',
+  {id:20, slug:'ai-handbook-2026', title:'The 2026 AI Handbook', sub:'Models, prompts & workflows that matter this year', author:'The Bookshelf Lab', cat:'Technology', type:'paid', price:27.00, list:45.00, rating:4.9, reviews:3890, pages:512, badge:'#1 New Release', bought:'5.6K bought in past month', bg:'#0f2a43', fg:'#a5d8ff', ac:'#ff9900', pat:'p-blocks',
    blurb:'The quarterly-updated reference for working with AI in 2026 — 512 pages of what actually works.', feat:['Every major model compared','Prompt pattern library (200+)','Team workflow playbooks','Free quarterly updates for life'],
    desc:'<p>One handbook instead of 400 newsletters. Updated every quarter; your purchase includes every future edition.</p>'},
 ];
