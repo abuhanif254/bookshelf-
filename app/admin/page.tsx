@@ -544,6 +544,22 @@ export default function AdminPage() {
       {/* TAB 1: BOOKS */}
       {activeTab === 'books' && (
         <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+          {/* Banner linking to the dedicated book manager */}
+          <div style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+            <div>
+              <span style={{ fontSize: 11, fontWeight: 800, color: '#f59e0b', textTransform: 'uppercase', letterSpacing: '0.1em' }}>📚 Book Management</span>
+              <p style={{ fontSize: 14, color: '#e2e8f0', margin: '2px 0 0', fontWeight: 600 }}>
+                Add, edit, delete and manage all {books.length} books — with live cover preview and full field control.
+              </p>
+            </div>
+            <Link
+              href="/admin/books"
+              style={{ background: '#f59e0b', color: '#0f172a', fontWeight: 900, fontSize: 13.5, padding: '10px 22px', borderRadius: 8, textDecoration: 'none', boxShadow: '0 4px 12px rgba(245,158,11,0.35)', whiteSpace: 'nowrap' }}
+            >
+              Open Full Book Manager →
+            </Link>
+          </div>
+
           <div style={{ padding: '14px 20px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
             <input
               type="text"
