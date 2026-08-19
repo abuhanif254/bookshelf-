@@ -39,13 +39,24 @@ export default function ProductClient({ p, faqs }: { p: Product; faqs?: FAQItem[
   const [currentRating, setCurrentRating] = useState(p.rating);
   const [totalReviewsCount, setTotalReviewsCount] = useState(p.reviews);
 
-  // Fetch real reviews from local JSON database
+  const [allBooks, setAllBooks] = useState<Product[]>(P);
+
+  // Fetch real reviews & all books from local database
   React.useEffect(() => {
     fetch(`/api/reviews?bookId=${p.id}`)
       .then(res => res.json())
       .then(data => {
         if (data.success && Array.isArray(data.reviews) && data.reviews.length > 0) {
           setReviewsList(data.reviews);
+        }
+      })
+      .catch(() => {});
+
+    fetch('/api/books')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.books) && data.books.length > 0) {
+          setAllBooks(data.books);
         }
       })
       .catch(() => {});
@@ -62,7 +73,7 @@ export default function ProductClient({ p, faqs }: { p: Product; faqs?: FAQItem[
       await fetch('/api/reviews', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reviewId }),
+        body: JSON.stringify({ reviewId, action: 'helpful' }),
       });
       setReviewsList(prev =>
         prev.map(r => (r.id === reviewId ? { ...r, helpfulCount: (r.helpfulCount || 0) + 1 } : r))
@@ -74,7 +85,7 @@ export default function ProductClient({ p, faqs }: { p: Product; faqs?: FAQItem[
   const isAff = p.type === 'affiliate';
   const isFree = p.type === 'free';
   const save = p.list ? Math.round((1 - p.price / p.list) * 100) : 0;
-  const related = P.filter(x => x.id !== p.id && (x.cat === p.cat || x.type === p.type)).slice(0, 6);
+  const related = allBooks.filter(x => x.id !== p.id && (x.cat === p.cat || x.type === p.type)).slice(0, 6);
 
   const hist = [72, 17, 6, 3, 2];
   const names: [string, string][] = [['Sofia M.', '#e8590c'], ['James T.', '#0b7285'], ['Aisha B.', '#5f3dc4']];

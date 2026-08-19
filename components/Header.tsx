@@ -4,19 +4,31 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useStore } from '@/lib/store';
-import { P } from '@/lib/products';
+import { P, Product } from '@/lib/products';
 
 export default function Header() {
   const { state, cartQty } = useStore();
   const [query, setQuery] = useState('');
   const [sugOpen, setSugOpen] = useState(false);
   const [bump, setBump] = useState(false);
+  const [allBooks, setAllBooks] = useState<Product[]>(P);
   const router = useRouter();
   const sugRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const prevQty = useRef(0);
 
   const qty = cartQty();
+
+  useEffect(() => {
+    fetch('/api/books')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.books) && data.books.length > 0) {
+          setAllBooks(data.books);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (qty !== prevQty.current) {
@@ -43,7 +55,7 @@ export default function Header() {
   };
 
   const suggestions = query.trim()
-    ? P.filter(p =>
+    ? allBooks.filter(p =>
         (p.title + ' ' + p.author + ' ' + p.cat).toLowerCase().includes(query.toLowerCase())
       ).slice(0, 6)
     : null;

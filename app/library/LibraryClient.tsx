@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { P } from '@/lib/products';
+import { P, Product } from '@/lib/products';
 import { cardHTML } from '@/lib/helpers';
 import { useStore } from '@/lib/store';
 
@@ -47,13 +47,25 @@ export default function LibraryClient() {
   const router = useRouter();
   const { state: storeState, dispatch, addToCart, downloadFree, openPartner, toast } = useStore();
   const [filter, setFilter] = useState<FilterState>(() => getInitialState(searchParams));
+  const [allBooks, setAllBooks] = useState<Product[]>(P);
+
+  useEffect(() => {
+    fetch('/api/books')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.books) && data.books.length > 0) {
+          setAllBooks(data.books);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     setFilter(getInitialState(searchParams));
   }, [searchParams]);
 
   const filtered = useCallback(() => {
-    const list = P.filter(p => {
+    const list = allBooks.filter(p => {
       if (filter.q && !(p.title + ' ' + p.author + ' ' + p.cat + ' ' + p.sub).toLowerCase().includes(filter.q.toLowerCase())) return false;
       if (filter.cats.size && !filter.cats.has(p.cat)) return false;
       if (filter.types.size && !filter.types.has(p.type)) return false;

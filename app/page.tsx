@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useStore } from '@/lib/store';
-import { P, byId } from '@/lib/products';
+import { P, byId, Product } from '@/lib/products';
 import { cardHTML, coverHTML, stars } from '@/lib/helpers';
 import HeroCarousel from '@/components/HeroCarousel';
 import ScrollSection from '@/components/ScrollSection';
@@ -16,6 +16,18 @@ export default function HomePage() {
   const { state, dispatch, addToCart, downloadFree, openPartner, toast } = useStore();
   const router = useRouter();
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [allBooks, setAllBooks] = useState<Product[]>(P);
+
+  useEffect(() => {
+    fetch('/api/books')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.books) && data.books.length > 0) {
+          setAllBooks(data.books);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // Scroll reveal
   useEffect(() => {
@@ -56,11 +68,13 @@ export default function HomePage() {
     }
   };
 
+  const getBook = (id: number) => allBooks.find(b => b.id === id) || byId(id);
+
   // Data
-  const deals = P.filter(p => p.list && p.price > 0).sort((a, b) => (1 - b.price / b.list!) - (1 - a.price / a.list!));
-  const freeBooks = P.filter(p => p.type === 'free');
-  const bestSellers = [...P].filter(p => p.type !== 'affiliate').sort((a, b) => b.reviews - a.reviews).slice(0, 8);
-  const newReleases = [...P].slice(4, 12);
+  const deals = allBooks.filter(p => p.list && p.price > 0).sort((a, b) => (1 - b.price / b.list!) - (1 - a.price / a.list!));
+  const freeBooks = allBooks.filter(p => p.type === 'free');
+  const bestSellers = [...allBooks].filter(p => p.type !== 'affiliate').sort((a, b) => b.reviews - a.reviews).slice(0, 8);
+  const newReleases = [...allBooks].slice(0, 8);
   const editorPicks = [4, 1, 10, 20, 15];
 
   const dealsHTML = deals.map(p => cardHTML(p, null, true, state.wishlist)).join('');
@@ -68,9 +82,10 @@ export default function HomePage() {
   const bestHTML = bestSellers.map((p, i) => cardHTML(p, i + 1, false, state.wishlist)).join('');
   const newHTML = newReleases.map(p => cardHTML(p, null, false, state.wishlist)).join('');
 
-  const editorStackHTML = [4, 10, 1].map(id => coverHTML(byId(id)!)).join('');
+  const editorStackHTML = [4, 10, 1].map(id => getBook(id) ? coverHTML(getBook(id)!) : '').join('');
   const edlistHTML = editorPicks.map((id, i) => {
-    const p = byId(id)!;
+    const p = getBook(id);
+    if (!p) return '';
     return `<div class="row" data-open="${p.slug}"><span class="num">${String(i + 1).padStart(2, '0')}</span><div><div class="t">${p.title}</div><div class="a">${p.author} · ${p.cat}</div></div><span class="pr">${p.type === 'free' ? 'Free' : '$' + p.price.toFixed(2)}</span></div>`;
   }).join('');
 
