@@ -16,6 +16,7 @@ function slugify(str: string): string {
 }
 
 function MiniCover({ book }: { book: Partial<FormData> }) {
+  const coverImage = (book.coverImage || '').trim();
   const bg = book.bg || '#0f2a43';
   const ac = book.ac || '#f59e0b';
   const fg = book.fg || '#ffffff';
@@ -24,6 +25,27 @@ function MiniCover({ book }: { book: Partial<FormData> }) {
   const cat = book.cat || 'Category';
   const pages = book.pages || 96;
   const pat = book.pat || 'p-rings';
+
+  if (coverImage) {
+    let resolvedImg = coverImage;
+    const driveMatch = coverImage.match(/\/d\/([a-zA-Z0-9_-]+)/) || coverImage.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    if (driveMatch && driveMatch[1]) {
+      resolvedImg = `https://drive.google.com/uc?export=view&id=${driveMatch[1]}`;
+    }
+    return (
+      <div style={{ width: 110, height: 156, borderRadius: 6, overflow: 'hidden', position: 'relative', background: '#0f172a', boxShadow: '0 4px 12px rgba(0,0,0,0.25)' }}>
+        <img
+          src={resolvedImg}
+          alt={title}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+          onError={(e) => {
+            (e.currentTarget as HTMLElement).style.display = 'none';
+          }}
+        />
+        <div style={{ position: 'absolute', inset: 0, boxShadow: 'inset 8px 0 10px -6px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.1)', pointerEvents: 'none' }} />
+      </div>
+    );
+  }
 
   const patternSVG = {
     'p-rings': `<circle cx="90" cy="90" r="60" fill="none" stroke="${ac}22" stroke-width="12"/><circle cx="90" cy="90" r="80" fill="none" stroke="${ac}15" stroke-width="16"/>`,
@@ -82,6 +104,7 @@ interface FormData {
   feat: string;       // newline-separated
   desc: string;       // HTML
   driveUrl: string;
+  coverImage: string; // Cover image URL link
   partner: string;
   partnerUrl: string;
 }
@@ -107,6 +130,7 @@ const emptyForm = (): FormData => ({
   feat: 'Instant PDF download\nDRM-free for personal use\nClean layout for screen & print',
   desc: '<p>Enter a rich description for this book here.</p>',
   driveUrl: '',
+  coverImage: '',
   partner: '',
   partnerUrl: '',
 });
@@ -116,6 +140,16 @@ const emptyForm = (): FormData => ({
 export default function AdminBooksClient() {
   const [books, setBooks] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
+  const [adminEmail, setAdminEmail] = useState('');
+  const [passcode, setPasscode] = useState('');
+  const [loginMode, setLoginMode] = useState<'passcode' | 'magic'>('passcode');
+  const [magicSent, setMagicSent] = useState(false);
+  const [pinInput, setPinInput] = useState('');
+  const [magicLoading, setMagicLoading] = useState(false);
+  const [authError, setAuthError] = useState('');
+
   const [search, setSearch] = useState('');
   const [filterCat, setFilterCat] = useState('');
   const [filterType, setFilterType] = useState('');
@@ -127,6 +161,106 @@ export default function AdminBooksClient() {
   const [deleting, setDeleting] = useState<number | null>(null);
   const [toast, setToast] = useState('');
   const [activeSection, setActiveSection] = useState<'basic' | 'cover' | 'content' | 'pricing'>('basic');
+
+  // Check auth session
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then(r => r.json())
+      .then(d => {
+        if (d.authenticated) {
+          setIsAuthenticated(true);
+          fetchBooks();
+        }
+      })
+      .catch(() => {})
+      .finally(() => setAuthChecked(true));
+  }, []);
+
+  // Passcode Login
+  const handlePasscodeLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError('');
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ passcode }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setIsAuthenticated(true);
+        showToast('✅ Welcome back!');
+        fetchBooks();
+      } else {
+        setAuthError(data.message || 'Incorrect passcode');
+      }
+    } catch {
+      setAuthError('Connection failed');
+    }
+  };
+
+  // Send Magic Link
+  const handleSendMagicLink = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError('');
+    setMagicLoading(true);
+    try {
+      const res = await fetch('/api/auth/magic-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: adminEmail }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setMagicSent(true);
+        showToast('✉️ Security PIN sent to email!');
+      } else {
+        setAuthError(data.message || 'Failed to send login link');
+      }
+    } catch {
+      setAuthError('Connection failed');
+    } finally {
+      setMagicLoading(false);
+    }
+  };
+
+  // Verify PIN
+  const handleVerifyPin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError('');
+    setMagicLoading(true);
+    try {
+      const res = await fetch('/api/auth/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin: pinInput }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setIsAuthenticated(true);
+        showToast('✅ Welcome back Mohammad!');
+        fetchBooks();
+      } else {
+        setAuthError(data.message || 'Invalid or expired 6-digit PIN');
+      }
+    } catch {
+      setAuthError('Connection failed');
+    } finally {
+      setMagicLoading(false);
+    }
+  };
+
+  // Logout
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      setIsAuthenticated(false);
+      setMagicSent(false);
+      setPinInput('');
+      setPasscode('');
+      showToast('Logged out securely');
+    } catch {}
+  };
 
   // ── Fetch books ─────────────────────────────────────────────────────────────
   const fetchBooks = useCallback(async () => {
@@ -141,8 +275,6 @@ export default function AdminBooksClient() {
       setLoading(false);
     }
   }, []);
-
-  useEffect(() => { fetchBooks(); }, [fetchBooks]);
 
   // ── Toast ────────────────────────────────────────────────────────────────────
   const showToast = (msg: string) => {
@@ -182,6 +314,7 @@ export default function AdminBooksClient() {
       feat: (book.feat || []).join('\n'),
       desc: book.desc || '',
       driveUrl: book.driveUrl || '',
+      coverImage: book.coverImage || book.coverUrl || '',
       partner: book.partner || '',
       partnerUrl: book.partnerUrl || '',
     });
@@ -225,6 +358,8 @@ export default function AdminBooksClient() {
       feat: form.feat.split('\n').map(l => l.trim()).filter(Boolean),
       desc: form.desc.trim(),
       driveUrl: form.driveUrl.trim() || undefined,
+      coverImage: form.coverImage.trim() || undefined,
+      coverUrl: form.coverImage.trim() || undefined,
       partner: form.partner.trim() || undefined,
       partnerUrl: form.partnerUrl.trim() || undefined,
     };
@@ -305,6 +440,180 @@ export default function AdminBooksClient() {
   // ═══════════════════════════════════════════════════════════════════════════════
   //  RENDER
   // ═══════════════════════════════════════════════════════════════════════════════
+  if (!isAuthenticated && authChecked) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', fontFamily: 'system-ui, sans-serif' }}>
+        <div style={{ background: '#fff', padding: '36px 32px', borderRadius: 16, maxWidth: 440, width: '100%', boxShadow: '0 25px 50px -12px rgba(15,23,42,0.15)', border: '1px solid #e2e8f0', textAlign: 'center' }}>
+          
+          <div style={{ width: 56, height: 56, borderRadius: 14, background: '#0f172a', color: '#f59e0b', display: 'grid', placeItems: 'center', margin: '0 auto 16px', fontSize: 24 }}>
+            📚
+          </div>
+          
+          <h2 style={{ fontSize: 22, fontWeight: 900, color: '#0f172a', margin: '0 0 6px' }}>Book Catalog Access</h2>
+          <p style={{ fontSize: 13.5, color: '#64748b', margin: '0 0 24px' }}>
+            Enter your credentials to manage books and PDF downloads.
+          </p>
+
+          {loginMode === 'passcode' ? (
+            <form onSubmit={handlePasscodeLogin}>
+              <div style={{ marginBottom: 14, textAlign: 'left' }}>
+                <label style={{ display: 'block', fontSize: 11.5, fontWeight: 800, color: '#475569', textTransform: 'uppercase', marginBottom: 6, letterSpacing: '0.05em' }}>
+                  Admin Passcode
+                </label>
+                <input
+                  type="password"
+                  required
+                  placeholder="Enter secret passcode"
+                  value={passcode}
+                  onChange={e => setPasscode(e.target.value)}
+                  style={{ width: '100%', padding: '12px 14px', borderRadius: 8, border: '1.5px solid #cbd5e1', fontSize: 15, outline: 'none' }}
+                />
+              </div>
+
+              {authError && (
+                <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', fontSize: 13, fontWeight: 600, padding: '10px 12px', borderRadius: 8, marginBottom: 14, textAlign: 'left' }}>
+                  ⚠️ {authError}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                style={{
+                  width: '100%',
+                  background: '#0f172a',
+                  color: '#fff',
+                  fontSize: 15,
+                  fontWeight: 800,
+                  padding: '13px',
+                  borderRadius: 8,
+                  border: 'none',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 12px rgba(15,23,42,0.2)',
+                }}
+              >
+                Unlock Book Manager →
+              </button>
+            </form>
+          ) : (
+            <div>
+              {!magicSent ? (
+                <form onSubmit={handleSendMagicLink}>
+                  <div style={{ marginBottom: 14, textAlign: 'left' }}>
+                    <label style={{ display: 'block', fontSize: 11.5, fontWeight: 800, color: '#475569', textTransform: 'uppercase', marginBottom: 6, letterSpacing: '0.05em' }}>
+                      Admin Email Address
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      value={adminEmail}
+                      onChange={e => setAdminEmail(e.target.value)}
+                      placeholder="Enter your admin email"
+                      style={{ width: '100%', padding: '12px 14px', borderRadius: 8, border: '1.5px solid #cbd5e1', fontSize: 14, outline: 'none' }}
+                    />
+                  </div>
+
+                  {authError && (
+                    <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', fontSize: 13, fontWeight: 600, padding: '10px 12px', borderRadius: 8, marginBottom: 14, textAlign: 'left' }}>
+                      ⚠️ {authError}
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={magicLoading}
+                    style={{
+                      width: '100%',
+                      background: magicLoading ? '#94a3b8' : '#f59e0b',
+                      color: '#0f172a',
+                      fontSize: 15,
+                      fontWeight: 800,
+                      padding: '13px',
+                      borderRadius: 8,
+                      border: 'none',
+                      cursor: magicLoading ? 'not-allowed' : 'pointer',
+                      boxShadow: '0 4px 14px rgba(245,158,11,0.3)',
+                    }}
+                  >
+                    {magicLoading ? 'Sending…' : '✉️ Send One-Time PIN to Email →'}
+                  </button>
+                </form>
+              ) : (
+                <form onSubmit={handleVerifyPin}>
+                  <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 10, padding: '14px', marginBottom: 16, textAlign: 'left' }}>
+                    <b style={{ color: '#1e40af', fontSize: 13, display: 'block', marginBottom: 2 }}>📬 Check your email inbox</b>
+                    <span style={{ fontSize: 12, color: '#3b82f6' }}>Enter the 6-digit security code sent to your email.</span>
+                  </div>
+
+                  <div style={{ marginBottom: 14 }}>
+                    <input
+                      type="text"
+                      maxLength={6}
+                      required
+                      placeholder="• • • • • •"
+                      value={pinInput}
+                      onChange={e => setPinInput(e.target.value.replace(/\D/g, ''))}
+                      style={{ width: '100%', padding: '12px 14px', borderRadius: 8, border: '2px solid #f59e0b', fontSize: 24, textAlign: 'center', letterSpacing: 8, fontFamily: 'monospace', fontWeight: 900, outline: 'none' }}
+                    />
+                  </div>
+
+                  {authError && (
+                    <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', fontSize: 13, fontWeight: 600, padding: '10px 12px', borderRadius: 8, marginBottom: 14, textAlign: 'left' }}>
+                      ⚠️ {authError}
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={magicLoading || pinInput.length < 6}
+                    style={{
+                      width: '100%',
+                      background: '#0f172a',
+                      color: '#fff',
+                      fontSize: 14,
+                      fontWeight: 800,
+                      padding: '12px',
+                      borderRadius: 8,
+                      border: 'none',
+                      cursor: pinInput.length === 6 ? 'pointer' : 'not-allowed',
+                    }}
+                  >
+                    {magicLoading ? 'Verifying…' : '✓ Unlock with PIN'}
+                  </button>
+
+                  <div style={{ marginTop: 12 }}>
+                    <button
+                      type="button"
+                      onClick={() => { setMagicSent(false); setAuthError(''); setPinInput(''); }}
+                      style={{ background: 'none', border: 'none', color: '#64748b', fontSize: 12, cursor: 'pointer', textDecoration: 'underline' }}
+                    >
+                      ← Back
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          )}
+
+          {/* Switch Mode Button */}
+          <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid #f1f5f9' }}>
+            <button
+              type="button"
+              onClick={() => {
+                setLoginMode(loginMode === 'passcode' ? 'magic' : 'passcode');
+                setAuthError('');
+                setMagicSent(false);
+                setPinInput('');
+              }}
+              style={{ background: 'none', border: 'none', color: '#64748b', fontSize: 12.5, cursor: 'pointer', fontWeight: 600 }}
+            >
+              {loginMode === 'passcode' ? '✉️ Or log in with Email PIN code' : '🔑 Or log in with Secret Passcode'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ minHeight: '100vh', background: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
 
@@ -321,25 +630,39 @@ export default function AdminBooksClient() {
       )}
 
       {/* ── Header Bar ── */}
-      <div style={{ background: '#0f172a', color: '#fff', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 56, gap: 12 }}>
+      <div style={{ background: '#0f172a', color: '#fff', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 56, gap: 12, flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Link href="/admin" style={{ color: '#94a3b8', textDecoration: 'none', fontSize: 13 }}>← Admin</Link>
+          <Link href="/admin" style={{ color: '#94a3b8', textDecoration: 'none', fontSize: 13 }}>← Admin Dashboard</Link>
           <span style={{ color: '#334155' }}>|</span>
-          <span style={{ fontSize: 15, fontWeight: 800, color: '#f59e0b' }}>📚 Book Manager</span>
+          <span style={{ fontSize: 15, fontWeight: 800, color: '#f59e0b' }}>📚 Complete Book Catalog Manager</span>
           <span style={{ background: '#1e293b', color: '#94a3b8', fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20 }}>
             {books.length} books
           </span>
+          <span style={{ fontSize: 11, background: '#064e3b', color: '#6ee7b7', padding: '2px 8px', borderRadius: 20, fontWeight: 700 }}>
+            🛡️ {adminEmail || 'Administrator (Online)'}
+          </span>
         </div>
-        <button
-          onClick={openAddModal}
-          style={{
-            background: '#f59e0b', color: '#0f172a', fontWeight: 800, fontSize: 13,
-            padding: '8px 18px', borderRadius: 6, border: 'none', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', gap: 6,
-          }}
-        >
-          ＋ Add New Book
-        </button>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <button
+            onClick={openAddModal}
+            style={{
+              background: '#f59e0b', color: '#0f172a', fontWeight: 800, fontSize: 13,
+              padding: '7px 16px', borderRadius: 6, border: 'none', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', gap: 6,
+            }}
+          >
+            ＋ Add New Book
+          </button>
+          <button
+            onClick={handleLogout}
+            style={{
+              background: '#334155', color: '#f87171', fontWeight: 700, fontSize: 12,
+              padding: '6px 12px', borderRadius: 6, border: 'none', cursor: 'pointer',
+            }}
+          >
+            Log Out 🚪
+          </button>
+        </div>
       </div>
 
       {/* ── Toolbar: search + filters ── */}
@@ -412,9 +735,20 @@ export default function AdminBooksClient() {
                 onMouseEnter={e => (e.currentTarget.style.background = '#f8fafc')}
                 onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
               >
-                {/* Mini cover swatch */}
-                <div style={{ width: 40, height: 56, borderRadius: 4, background: book.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 2px 6px rgba(0,0,0,0.15)' }}>
-                  <span style={{ color: book.ac, fontSize: 10, fontWeight: 900 }}>PDF</span>
+                {/* Mini cover swatch or custom image */}
+                <div style={{ width: 40, height: 56, borderRadius: 4, background: book.bg, overflow: 'hidden', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 2px 6px rgba(0,0,0,0.15)' }}>
+                  {(book.coverImage || book.coverUrl) ? (
+                    <img
+                      src={book.coverImage || book.coverUrl}
+                      alt={book.title}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      onError={(e) => {
+                        (e.currentTarget as HTMLElement).style.display = 'none';
+                      }}
+                    />
+                  ) : (
+                    <span style={{ color: book.ac, fontSize: 10, fontWeight: 900 }}>PDF</span>
+                  )}
                 </div>
 
                 {/* Title + Author */}
@@ -423,11 +757,18 @@ export default function AdminBooksClient() {
                     {book.title}
                   </div>
                   <div style={{ fontSize: 12, color: '#64748b', marginTop: 1 }}>{book.author}</div>
-                  {book.badge && (
-                    <span style={{ fontSize: 10, background: '#fef3c7', color: '#92400e', fontWeight: 700, padding: '1px 6px', borderRadius: 3, marginTop: 3, display: 'inline-block' }}>
-                      {book.badge}
-                    </span>
-                  )}
+                  <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 3 }}>
+                    {book.badge && (
+                      <span style={{ fontSize: 10, background: '#fef3c7', color: '#92400e', fontWeight: 700, padding: '1px 6px', borderRadius: 3 }}>
+                        {book.badge}
+                      </span>
+                    )}
+                    {(book.coverImage || book.coverUrl) && (
+                      <span style={{ fontSize: 10, background: '#eff6ff', color: '#1d4ed8', fontWeight: 700, padding: '1px 6px', borderRadius: 3 }}>
+                        🖼️ Image Cover
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {/* Category */}
@@ -490,23 +831,23 @@ export default function AdminBooksClient() {
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 1000, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '20px 16px', overflowY: 'auto' }}
           onClick={e => { if (e.target === e.currentTarget) closeModal(); }}
         >
-          <div style={{ background: '#fff', width: '100%', maxWidth: 900, borderRadius: 14, boxShadow: '0 30px 60px rgba(0,0,0,0.35)', overflow: 'hidden', marginBottom: 20 }}>
+          <div style={{ background: '#fff', width: '100%', maxWidth: 920, borderRadius: 14, boxShadow: '0 30px 60px rgba(0,0,0,0.35)', overflow: 'hidden', marginBottom: 20 }}>
 
             {/* Modal Header */}
             <div style={{ background: '#0f172a', color: '#fff', padding: '18px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <h2 style={{ margin: 0, fontSize: 18, fontWeight: 900 }}>
-                  {editingBook ? `✏️ Edit: ${editingBook.title}` : '＋ Add New PDF Book'}
+                  {editingBook ? `✏️ Edit: ${editingBook.title}` : '＋ Add New PDF Book to Catalog'}
                 </h2>
                 <p style={{ margin: '2px 0 0', fontSize: 12, color: '#94a3b8' }}>
-                  Fill in all the details below — all fields are saved to the live database.
+                  Manage book info, cover image link, Google Drive downloads, pricing and content.
                 </p>
               </div>
               <button onClick={closeModal} style={{ background: '#1e293b', color: '#94a3b8', border: 'none', width: 32, height: 32, borderRadius: '50%', cursor: 'pointer', fontSize: 16, display: 'grid', placeItems: 'center' }}>×</button>
             </div>
 
             {/* Modal Body — 2 columns: form + live preview */}
-            <form onSubmit={handleSave} style={{ display: 'grid', gridTemplateColumns: '1fr 220px', height: 'auto' }}>
+            <form onSubmit={handleSave} style={{ display: 'grid', gridTemplateColumns: '1fr 230px', height: 'auto' }}>
 
               {/* ── Left: tabbed form ── */}
               <div style={{ borderRight: '1px solid #e2e8f0' }}>
@@ -556,6 +897,52 @@ export default function AdminBooksClient() {
                           </select>
                         </Field>
                       </div>
+
+                      {/* Cover Image Link */}
+                      <div style={{ background: '#eff6ff', border: '1.5px solid #bfdbfe', borderRadius: 8, padding: 14 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
+                          <label style={{ fontSize: 12, fontWeight: 800, color: '#1e40af', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                            🖼️ Cover Image Link (URL)
+                          </label>
+                          {form.coverImage && (
+                            <button
+                              type="button"
+                              onClick={() => set('coverImage', '')}
+                              style={{ fontSize: 11, color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700 }}
+                            >
+                              ✕ Remove (Use Canvas Cover)
+                            </button>
+                          )}
+                        </div>
+                        <input
+                          value={form.coverImage}
+                          onChange={e => set('coverImage', e.target.value)}
+                          placeholder="https://example.com/cover.jpg or Google Drive image link..."
+                          style={{ ...inp, background: '#fff', borderColor: form.coverImage ? '#60a5fa' : '#cbd5e1' }}
+                        />
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4, flexWrap: 'wrap', gap: 6 }}>
+                          <span style={{ fontSize: 11, color: '#64748b' }}>
+                            Paste any direct image URL (JPG/PNG/WebP/Google Drive). If left empty, the canvas cover in Tab 3 is used.
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Google Drive PDF Link */}
+                      <div style={{ background: '#f0fdf4', border: '1.5px solid #86efac', borderRadius: 8, padding: 14 }}>
+                        <label style={{ display: 'block', fontSize: 12, fontWeight: 800, color: '#166534', marginBottom: 5, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                          ⤓ Google Drive PDF Download Link
+                        </label>
+                        <input
+                          value={form.driveUrl}
+                          onChange={e => set('driveUrl', e.target.value)}
+                          placeholder="https://drive.google.com/file/d/..."
+                          style={{ ...inp, fontFamily: 'monospace', fontSize: 12, borderColor: form.driveUrl ? '#86efac' : '#cbd5e1', background: '#fff' }}
+                        />
+                        <span style={{ fontSize: 11, color: '#64748b', marginTop: 4, display: 'block' }}>
+                          Paste the full Google Drive share link. Downloads are served through the secure high-speed download engine.
+                        </span>
+                      </div>
+
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
                         <Field label="Book Type">
                           <select value={form.type} onChange={e => set('type', e.target.value as any)} style={inp}>
@@ -578,15 +965,6 @@ export default function AdminBooksClient() {
                           <input value={form.bought} onChange={e => set('bought', e.target.value)} placeholder="e.g. 3.2K bought this month" style={inp} />
                         </Field>
                       </div>
-                      <Field label="Google Drive PDF Link">
-                        <input
-                          value={form.driveUrl}
-                          onChange={e => set('driveUrl', e.target.value)}
-                          placeholder="https://drive.google.com/file/d/..."
-                          style={{ ...inp, fontFamily: 'monospace', fontSize: 12, borderColor: form.driveUrl ? '#86efac' : '#cbd5e1', background: form.driveUrl ? '#f0fdf4' : '#fff' }}
-                        />
-                        <span style={{ fontSize: 11, color: '#64748b', marginTop: 3, display: 'block' }}>Paste the full Google Drive share link. Downloads are served through the secure API.</span>
-                      </Field>
                       <Field label="Short Blurb (1–2 sentences)">
                         <textarea
                           rows={2}
@@ -656,29 +1034,59 @@ export default function AdminBooksClient() {
                   {/* ── SECTION 3: COVER DESIGN ── */}
                   {activeSection === 'cover' && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                      <p style={{ fontSize: 13, color: '#475569', margin: 0 }}>
-                        Customise the auto-generated book cover. The cover is rendered from these colour and pattern settings — no image upload needed.
-                      </p>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
-                        <Field label="Background Colour">
-                          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                            <input type="color" value={form.bg} onChange={e => set('bg', e.target.value)} style={{ width: 40, height: 34, border: 'none', cursor: 'pointer', borderRadius: 4 }} />
-                            <input value={form.bg} onChange={e => set('bg', e.target.value)} style={{ ...inp, fontFamily: 'monospace', flex: 1 }} placeholder="#0f2a43" />
-                          </div>
-                        </Field>
-                        <Field label="Foreground / Text">
-                          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                            <input type="color" value={form.fg} onChange={e => set('fg', e.target.value)} style={{ width: 40, height: 34, border: 'none', cursor: 'pointer', borderRadius: 4 }} />
-                            <input value={form.fg} onChange={e => set('fg', e.target.value)} style={{ ...inp, fontFamily: 'monospace', flex: 1 }} placeholder="#ffffff" />
-                          </div>
-                        </Field>
-                        <Field label="Accent Colour">
-                          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                            <input type="color" value={form.ac} onChange={e => set('ac', e.target.value)} style={{ width: 40, height: 34, border: 'none', cursor: 'pointer', borderRadius: 4 }} />
-                            <input value={form.ac} onChange={e => set('ac', e.target.value)} style={{ ...inp, fontFamily: 'monospace', flex: 1 }} placeholder="#f59e0b" />
-                          </div>
-                        </Field>
+                      {/* Cover Image Link */}
+                      <div style={{ background: '#eff6ff', border: '1.5px solid #bfdbfe', borderRadius: 8, padding: 14 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
+                          <label style={{ fontSize: 12, fontWeight: 800, color: '#1e40af', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                            🖼️ Custom Cover Image Link (URL)
+                          </label>
+                          {form.coverImage && (
+                            <button
+                              type="button"
+                              onClick={() => set('coverImage', '')}
+                              style={{ fontSize: 11, color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700 }}
+                            >
+                              ✕ Switch back to Canvas Cover
+                            </button>
+                          )}
+                        </div>
+                        <input
+                          value={form.coverImage}
+                          onChange={e => set('coverImage', e.target.value)}
+                          placeholder="https://example.com/cover.jpg or Google Drive image link..."
+                          style={{ ...inp, background: '#fff', borderColor: form.coverImage ? '#60a5fa' : '#cbd5e1' }}
+                        />
+                        <span style={{ fontSize: 11, color: '#64748b', marginTop: 4, display: 'block' }}>
+                          If provided, this image will be rendered with realistic 3D book spine lighting across all catalog pages.
+                        </span>
                       </div>
+
+                      <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 14 }}>
+                        <p style={{ fontSize: 12.5, fontWeight: 700, color: '#475569', margin: '0 0 12px' }}>
+                          🎨 Dynamic Canvas Cover Settings (used when no image link is provided):
+                        </p>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
+                          <Field label="Background Colour">
+                            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                              <input type="color" value={form.bg} onChange={e => set('bg', e.target.value)} style={{ width: 40, height: 34, border: 'none', cursor: 'pointer', borderRadius: 4 }} />
+                              <input value={form.bg} onChange={e => set('bg', e.target.value)} style={{ ...inp, fontFamily: 'monospace', flex: 1 }} placeholder="#0f2a43" />
+                            </div>
+                          </Field>
+                          <Field label="Foreground / Text">
+                            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                              <input type="color" value={form.fg} onChange={e => set('fg', e.target.value)} style={{ width: 40, height: 34, border: 'none', cursor: 'pointer', borderRadius: 4 }} />
+                              <input value={form.fg} onChange={e => set('fg', e.target.value)} style={{ ...inp, fontFamily: 'monospace', flex: 1 }} placeholder="#ffffff" />
+                            </div>
+                          </Field>
+                          <Field label="Accent Colour">
+                            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                              <input type="color" value={form.ac} onChange={e => set('ac', e.target.value)} style={{ width: 40, height: 34, border: 'none', cursor: 'pointer', borderRadius: 4 }} />
+                              <input value={form.ac} onChange={e => set('ac', e.target.value)} style={{ ...inp, fontFamily: 'monospace', flex: 1 }} placeholder="#f59e0b" />
+                            </div>
+                          </Field>
+                        </div>
+                      </div>
+
                       <Field label="Cover Pattern">
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
                           {PATTERNS.map(p => (
@@ -789,7 +1197,7 @@ export default function AdminBooksClient() {
               <div style={{ padding: '20px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, background: '#f8fafc' }}>
                 <div>
                   <p style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', color: '#64748b', letterSpacing: '0.08em', margin: '0 0 8px', textAlign: 'center' }}>
-                    Live Cover Preview
+                    {form.coverImage ? '🖼️ Custom Image Cover' : '🎨 Live Cover Preview'}
                   </p>
                   <MiniCover book={form} />
                 </div>
@@ -802,6 +1210,7 @@ export default function AdminBooksClient() {
                     <div>🏷 {form.type.toUpperCase()} · {form.type !== 'free' ? `$${form.price}` : 'Free'}</div>
                     <div>📄 {form.pages} pages</div>
                     <div>⭐ {form.rating} ({form.reviews} reviews)</div>
+                    {form.coverImage && <div style={{ color: '#2563eb', fontWeight: 700 }}>🖼️ Cover image linked</div>}
                     {form.driveUrl && <div style={{ color: '#059669', fontWeight: 700 }}>✅ Drive link added</div>}
                     {!form.driveUrl && <div style={{ color: '#dc2626' }}>⚠️ No Drive link</div>}
                   </div>

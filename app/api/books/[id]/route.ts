@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getBookById, updateBook, deleteBook } from '@/lib/db';
+import { isRequestAuthorized } from '@/lib/auth';
 
 interface Params {
   params: Promise<{ id: string }> | { id: string };
@@ -25,6 +26,10 @@ export async function GET(request: Request, { params }: Params) {
 
 export async function PUT(request: Request, { params }: Params) {
   try {
+    if (!isRequestAuthorized(request)) {
+      return NextResponse.json({ success: false, message: 'Unauthorized. Admin session required.' }, { status: 401 });
+    }
+
     const resolved = typeof (params as Promise<{ id: string }>)?.then === 'function'
       ? await (params as Promise<{ id: string }>)
       : (params as { id: string });
@@ -44,6 +49,10 @@ export async function PUT(request: Request, { params }: Params) {
 
 export async function DELETE(request: Request, { params }: Params) {
   try {
+    if (!isRequestAuthorized(request)) {
+      return NextResponse.json({ success: false, message: 'Unauthorized. Admin session required.' }, { status: 401 });
+    }
+
     const resolved = typeof (params as Promise<{ id: string }>)?.then === 'function'
       ? await (params as Promise<{ id: string }>)
       : (params as { id: string });

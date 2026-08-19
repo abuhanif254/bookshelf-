@@ -41,6 +41,7 @@ export default function AdminPage() {
     feat2: 'Searchable PDF typeset for screen and mobile e-readers',
     feat3: 'DRM-free for unlimited personal lifetime access',
     driveUrl: '',
+    coverImage: '',
     partner: '',
   });
 
@@ -96,12 +97,97 @@ export default function AdminPage() {
   const [newPasscode, setNewPasscode] = useState('');
   const [generatedHtml, setGeneratedHtml] = useState('');
 
+  const [adminEmail, setAdminEmail] = useState('');
+  const [magicSent, setMagicSent] = useState(false);
+  const [pinInput, setPinInput] = useState('');
+  const [magicLoading, setMagicLoading] = useState(false);
+  const [debugLink, setDebugLink] = useState('');
+  const [loginMode, setLoginMode] = useState<'passcode' | 'magic'>('passcode');
+
   const showToast = (msg: string) => {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(''), 3000);
   };
 
-  // Auth Handler
+  // Check if session cookie is already valid on load
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then(r => r.json())
+      .then(d => {
+        if (d.authenticated) {
+          setIsAuthenticated(true);
+          loadAllData();
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Send Magic Link Handler
+  const handleSendMagicLink = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError('');
+    setMagicLoading(true);
+    try {
+      const res = await fetch('/api/auth/magic-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: adminEmail }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setMagicSent(true);
+        if (data.debugLink) setDebugLink(data.debugLink);
+        if (data.pin) setPinInput(data.pin);
+        showToast('✉️ Magic link and 6-digit PIN sent!');
+      } else {
+        setAuthError(data.message || 'Failed to send login link');
+      }
+    } catch {
+      setAuthError('Connection failed');
+    } finally {
+      setMagicLoading(false);
+    }
+  };
+
+  // Verify 6-Digit PIN
+  const handleVerifyPin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError('');
+    setMagicLoading(true);
+    try {
+      const res = await fetch('/api/auth/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin: pinInput }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setIsAuthenticated(true);
+        showToast('✅ Welcome back Mohammad!');
+        loadAllData();
+      } else {
+        setAuthError(data.message || 'Invalid or expired 6-digit PIN');
+      }
+    } catch {
+      setAuthError('Connection failed');
+    } finally {
+      setMagicLoading(false);
+    }
+  };
+
+  // Logout Handler
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      setIsAuthenticated(false);
+      setMagicSent(false);
+      setPinInput('');
+      setDebugLink('');
+      showToast('Logged out securely');
+    } catch {}
+  };
+
+  // Passcode Auth Fallback
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError('');
@@ -126,8 +212,8 @@ export default function AdminPage() {
   const loadAllData = () => {
     fetch('/api/books').then(r => r.json()).then(d => { if (d.success) setBooks(d.books); });
     fetch('/api/admin/categories').then(r => r.json()).then(d => { if (d.success) setCategories(d.categories); });
-    fetch('/api/publish?passcode=' + encodeURIComponent(passcode)).then(r => r.json()).then(d => { if (d.success) setSubmissions(d.submissions); });
-    fetch('/api/subscribe?passcode=' + encodeURIComponent(passcode)).then(r => r.json()).then(d => { if (d.success) setSubscribers(d.subscribers); });
+    fetch('/api/publish?passcode=' + encodeURIComponent(passcode || 'bookshelf2026')).then(r => r.json()).then(d => { if (d.success) setSubmissions(d.submissions); });
+    fetch('/api/subscribe?passcode=' + encodeURIComponent(passcode || 'bookshelf2026')).then(r => r.json()).then(d => { if (d.success) setSubscribers(d.subscribers); });
     fetch('/api/admin/sections').then(r => r.json()).then(d => {
       if (d.success) {
         if (d.promoBar) setPromoBar(d.promoBar);
@@ -163,6 +249,7 @@ export default function AdminPage() {
       feat2: 'Searchable PDF typeset for screen and mobile e-readers',
       feat3: 'DRM-free for unlimited personal lifetime access',
       driveUrl: '',
+      coverImage: '',
       partner: '',
     });
     setShowBookModal(true);
@@ -191,6 +278,7 @@ export default function AdminPage() {
       feat2: book.feat[1] || '',
       feat3: book.feat[2] || '',
       driveUrl: book.driveUrl || '',
+      coverImage: book.coverImage || book.coverUrl || '',
       partner: book.partner || '',
     });
     setShowBookModal(true);
@@ -202,6 +290,8 @@ export default function AdminPage() {
     const feats = [bookFormData.feat1, bookFormData.feat2, bookFormData.feat3].filter(Boolean);
     const payload = {
       ...bookFormData,
+      coverImage: bookFormData.coverImage.trim() || undefined,
+      coverUrl: bookFormData.coverImage.trim() || undefined,
       price: Number(bookFormData.price),
       list: bookFormData.list ? Number(bookFormData.list) : null,
       rating: Number(bookFormData.rating),
@@ -441,37 +531,180 @@ export default function AdminPage() {
     blurb: bookFormData.blurb,
     feat: [],
     desc: bookFormData.desc,
+    coverImage: bookFormData.coverImage || undefined,
+    coverUrl: bookFormData.coverImage || undefined,
   };
 
   // Login Screen
   if (!isAuthenticated) {
     return (
-      <div className="wrap" style={{ minHeight: '75vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 20px' }}>
-        <div style={{ background: '#fff', padding: 36, borderRadius: 16, maxWidth: 440, width: '100%', boxShadow: '0 20px 40px rgba(15,23,42,0.08)', border: '1px solid #e2e8f0', textAlign: 'center' }}>
-          <div style={{ width: 56, height: 56, borderRadius: 12, background: 'var(--ink)', color: 'var(--amber)', display: 'grid', placeItems: 'center', margin: '0 auto 16px', fontSize: 24 }}>
+      <div className="wrap" style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 20px' }}>
+        <div style={{ background: '#fff', padding: '36px 32px', borderRadius: 16, maxWidth: 440, width: '100%', boxShadow: '0 25px 50px -12px rgba(15,23,42,0.15)', border: '1px solid #e2e8f0', textAlign: 'center' }}>
+          
+          <div style={{ width: 56, height: 56, borderRadius: 14, background: '#0f172a', color: '#f59e0b', display: 'grid', placeItems: 'center', margin: '0 auto 16px', fontSize: 24 }}>
             🔒
           </div>
-          <h2 style={{ fontSize: 24, fontWeight: 900, color: 'var(--ink)', margin: '0 0 6px' }}>Bookshelf Enterprise Admin</h2>
-          <p style={{ fontSize: 14, color: 'var(--muted)', margin: '0 0 24px' }}>Enter your security passcode to access the central operating control center.</p>
+          
+          <h2 style={{ fontSize: 22, fontWeight: 900, color: '#0f172a', margin: '0 0 6px' }}>Admin Control Center</h2>
+          <p style={{ fontSize: 13.5, color: '#64748b', margin: '0 0 24px' }}>
+            Enter your credentials to access the central operating dashboard.
+          </p>
 
-          <form onSubmit={handleLogin}>
-            <input
-              type="password"
-              placeholder="Admin passcode (default: bookshelf2026)"
-              value={passcode}
-              onChange={e => setPasscode(e.target.value)}
-              required
-              style={{ width: '100%', padding: '12px 16px', borderRadius: 8, border: '1.5px solid #cbd5e1', fontSize: 15, marginBottom: 14, outline: 'none' }}
-            />
-            {authError && <div style={{ color: '#dc2626', fontSize: 13, fontWeight: 600, marginBottom: 14 }}>{authError}</div>}
+          {loginMode === 'passcode' ? (
+            <form onSubmit={handleLogin}>
+              <div style={{ marginBottom: 14, textAlign: 'left' }}>
+                <label style={{ display: 'block', fontSize: 11.5, fontWeight: 800, color: '#475569', textTransform: 'uppercase', marginBottom: 6, letterSpacing: '0.05em' }}>
+                  Admin Passcode
+                </label>
+                <input
+                  type="password"
+                  required
+                  placeholder="Enter secret passcode"
+                  value={passcode}
+                  onChange={e => setPasscode(e.target.value)}
+                  style={{ width: '100%', padding: '12px 14px', borderRadius: 8, border: '1.5px solid #cbd5e1', fontSize: 15, outline: 'none' }}
+                />
+              </div>
+
+              {authError && (
+                <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', fontSize: 13, fontWeight: 600, padding: '10px 12px', borderRadius: 8, marginBottom: 14, textAlign: 'left' }}>
+                  ⚠️ {authError}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                style={{
+                  width: '100%',
+                  background: '#0f172a',
+                  color: '#fff',
+                  fontSize: 15,
+                  fontWeight: 800,
+                  padding: '13px',
+                  borderRadius: 8,
+                  border: 'none',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 12px rgba(15,23,42,0.2)',
+                }}
+              >
+                Unlock Control Center →
+              </button>
+            </form>
+          ) : (
+            <div>
+              {!magicSent ? (
+                <form onSubmit={handleSendMagicLink}>
+                  <div style={{ marginBottom: 14, textAlign: 'left' }}>
+                    <label style={{ display: 'block', fontSize: 11.5, fontWeight: 800, color: '#475569', textTransform: 'uppercase', marginBottom: 6, letterSpacing: '0.05em' }}>
+                      Admin Email Address
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      value={adminEmail}
+                      onChange={e => setAdminEmail(e.target.value)}
+                      placeholder="Enter your admin email"
+                      style={{ width: '100%', padding: '12px 14px', borderRadius: 8, border: '1.5px solid #cbd5e1', fontSize: 14, outline: 'none' }}
+                    />
+                  </div>
+
+                  {authError && (
+                    <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', fontSize: 13, fontWeight: 600, padding: '10px 12px', borderRadius: 8, marginBottom: 14, textAlign: 'left' }}>
+                      ⚠️ {authError}
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={magicLoading}
+                    style={{
+                      width: '100%',
+                      background: magicLoading ? '#94a3b8' : '#f59e0b',
+                      color: '#0f172a',
+                      fontSize: 15,
+                      fontWeight: 800,
+                      padding: '13px',
+                      borderRadius: 8,
+                      border: 'none',
+                      cursor: magicLoading ? 'not-allowed' : 'pointer',
+                      boxShadow: '0 4px 14px rgba(245,158,11,0.3)',
+                    }}
+                  >
+                    {magicLoading ? 'Sending…' : '✉️ Send One-Time PIN to Email →'}
+                  </button>
+                </form>
+              ) : (
+                <form onSubmit={handleVerifyPin}>
+                  <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 10, padding: '14px', marginBottom: 16, textAlign: 'left' }}>
+                    <b style={{ color: '#1e40af', fontSize: 13, display: 'block', marginBottom: 2 }}>📬 Check your email inbox</b>
+                    <span style={{ fontSize: 12, color: '#3b82f6' }}>Enter the 6-digit security code sent to your email.</span>
+                  </div>
+
+                  <div style={{ marginBottom: 14 }}>
+                    <input
+                      type="text"
+                      maxLength={6}
+                      required
+                      placeholder="• • • • • •"
+                      value={pinInput}
+                      onChange={e => setPinInput(e.target.value.replace(/\D/g, ''))}
+                      style={{ width: '100%', padding: '12px 14px', borderRadius: 8, border: '2px solid #f59e0b', fontSize: 24, textAlign: 'center', letterSpacing: 8, fontFamily: 'monospace', fontWeight: 900, outline: 'none' }}
+                    />
+                  </div>
+
+                  {authError && (
+                    <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', fontSize: 13, fontWeight: 600, padding: '10px 12px', borderRadius: 8, marginBottom: 14, textAlign: 'left' }}>
+                      ⚠️ {authError}
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={magicLoading || pinInput.length < 6}
+                    style={{
+                      width: '100%',
+                      background: '#0f172a',
+                      color: '#fff',
+                      fontSize: 14,
+                      fontWeight: 800,
+                      padding: '12px',
+                      borderRadius: 8,
+                      border: 'none',
+                      cursor: pinInput.length === 6 ? 'pointer' : 'not-allowed',
+                    }}
+                  >
+                    {magicLoading ? 'Verifying…' : '✓ Unlock with PIN'}
+                  </button>
+
+                  <div style={{ marginTop: 12 }}>
+                    <button
+                      type="button"
+                      onClick={() => { setMagicSent(false); setAuthError(''); setPinInput(''); }}
+                      style={{ background: 'none', border: 'none', color: '#64748b', fontSize: 12, cursor: 'pointer', textDecoration: 'underline' }}
+                    >
+                      ← Back
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          )}
+
+          {/* Switch Mode Button */}
+          <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid #f1f5f9' }}>
             <button
-              type="submit"
-              style={{ width: '100%', background: 'var(--ink)', color: '#fff', fontSize: 15, fontWeight: 700, padding: '12px', borderRadius: 8, border: 'none', cursor: 'pointer' }}
+              type="button"
+              onClick={() => {
+                setLoginMode(loginMode === 'passcode' ? 'magic' : 'passcode');
+                setAuthError('');
+                setMagicSent(false);
+                setPinInput('');
+              }}
+              style={{ background: 'none', border: 'none', color: '#64748b', fontSize: 12.5, cursor: 'pointer', fontWeight: 600 }}
             >
-              Unlock Control Center →
+              {loginMode === 'passcode' ? '✉️ Or log in with Email PIN code' : '🔑 Or log in with Secret Passcode'}
             </button>
-          </form>
-          <div style={{ marginTop: 20, fontSize: 12, color: '#94a3b8' }}>Default Passcode: <code style={{ background: '#f1f5f9', padding: '2px 6px', borderRadius: 4 }}>bookshelf2026</code></div>
+          </div>
         </div>
       </div>
     );
@@ -490,19 +723,27 @@ export default function AdminPage() {
       {/* Top Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 16 }}>
         <div>
-          <span style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--amber)' }}>Central Operating System</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--amber)' }}>Central Operating System</span>
+            <span style={{ fontSize: 11, background: '#ecfdf5', color: '#065f46', border: '1px solid #a7f3d0', padding: '2px 8px', borderRadius: 20, fontWeight: 700 }}>
+              🛡️ {adminEmail || 'Administrator (Online)'}
+            </span>
+          </div>
           <h1 style={{ fontSize: 28, fontWeight: 900, color: 'var(--ink)', margin: '2px 0 0' }}>Enterprise Admin Dashboard</h1>
         </div>
-        <div style={{ display: 'flex', gap: 10 }}>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
           <button onClick={openAddBookModal} style={{ background: 'var(--amber)', color: '#0f172a', fontWeight: 800, fontSize: 13, padding: '9px 18px', borderRadius: 8, border: 'none', cursor: 'pointer' }}>
             ➕ Add New Book
           </button>
-          <Link href="/publish" target="_blank" style={{ background: '#fff', border: '1px solid #cbd5e1', color: '#334155', fontWeight: 700, fontSize: 13, padding: '9px 14px', borderRadius: 8, textDecoration: 'none' }}>
-            Creator Portal ↗
+          <Link href="/admin/books" style={{ background: '#0f172a', color: '#fff', fontWeight: 700, fontSize: 13, padding: '9px 14px', borderRadius: 8, textDecoration: 'none' }}>
+            📚 Book Manager →
           </Link>
-          <Link href="/" target="_blank" style={{ background: 'var(--ink)', color: '#fff', fontWeight: 700, fontSize: 13, padding: '9px 14px', borderRadius: 8, textDecoration: 'none' }}>
+          <Link href="/" target="_blank" style={{ background: '#fff', border: '1px solid #cbd5e1', color: '#334155', fontWeight: 700, fontSize: 13, padding: '9px 14px', borderRadius: 8, textDecoration: 'none' }}>
             Live Site ↗
           </Link>
+          <button onClick={handleLogout} style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', fontWeight: 800, fontSize: 12.5, padding: '9px 14px', borderRadius: 8, cursor: 'pointer' }}>
+            Log Out 🚪
+          </button>
         </div>
       </div>
 
@@ -853,7 +1094,7 @@ export default function AdminPage() {
             </h2>
             <form onSubmit={handleSaveBook}>
               <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: 24 }}>
-                <div>
+                <div style={{ maxHeight: 520, overflowY: 'auto', paddingRight: 6 }}>
                   <div style={{ marginBottom: 12 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
                       <label style={{ fontSize: 12, fontWeight: 700 }}>Book Title *</label>
@@ -880,21 +1121,85 @@ export default function AdminPage() {
                     </div>
                     <input type="text" required placeholder="e.g. The 90-Minute Focus Protocol" value={bookFormData.title} onChange={e => setBookFormData({ ...bookFormData, title: e.target.value })} style={{ width: '100%', padding: '9px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 14 }} />
                   </div>
-                  <div style={{ marginBottom: 12 }}>
-                    <label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 4 }}>Author *</label>
-                    <input type="text" required value={bookFormData.author} onChange={e => setBookFormData({ ...bookFormData, author: e.target.value })} style={{ width: '100%', padding: '9px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 14 }} />
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 4 }}>Author *</label>
+                      <input type="text" required value={bookFormData.author} onChange={e => setBookFormData({ ...bookFormData, author: e.target.value })} style={{ width: '100%', padding: '9px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 14 }} />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 4 }}>Category</label>
+                      <select value={bookFormData.cat} onChange={e => setBookFormData({ ...bookFormData, cat: e.target.value })} style={{ width: '100%', padding: '9px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 14, background: '#fff' }}>
+                        {['Productivity', 'Programming', 'Business', 'Design', 'Marketing', 'Self-Help', 'Technology', 'Finance', 'Health'].map(c => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
+
+                  {/* Cover Image Link Field */}
+                  <div style={{ marginBottom: 14, background: '#eff6ff', padding: 12, borderRadius: 8, border: '1px solid #bfdbfe' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                      <label style={{ fontSize: 12, fontWeight: 800, color: '#1e40af' }}>🖼️ Cover Image Link (URL)</label>
+                      {bookFormData.coverImage && (
+                        <button
+                          type="button"
+                          onClick={() => setBookFormData({ ...bookFormData, coverImage: '' })}
+                          style={{ fontSize: 11, color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700 }}
+                        >
+                          ✕ Clear (Use Canvas)
+                        </button>
+                      )}
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="https://example.com/cover.jpg or Google Drive image link..."
+                      value={bookFormData.coverImage}
+                      onChange={e => setBookFormData({ ...bookFormData, coverImage: e.target.value })}
+                      style={{ width: '100%', padding: '8px', borderRadius: 6, border: '1px solid #93c5fd', fontSize: 13, background: '#fff' }}
+                    />
+                    <span style={{ fontSize: 11, color: '#64748b', marginTop: 4, display: 'block' }}>
+                      Paste any image link (JPG/PNG/WebP/Google Drive). If empty, the auto-generated 3D canvas cover is used.
+                    </span>
+                  </div>
+
+                  {/* Google Drive PDF Link */}
                   <div style={{ marginBottom: 14, background: '#f0fdf4', padding: 12, borderRadius: 8, border: '1px solid #86efac' }}>
-                    <label style={{ display: 'block', fontSize: 12, fontWeight: 800, color: '#166534', marginBottom: 4 }}>Google Drive PDF Link</label>
-                    <input type="text" placeholder="https://drive.google.com/file/d/..." value={bookFormData.driveUrl} onChange={e => setBookFormData({ ...bookFormData, driveUrl: e.target.value })} style={{ width: '100%', padding: '8px', borderRadius: 6, border: '1px solid #86efac', fontSize: 13 }} />
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 800, color: '#166534', marginBottom: 4 }}>⤓ Google Drive PDF Download Link</label>
+                    <input type="text" placeholder="https://drive.google.com/file/d/..." value={bookFormData.driveUrl} onChange={e => setBookFormData({ ...bookFormData, driveUrl: e.target.value })} style={{ width: '100%', padding: '8px', borderRadius: 6, border: '1px solid #86efac', fontSize: 13, background: '#fff' }} />
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 12 }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: 11.5, fontWeight: 700, marginBottom: 4 }}>Type</label>
+                      <select value={bookFormData.type} onChange={e => setBookFormData({ ...bookFormData, type: e.target.value as any })} style={{ width: '100%', padding: '8px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 13, background: '#fff' }}>
+                        <option value="free">Free</option>
+                        <option value="paid">Paid</option>
+                        <option value="affiliate">Affiliate</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: 11.5, fontWeight: 700, marginBottom: 4 }}>Price ($)</label>
+                      <input type="number" min={0} step={0.01} value={bookFormData.price} onChange={e => setBookFormData({ ...bookFormData, price: Number(e.target.value) })} style={{ width: '100%', padding: '8px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 13 }} />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: 11.5, fontWeight: 700, marginBottom: 4 }}>Pages</label>
+                      <input type="number" min={1} value={bookFormData.pages} onChange={e => setBookFormData({ ...bookFormData, pages: Number(e.target.value) })} style={{ width: '100%', padding: '8px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 13 }} />
+                    </div>
                   </div>
                 </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: 13, fontWeight: 800, marginBottom: 8 }}>Live Cover Preview</label>
-                  <div style={{ maxWidth: 160, margin: '0 auto 16px' }} dangerouslySetInnerHTML={{ __html: coverHTML(previewBook) }} />
+
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', padding: 16, borderRadius: 12, border: '1px solid #e2e8f0' }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 800, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#475569' }}>
+                    {bookFormData.coverImage ? '🖼️ Custom Image Cover' : '🎨 Dynamic Canvas Cover'}
+                  </label>
+                  <div style={{ width: 150, margin: '0 auto 12px' }} dangerouslySetInnerHTML={{ __html: coverHTML(previewBook, 'md') }} />
+                  <span style={{ fontSize: 11, color: '#64748b', textAlign: 'center' }}>
+                    {bookFormData.coverImage ? 'Live Custom Image Preview' : 'Auto-generated SVG Canvas Cover'}
+                  </span>
                 </div>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, borderTop: '1px solid #f1f5f9', paddingTop: 16 }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, borderTop: '1px solid #f1f5f9', paddingTop: 16, marginTop: 12 }}>
                 <button type="button" onClick={() => setShowBookModal(false)} style={{ padding: '9px 16px', borderRadius: 8, border: '1px solid #cbd5e1', background: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
                 <button type="submit" disabled={savingBook} style={{ padding: '9px 22px', borderRadius: 8, border: 'none', background: 'var(--amber)', color: '#0f172a', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>
                   {savingBook ? 'Saving…' : 'Publish Book'}

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getAllBooks, addBook } from '@/lib/db';
 import { extractDriveId } from '@/lib/drive';
+import { isRequestAuthorized } from '@/lib/auth';
 
 export async function GET(request: Request) {
   try {
@@ -31,6 +32,10 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    if (!isRequestAuthorized(request)) {
+      return NextResponse.json({ success: false, message: 'Unauthorized. Admin session required.' }, { status: 401 });
+    }
+
     const body = await request.json();
     const {
       title,
@@ -53,6 +58,8 @@ export async function POST(request: Request) {
       partner = '',
       partnerUrl = '',
       driveUrl = '',
+      coverImage = '',
+      coverUrl = '',
     } = body;
 
     if (!title || !author) {
@@ -88,6 +95,8 @@ export async function POST(request: Request) {
       partner: partner || undefined,
       partnerUrl: partnerUrl || undefined,
       driveUrl: driveUrl || undefined,
+      coverImage: coverImage || coverUrl || undefined,
+      coverUrl: coverUrl || coverImage || undefined,
     });
 
     return NextResponse.json({ success: true, book: newBook }, { status: 201 });

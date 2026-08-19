@@ -25,6 +25,8 @@ export interface Product {
   partner?: string;
   partnerUrl?: string;
   driveUrl?: string;
+  coverImage?: string;
+  coverUrl?: string;
   downloads?: number;
   createdAt?: string;
 }

@@ -18,6 +18,20 @@ export const flagCls = (b: string | null): string => {
 };
 
 export const coverHTML = (p: Product, size: string = ''): string => {
+  const img = (p.coverImage || p.coverUrl || '').trim();
+  if (img) {
+    let resolvedImg = img;
+    // If user provided a Google Drive view link for the image, convert to direct image stream
+    const driveMatch = img.match(/\/d\/([a-zA-Z0-9_-]+)/) || img.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    if (driveMatch && driveMatch[1]) {
+      resolvedImg = `https://drive.google.com/uc?export=view&id=${driveMatch[1]}`;
+    }
+    return `<div class="coverwrap"><div class="cover ${size ? 'cover--' + size : ''}" style="padding:0;overflow:hidden;background:#0f172a;position:relative;">
+      <img src="${resolvedImg}" alt="${p.title.replace(/"/g, '&quot;')}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;" loading="lazy" onerror="this.style.display='none';this.parentElement.classList.add('cover--fallback');" />
+      <div style="position:absolute;inset:0;box-shadow:inset 10px 0 14px -10px rgba(0,0,0,.6), inset 0 0 0 1px rgba(255,255,255,0.08);pointer-events:none;"></div>
+    </div></div>`;
+  }
+
   return `<div class="coverwrap"><div class="cover ${size ? 'cover--' + size : ''}" style="--cbg:${p.bg};--fg:${p.fg};--cac:${p.ac}">
     <div class="pat ${p.pat}"></div><span class="cac"></span>
     <span class="ccat">${p.cat}</span>
