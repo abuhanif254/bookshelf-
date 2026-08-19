@@ -224,7 +224,7 @@
         "Prompt-chaining recipes"
       ],
       "desc": "<p>The free starter edition of our annual AI Handbook. If it saves you ten minutes, tell a friend.</p>",
-      "downloads": 1
+      "downloads": 2
     },
     {
       "id": 8,
@@ -867,22 +867,22 @@
     }
   ],
   "settings": {
-    "adNetwork": "built-in",
+    "adNetwork": "monetag",
     "countdownSeconds": 8,
-    "adCode": "",
-    "directSmartLink": "",
+    "adCode": "<script>(function(s){s.dataset.zone='11608665',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>",
+    "directSmartLink": "https://omg10.com/4/11608657",
     "sponsorTitle": "SkillBoost Pro — Master High-Income Tech Skills",
     "sponsorSubtitle": "Get 85% off premium project-based roadmaps, certifications, and AI tools for developers.",
     "sponsorCta": "Explore SkillBoost Free Trial ↗",
-    "sponsorUrl": "https://github.com",
+    "sponsorUrl": "https://omg10.com/4/11608657",
     "adminPasscode": "bookshelf2026",
     "siteName": "Bookshelf",
     "siteTagline": "Buy & Download Free PDF Books Instantly",
     "supportEmail": "support@bookshelf.com",
     "stats": {
-      "totalDownloads": 1423,
-      "adImpressions": 3898,
-      "adUnlocks": 2743
+      "totalDownloads": 1425,
+      "adImpressions": 3900,
+      "adUnlocks": 2745
     }
   }
 }

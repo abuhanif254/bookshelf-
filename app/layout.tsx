@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Script from 'next/script';
 import './globals.css';
 import { StoreProvider } from '@/lib/store';
 import PromoBar from '@/components/PromoBar';
@@ -97,6 +98,23 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <OrganizationJsonLd />
       </head>
       <body>
+        {/* Monetag Vignette Banner */}
+        <Script
+          id="monetag-vignette"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `(function(s){s.dataset.zone='11608665',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))`,
+          }}
+        />
+        {/* Monetag In-Page Push */}
+        <Script
+          id="monetag-inpage-push"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `(function(s){s.dataset.zone='11608673',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))`,
+          }}
+        />
+
         <StoreProvider>
           <CurrencyProvider>
             <PdfReaderProvider>

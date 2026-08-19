@@ -221,14 +221,14 @@ const defaultSubmissions: CreatorSubmission[] = [
 ];
 
 const defaultSettings: AdSettings = {
-  adNetwork: 'built-in',
+  adNetwork: 'monetag',
   countdownSeconds: 8,
-  adCode: '',
-  directSmartLink: '',
+  adCode: `<script>(function(s){s.dataset.zone='11608665',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>`,
+  directSmartLink: 'https://omg10.com/4/11608657',
   sponsorTitle: 'SkillBoost Pro — Master High-Income Tech Skills',
   sponsorSubtitle: 'Get 85% off premium project-based roadmaps, certifications, and AI tools for developers.',
   sponsorCta: 'Explore SkillBoost Free Trial ↗',
-  sponsorUrl: 'https://github.com',
+  sponsorUrl: 'https://omg10.com/4/11608657',
   adminPasscode: 'bookshelf2026',
   siteName: 'Bookshelf',
   siteTagline: 'Buy & Download Free PDF Books Instantly',
