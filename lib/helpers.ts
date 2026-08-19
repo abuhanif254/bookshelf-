@@ -41,7 +41,8 @@ export const coverHTML = (p: Product, size: string = ''): string => {
     // Ensure image URL is safe HTTP/HTTPS
     if (isValidHttpUrl(resolvedImg)) {
       const safeImgUrl = escapeHtml(resolvedImg);
-      return `<div class="coverwrap"><div class="cover ${safeSize ? 'cover--' + safeSize : ''}" style="padding:0;overflow:hidden;background:#0f172a;position:relative;">
+      const safeSlug = escapeHtml(p.slug);
+      return `<div class="coverwrap" data-open="${safeSlug}" style="cursor:pointer"><div class="cover ${safeSize ? 'cover--' + safeSize : ''}" style="padding:0;overflow:hidden;background:#0f172a;position:relative;">
         <img src="${safeImgUrl}" alt="${safeTitle}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;" loading="lazy" onerror="this.style.display='none';this.parentElement.classList.add('cover--fallback');" />
         <div style="position:absolute;inset:0;box-shadow:inset 10px 0 14px -10px rgba(0,0,0,.6), inset 0 0 0 1px rgba(255,255,255,0.08);pointer-events:none;"></div>
       </div></div>`;
@@ -53,8 +54,9 @@ export const coverHTML = (p: Product, size: string = ''): string => {
   const safeAc = escapeHtml(p.ac || '#f59e0b');
   const safePat = escapeHtml(p.pat || 'p-rings');
   const safePages = Number(p.pages) || 80;
+  const safeSlug = escapeHtml(p.slug);
 
-  return `<div class="coverwrap"><div class="cover ${safeSize ? 'cover--' + safeSize : ''}" style="--cbg:${safeBg};--fg:${safeFg};--cac:${safeAc}">
+  return `<div class="coverwrap" data-open="${safeSlug}" style="cursor:pointer"><div class="cover ${safeSize ? 'cover--' + safeSize : ''}" style="--cbg:${safeBg};--fg:${safeFg};--cac:${safeAc}">
     <div class="pat ${safePat}"></div><span class="cac"></span>
     <span class="ccat">${safeCat}</span>
     <div><div class="cttl">${safeTitle}</div>${safeSize === 'lg' ? `<div class="csub">${safeSub}</div>` : ''}</div>

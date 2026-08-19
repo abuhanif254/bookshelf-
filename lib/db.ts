@@ -125,8 +125,10 @@ export interface AppDatabase {
   settings: AdSettings;
 }
 
-const DB_DIR = path.join(process.cwd(), 'data');
-const DB_PATH = path.join(DB_DIR, 'bookshelf-db.json');
+const isServerless = !!(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+const DB_DIR = isServerless ? '/tmp' : path.join(process.cwd(), 'data');
+const DB_PATH = isServerless ? path.join('/tmp', 'bookshelf-db.json') : path.join(process.cwd(), 'data', 'bookshelf-db.json');
+const STATIC_SEED_PATH = path.join(process.cwd(), 'data', 'bookshelf-db.json');
 
 const defaultCategories: CategoryConfig[] = [
   { id: '1', name: 'Productivity', slug: 'productivity', badge: 'Popular', seoTitle: 'Best Free Productivity PDF Books & Focus Systems (2026)', h1: 'Free Productivity PDF Books & Guides', intro: 'Reclaim your attention, master daily deep-work blocks, and build unbreakable focus habits with our curated collection of free productivity PDFs.' },
@@ -308,6 +310,29 @@ function ensureDbFile(): AppDatabase {
           settings: { ...defaultSettings, ...parsed.settings },
         };
       }
+    }
+    // If serverless and /tmp DB doesn't exist yet, seed from data/bookshelf-db.json if available
+    if (isServerless && fs.existsSync(STATIC_SEED_PATH)) {
+      try {
+        const seedRaw = fs.readFileSync(STATIC_SEED_PATH, 'utf-8');
+        const seedParsed = JSON.parse(seedRaw);
+        if (seedParsed && Array.isArray(seedParsed.books)) {
+          fs.writeFileSync(DB_PATH, seedRaw, 'utf-8');
+          return {
+            books: seedParsed.books,
+            categories: seedParsed.categories || defaultCategories,
+            promoBar: seedParsed.promoBar || defaultPromoBar,
+            heroSlides: seedParsed.heroSlides || defaultHeroSlides,
+            quadCards: seedParsed.quadCards || defaultQuadCards,
+            scrollSections: seedParsed.scrollSections || defaultScrollSections,
+            subscribers: seedParsed.subscribers || defaultSubscribers,
+            submissions: seedParsed.submissions || defaultSubmissions,
+            referrals: seedParsed.referrals || {},
+            reviews: seedParsed.reviews || defaultReviews,
+            settings: { ...defaultSettings, ...seedParsed.settings },
+          };
+        }
+      } catch {}
     }
   } catch (err) {
     console.error('Error reading bookshelf DB:', err);

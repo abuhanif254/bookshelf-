@@ -9,6 +9,7 @@ import { cardHTML, coverHTML, stars } from '@/lib/helpers';
 import HeroCarousel from '@/components/HeroCarousel';
 import ScrollSection from '@/components/ScrollSection';
 import { BUNDLES } from '@/lib/bundles';
+import { getClientBooks, saveClientBooks } from '@/lib/customBooks';
 
 const dealEnd = Date.now() + (7 * 3600 + 42 * 60 + 15) * 1000;
 
@@ -19,11 +20,15 @@ export default function HomePage() {
   const [allBooks, setAllBooks] = useState<Product[]>(P);
 
   useEffect(() => {
+    const local = getClientBooks();
+    if (local && local.length > 0) setAllBooks(local);
+
     fetch('/api/books')
       .then(res => res.json())
       .then(data => {
         if (data.success && Array.isArray(data.books) && data.books.length > 0) {
           setAllBooks(data.books);
+          saveClientBooks(data.books);
         }
       })
       .catch(() => {});

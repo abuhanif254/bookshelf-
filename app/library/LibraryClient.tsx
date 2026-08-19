@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { P, Product } from '@/lib/products';
 import { cardHTML } from '@/lib/helpers';
 import { useStore } from '@/lib/store';
+import { getClientBooks, saveClientBooks } from '@/lib/customBooks';
 
 const PAGE_SIZE = 9;
 
@@ -50,11 +51,15 @@ export default function LibraryClient() {
   const [allBooks, setAllBooks] = useState<Product[]>(P);
 
   useEffect(() => {
+    const local = getClientBooks();
+    if (local && local.length > 0) setAllBooks(local);
+
     fetch('/api/books')
       .then(res => res.json())
       .then(data => {
         if (data.success && Array.isArray(data.books) && data.books.length > 0) {
           setAllBooks(data.books);
+          saveClientBooks(data.books);
         }
       })
       .catch(() => {});

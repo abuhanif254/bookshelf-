@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { getBookBySlug, getAllBooks } from '@/lib/db';
 import { BookJsonLd, BreadcrumbJsonLd, FAQJsonLd } from '@/components/JsonLd';
 import ProductClient from './ProductClient';
+import DynamicBookFallback from './DynamicBookFallback';
 
 interface Props {
   params: Promise<{ slug: string }> | { slug: string };
@@ -20,9 +21,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const book = getBookBySlug(resolvedParams.slug);
 
   if (!book) {
+    const formattedTitle = resolvedParams.slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
     return {
-      title: 'Book Not Found | Bookshelf',
-      description: 'The requested PDF book could not be found.',
+      title: `${formattedTitle} — Download Free PDF | Bookshelf`,
+      description: `Download ${formattedTitle} PDF book with high-speed Google Drive download.`,
     };
   }
 
@@ -78,7 +80,7 @@ export default async function ProductPage({ params }: Props) {
   const book = getBookBySlug(resolvedParams.slug);
 
   if (!book) {
-    notFound();
+    return <DynamicBookFallback slug={resolvedParams.slug} />;
   }
 
   const catSlug = normalizeSlug(book.cat);

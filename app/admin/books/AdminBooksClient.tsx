@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { Product } from '@/lib/products';
+import { getClientBooks, saveClientBooks, addClientBook, deleteClientBook } from '@/lib/customBooks';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -138,7 +139,12 @@ const emptyForm = (): FormData => ({
 // ─── Main Component ────────────────────────────────────────────────────────────
 
 export default function AdminBooksClient() {
-  const [books, setBooks] = useState<Product[]>([]);
+  const [books, setBooks] = useState<Product[]>(() => {
+    if (typeof window !== 'undefined') {
+      return getClientBooks();
+    }
+    return [];
+  });
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
@@ -268,9 +274,17 @@ export default function AdminBooksClient() {
     try {
       const res = await fetch('/api/books');
       const data = await res.json();
-      if (data.success) setBooks(data.books);
+      if (data.success && Array.isArray(data.books)) {
+        setBooks(data.books);
+        saveClientBooks(data.books);
+      } else {
+        const stored = getClientBooks();
+        if (stored.length > 0) setBooks(stored);
+      }
     } catch {
-      showToast('❌ Failed to load books');
+      const stored = getClientBooks();
+      if (stored.length > 0) setBooks(stored);
+      showToast('❌ Failed to load books (using cached)');
     } finally {
       setLoading(false);
     }
@@ -383,6 +397,9 @@ export default function AdminBooksClient() {
       const data = await res.json();
       if (data.success) {
         showToast(editingBook ? '✅ Book updated successfully' : '✅ Book published successfully');
+        if (data.book) {
+          addClientBook(data.book);
+        }
         closeModal();
         fetchBooks();
       } else {
@@ -404,6 +421,7 @@ export default function AdminBooksClient() {
       const data = await res.json();
       if (data.success) {
         showToast('🗑️ Book deleted');
+        deleteClientBook(id);
         setBooks(prev => prev.filter(b => b.id !== id));
       } else {
         showToast('❌ Delete failed');
