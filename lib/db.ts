@@ -87,12 +87,28 @@ export interface AdSettings {
   siteName: string;
   siteTagline: string;
   supportEmail: string;
+  aiApiKey?: string;
+  aiProvider?: 'gemini' | 'openai' | 'groq' | 'deepseek' | 'auto';
   stats: {
     totalDownloads: number;
     adImpressions: number;
     adUnlocks: number;
     vipReferralUnlocks: number;
   };
+}
+
+export interface BookReview {
+  id: string;
+  bookId: number;
+  userName: string;
+  rating: number; // 1 to 5
+  title: string;
+  body: string;
+  date: string;
+  verified: boolean;
+  helpfulCount: number;
+  approved: boolean;
+  createdAt: string;
 }
 
 export interface AppDatabase {
@@ -105,6 +121,7 @@ export interface AppDatabase {
   subscribers: Subscriber[];
   submissions: CreatorSubmission[];
   referrals: Record<string, number>;
+  reviews: BookReview[];
   settings: AdSettings;
 }
 
@@ -224,6 +241,48 @@ const defaultSettings: AdSettings = {
   },
 };
 
+const defaultReviews: BookReview[] = [
+  {
+    id: 'rev-1',
+    bookId: 1,
+    userName: 'Sofia M.',
+    rating: 5,
+    title: 'Worth 10× the price',
+    body: 'I finished it in one evening and applied the framework the next morning. The printable extras alone justify it. This is the kind of PDF you actually keep.',
+    date: 'July 22, 2026',
+    verified: true,
+    helpfulCount: 142,
+    approved: true,
+    createdAt: '2026-07-22T10:00:00Z',
+  },
+  {
+    id: 'rev-2',
+    bookId: 1,
+    userName: 'James T.',
+    rating: 5,
+    title: 'Practical, zero fluff',
+    body: 'Every chapter ends with something to do, not something to ponder. I have shared copies with my engineering team and we run the playbook weekly.',
+    date: 'July 9, 2026',
+    verified: true,
+    helpfulCount: 98,
+    approved: true,
+    createdAt: '2026-07-09T14:30:00Z',
+  },
+  {
+    id: 'rev-3',
+    bookId: 1,
+    userName: 'Aisha B.',
+    rating: 4,
+    title: 'Great structure and actionable templates',
+    body: 'Excellent structure and beautiful layout on both tablet and print. Wish there were more advanced examples in chapter 8, but the author replies promptly.',
+    date: 'June 28, 2026',
+    verified: true,
+    helpfulCount: 65,
+    approved: true,
+    createdAt: '2026-06-28T09:15:00Z',
+  },
+];
+
 let memoryDb: AppDatabase | null = null;
 
 function ensureDbFile(): AppDatabase {
@@ -245,6 +304,7 @@ function ensureDbFile(): AppDatabase {
           subscribers: parsed.subscribers || defaultSubscribers,
           submissions: parsed.submissions || defaultSubmissions,
           referrals: parsed.referrals || {},
+          reviews: parsed.reviews || defaultReviews,
           settings: { ...defaultSettings, ...parsed.settings },
         };
       }
@@ -263,6 +323,7 @@ function ensureDbFile(): AppDatabase {
     subscribers: defaultSubscribers,
     submissions: defaultSubmissions,
     referrals: {},
+    reviews: defaultReviews,
     settings: defaultSettings,
   };
 
@@ -518,4 +579,82 @@ export function incrementStat(type: 'totalDownloads' | 'adImpressions' | 'adUnlo
   const db = getDatabase();
   db.settings.stats[type] = (db.settings.stats[type] || 0) + 1;
   saveDatabase(db);
+}
+
+// Reader Reviews CRUD
+export function getAllReviews(): BookReview[] {
+  const db = getDatabase();
+  return db.reviews || [];
+}
+
+export function getBookReviews(bookId: number): BookReview[] {
+  const db = getDatabase();
+  return (db.reviews || []).filter(r => r.bookId === bookId && r.approved);
+}
+
+export function addBookReview(data: {
+  bookId: number;
+  userName: string;
+  rating: number;
+  title: string;
+  body: string;
+  verified?: boolean;
+}): BookReview {
+  const db = getDatabase();
+  if (!db.reviews) db.reviews = [];
+
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+
+  const newReview: BookReview = {
+    id: 'rev-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
+    bookId: data.bookId,
+    userName: data.userName.trim() || 'Anonymous Reader',
+    rating: Math.max(1, Math.min(5, Math.round(data.rating))),
+    title: data.title.trim(),
+    body: data.body.trim(),
+    date: dateStr,
+    verified: data.verified ?? true,
+    helpfulCount: 0,
+    approved: true,
+    createdAt: now.toISOString(),
+  };
+
+  db.reviews.unshift(newReview);
+
+  // Recalculate book rating and review count
+  const bookIndex = db.books.findIndex(b => b.id === data.bookId);
+  if (bookIndex !== -1) {
+    const book = db.books[bookIndex];
+    const newTotalReviews = (book.reviews || 0) + 1;
+    const currentSum = (book.rating || 4.8) * (book.reviews || 100);
+    const newAvg = Number(((currentSum + newReview.rating) / (newTotalReviews + 99)).toFixed(1));
+    book.rating = Math.min(5.0, Math.max(1.0, newAvg));
+    book.reviews = newTotalReviews;
+  }
+
+  saveDatabase(db);
+  return newReview;
+}
+
+export function voteReviewHelpful(reviewId: string): boolean {
+  const db = getDatabase();
+  const review = (db.reviews || []).find(r => r.id === reviewId);
+  if (review) {
+    review.helpfulCount = (review.helpfulCount || 0) + 1;
+    saveDatabase(db);
+    return true;
+  }
+  return false;
+}
+
+export function deleteReview(reviewId: string): boolean {
+  const db = getDatabase();
+  const initialLength = (db.reviews || []).length;
+  db.reviews = (db.reviews || []).filter(r => r.id !== reviewId);
+  if (db.reviews.length !== initialLength) {
+    saveDatabase(db);
+    return true;
+  }
+  return false;
 }

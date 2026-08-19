@@ -1,6 +1,36 @@
 {
   "books": [
     {
+      "slug": "clean-code-in-python-2026",
+      "title": "Clean Code in Python 2026",
+      "sub": "Architecture patterns for scalable backend services",
+      "author": "Liam Vance",
+      "cat": "Programming",
+      "type": "free",
+      "price": 0,
+      "list": 14.99,
+      "rating": 4.8,
+      "reviews": 140,
+      "pages": 148,
+      "badge": "#1 New Release",
+      "bought": "Instant download",
+      "bg": "#1e293b",
+      "fg": "#ffffff",
+      "ac": "#38bdf8",
+      "pat": "p-grid",
+      "blurb": "A comprehensive guide to refactoring and writing robust Python code.",
+      "feat": [
+        "Instant PDF download",
+        "DRM-free edition",
+        "Community verified author"
+      ],
+      "desc": "<p>Master clean architecture in Python with real-world enterprise examples.</p>",
+      "driveUrl": "https://drive.google.com/file/d/1X9aBcDeFgHiJkLmNoPqRsTuVwXyZ123/view",
+      "id": 21,
+      "downloads": 0,
+      "createdAt": "2026-08-19T06:49:24.501Z"
+    },
+    {
       "id": 1,
       "slug": "deep-focus",
       "title": "Deep Focus",
@@ -193,7 +223,8 @@
         "Before/after output examples",
         "Prompt-chaining recipes"
       ],
-      "desc": "<p>The free starter edition of our annual AI Handbook. If it saves you ten minutes, tell a friend.</p>"
+      "desc": "<p>The free starter edition of our annual AI Handbook. If it saves you ten minutes, tell a friend.</p>",
+      "downloads": 1
     },
     {
       "id": 8,
@@ -556,6 +587,285 @@
       "desc": "<p>One handbook instead of 400 newsletters. Updated every quarter; your purchase includes every future edition.</p>"
     }
   ],
+  "categories": [
+    {
+      "id": "1",
+      "name": "Productivity",
+      "slug": "productivity",
+      "badge": "Popular",
+      "seoTitle": "Best Free Productivity PDF Books & Focus Systems (2026)",
+      "h1": "Free Productivity PDF Books & Guides",
+      "intro": "Reclaim your attention, master daily deep-work blocks, and build unbreakable focus habits with our curated collection of free productivity PDFs."
+    },
+    {
+      "id": "2",
+      "name": "Programming",
+      "slug": "programming",
+      "badge": "Hot",
+      "seoTitle": "Free Programming PDF Books, Cheat Sheets & Coding Handbooks",
+      "h1": "Free Programming & Software Engineering PDFs",
+      "intro": "From modern JavaScript patterns to data science and SQL query cheat sheets, explore battle-tested coding books written by experienced software engineers."
+    },
+    {
+      "id": "3",
+      "name": "Business",
+      "slug": "business",
+      "badge": "Trending",
+      "seoTitle": "Free Business & Indie Founder Playbooks PDF Downloads (2026)",
+      "h1": "Free Business, Startup & Solo-Founder PDFs",
+      "intro": "Practical field manuals and real-world launch teardowns designed to take your digital products from idea to profitability without VC capital."
+    },
+    {
+      "id": "4",
+      "name": "Design",
+      "slug": "design",
+      "badge": "Creative",
+      "seoTitle": "Free UI/UX Design Systems & Typography PDF Handbooks",
+      "h1": "Free UI/UX, Design Systems & Typography PDFs",
+      "intro": "Master design tokens, responsive component architecture, and modular typography scales with our handpicked free design books and checklists."
+    },
+    {
+      "id": "5",
+      "name": "Marketing",
+      "slug": "marketing",
+      "badge": "Growth",
+      "seoTitle": "Free Digital Marketing & Email Sequences PDF Books",
+      "h1": "Free Digital Marketing & Copywriting PDFs",
+      "intro": "Proven email flows, copy-paste launch scripts, and digital product distribution playbooks tested across millions of subscribers."
+    },
+    {
+      "id": "6",
+      "name": "Self-Help",
+      "slug": "self-help",
+      "badge": "Mindset",
+      "seoTitle": "Free Self-Help & Habit Building PDF Starter Kits",
+      "h1": "Free Self-Help, Habits & Personal Growth PDFs",
+      "intro": "Science-backed protocols to reset your daily routines, sustain positive habits, and eliminate burnout in practical, short reads."
+    },
+    {
+      "id": "7",
+      "name": "Technology",
+      "slug": "technology",
+      "badge": "AI & Tech",
+      "seoTitle": "Free AI Prompts & Technology Handbook PDF Downloads",
+      "h1": "Free AI & Technology PDF Handbooks",
+      "intro": "Up-to-date AI prompts, model comparison guides, and modern tech workflows to accelerate your daily software and analysis tasks."
+    },
+    {
+      "id": "8",
+      "name": "Finance",
+      "slug": "finance",
+      "badge": "Money",
+      "seoTitle": "Free Personal Finance & Investing Blueprint PDF Books",
+      "h1": "Free Personal Finance & Money Management PDFs",
+      "intro": "Set up automated financial systems, index investing plans, and net-worth tracking in one weekend without hype or guesswork."
+    },
+    {
+      "id": "9",
+      "name": "Health",
+      "slug": "health",
+      "badge": "Wellness",
+      "seoTitle": "Free Sleep & Wellness Protocol PDF Books",
+      "h1": "Free Health, Sleep & Wellness PDFs",
+      "intro": "Evidence-based protocols for better sleep, mental clarity, and daily energy without expensive supplements or clinic waitlists."
+    }
+  ],
+  "promoBar": {
+    "enabled": true,
+    "pillText": "⚡ FREE PDF FRIDAYS",
+    "mainText": "Download 10 new handpicked productivity & coding PDFs — 100% free this week only",
+    "codeText": "NO CODE NEEDED",
+    "linkText": "Claim Free PDFs ↗",
+    "linkUrl": "/library?preset=free"
+  },
+  "heroSlides": [
+    {
+      "id": "s1",
+      "tag": "FREE PDF FRIDAYS · 10 TITLES ADDED",
+      "title": "Download best-selling PDF books. Read anywhere.",
+      "sub": "DRM-free for all devices · Instant delivery · Over 40,000 readers",
+      "ctaText": "Browse Free Titles ⤓",
+      "ctaUrl": "/library?preset=free",
+      "bg": "linear-gradient(135deg, #0f172a 0%, #1e293b 40%, #0f172a 100%)",
+      "secondaryCta": {
+        "text": "View All Deals",
+        "url": "/library?preset=deals"
+      }
+    },
+    {
+      "id": "s2",
+      "tag": "#1 NEW RELEASE IN BUSINESS",
+      "title": "The Indie Founder Playbook: $0 to $10K MRR",
+      "sub": "Real launch teardowns, cold outreach scripts & pricing frameworks with zero VC fluff.",
+      "ctaText": "Download Preview PDF ↗",
+      "ctaUrl": "/pdf/indie-founder-playbook",
+      "bg": "linear-gradient(135deg, #1e1b4b 0%, #312e81 40%, #0f172a 100%)"
+    },
+    {
+      "id": "s3",
+      "tag": "LIMITED TIME DEAL · 50% OFF",
+      "title": "Design Systems Handbook by Studio Norr",
+      "sub": "Tokens, component architecture and Figma-to-code sync workflows that scale across teams.",
+      "ctaText": "Get the Handbook · $29",
+      "ctaUrl": "/pdf/design-systems-handbook",
+      "bg": "linear-gradient(135deg, #064e3b 0%, #065f46 40%, #0f172a 100%)"
+    }
+  ],
+  "quadCards": [
+    {
+      "id": "q1",
+      "title": "Free PDF Friday · Top downloads",
+      "type": "grid",
+      "linkText": "Explore all 12 free titles",
+      "linkUrl": "/library?preset=free",
+      "bookIds": [
+        5,
+        10,
+        15,
+        18
+      ]
+    },
+    {
+      "id": "q2",
+      "title": "Save up to 50% · Creator toolkits",
+      "type": "grid",
+      "linkText": "Shop the creator sale",
+      "linkUrl": "/library?preset=deals",
+      "bookIds": [
+        1,
+        2,
+        4,
+        6
+      ]
+    },
+    {
+      "id": "q3",
+      "title": "Under $15 · Weekend deep-dives",
+      "type": "grid",
+      "linkText": "See all under $15",
+      "linkUrl": "/library?maxPrice=15",
+      "bookIds": [
+        1,
+        5,
+        11,
+        14
+      ]
+    },
+    {
+      "id": "q4",
+      "title": "Today's Spotlight · Staff recommendation",
+      "type": "single",
+      "linkText": "Read sample chapter",
+      "linkUrl": "/pdf/deep-focus",
+      "bookIds": [
+        1
+      ]
+    }
+  ],
+  "scrollSections": [
+    {
+      "id": "sec-trending",
+      "title": "Trending in Business & Productivity",
+      "filterType": "category",
+      "filterValue": "Productivity"
+    },
+    {
+      "id": "sec-free",
+      "title": "Free PDF Friday — Top Downloads",
+      "filterType": "preset",
+      "filterValue": "free"
+    },
+    {
+      "id": "sec-under15",
+      "title": "Under $15 — Weekend Deep-Dives",
+      "filterType": "preset",
+      "filterValue": "deals"
+    },
+    {
+      "id": "sec-best",
+      "title": "Best Sellers in Technology & Design",
+      "filterType": "category",
+      "filterValue": "Design"
+    }
+  ],
+  "subscribers": [
+    {
+      "id": "sub-1",
+      "email": "alex.chen@example.com",
+      "subscribedAt": "2026-08-10T10:20:00Z"
+    },
+    {
+      "id": "sub-2",
+      "email": "sarah.m@example.com",
+      "subscribedAt": "2026-08-12T14:15:00Z"
+    },
+    {
+      "id": "sub-3",
+      "email": "dev.lead@example.com",
+      "subscribedAt": "2026-08-15T09:40:00Z"
+    }
+  ],
+  "submissions": [
+    {
+      "id": "sub-c1",
+      "title": "Clean Code in Python 2026",
+      "sub": "Architecture patterns for scalable backend services",
+      "author": "Liam Vance",
+      "authorEmail": "liam.vance@example.com",
+      "cat": "Programming",
+      "pages": 148,
+      "driveUrl": "https://drive.google.com/file/d/1X9aBcDeFgHiJkLmNoPqRsTuVwXyZ123/view",
+      "blurb": "A comprehensive guide to refactoring and writing robust Python code.",
+      "desc": "<p>Master clean architecture in Python with real-world enterprise examples.</p>",
+      "bg": "#1e293b",
+      "ac": "#38bdf8",
+      "pat": "p-grid",
+      "submittedAt": "2026-08-16T11:00:00Z",
+      "status": "approved"
+    }
+  ],
+  "referrals": {},
+  "reviews": [
+    {
+      "id": "rev-1",
+      "bookId": 1,
+      "userName": "Sofia M.",
+      "rating": 5,
+      "title": "Worth 10× the price",
+      "body": "I finished it in one evening and applied the framework the next morning. The printable extras alone justify it. This is the kind of PDF you actually keep.",
+      "date": "July 22, 2026",
+      "verified": true,
+      "helpfulCount": 142,
+      "approved": true,
+      "createdAt": "2026-07-22T10:00:00Z"
+    },
+    {
+      "id": "rev-2",
+      "bookId": 1,
+      "userName": "James T.",
+      "rating": 5,
+      "title": "Practical, zero fluff",
+      "body": "Every chapter ends with something to do, not something to ponder. I have shared copies with my engineering team and we run the playbook weekly.",
+      "date": "July 9, 2026",
+      "verified": true,
+      "helpfulCount": 98,
+      "approved": true,
+      "createdAt": "2026-07-09T14:30:00Z"
+    },
+    {
+      "id": "rev-3",
+      "bookId": 1,
+      "userName": "Aisha B.",
+      "rating": 4,
+      "title": "Great structure and actionable templates",
+      "body": "Excellent structure and beautiful layout on both tablet and print. Wish there were more advanced examples in chapter 8, but the author replies promptly.",
+      "date": "June 28, 2026",
+      "verified": true,
+      "helpfulCount": 65,
+      "approved": true,
+      "createdAt": "2026-06-28T09:15:00Z"
+    }
+  ],
   "settings": {
     "adNetwork": "built-in",
     "countdownSeconds": 8,
@@ -566,10 +876,13 @@
     "sponsorCta": "Explore SkillBoost Free Trial ↗",
     "sponsorUrl": "https://github.com",
     "adminPasscode": "bookshelf2026",
+    "siteName": "Bookshelf",
+    "siteTagline": "Buy & Download Free PDF Books Instantly",
+    "supportEmail": "support@bookshelf.com",
     "stats": {
-      "totalDownloads": 1420,
-      "adImpressions": 3890,
-      "adUnlocks": 2740
+      "totalDownloads": 1423,
+      "adImpressions": 3898,
+      "adUnlocks": 2743
     }
   }
 }

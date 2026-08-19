@@ -131,7 +131,6 @@ export default function Header() {
           </div>
         </div>
 
-        <button className="cell acct"><span>Hello, Reader</span><b>My Account ▾</b></button>
         <button className="cell acct"><span>My Orders</span><b>&amp; Downloads</b></button>
         <Link href="/cart" className="cell cartbtn" aria-label="Cart">
           <svg viewBox="0 0 24 24">
@@ -151,13 +150,7 @@ export default function Header() {
           <Link href="/library?preset=free" className="cell">Free PDFs</Link>
           <Link href="/library?preset=best" className="cell">Best Sellers</Link>
           <Link href="/library?preset=new" className="cell">New Releases</Link>
-          <Link href="/library?preset=partner" className="cell">Partner Store</Link>
           <Link href="/account/library" className="cell">My Library</Link>
-          <Link href="/admin" className="cell" style={{ color: 'var(--amber)', fontWeight: 700 }}>⚙️ Admin</Link>
-          <div className="right">
-            <Link href="/admin" className="cell">Upload PDF</Link>
-            <button className="cell" onClick={() => alert('Gift cards arrive as beautiful printable PDFs.')}>Gift Cards</button>
-          </div>
         </div>
       </nav>
     </header>

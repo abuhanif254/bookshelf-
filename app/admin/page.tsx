@@ -5,14 +5,15 @@ import Link from 'next/link';
 import { Product } from '@/lib/products';
 import { coverHTML } from '@/lib/helpers';
 import { extractDriveId, getDirectDownloadUrl } from '@/lib/drive';
-import { CategoryConfig, HeroSlide, PromoBarConfig, QuadCardConfig, ScrollSectionConfig, CreatorSubmission, Subscriber } from '@/lib/db';
+import { CategoryConfig, HeroSlide, PromoBarConfig, QuadCardConfig, ScrollSectionConfig, CreatorSubmission, Subscriber, BookReview, AdSettings } from '@/lib/db';
 
 export default function AdminPage() {
   const [passcode, setPasscode] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authError, setAuthError] = useState('');
-  const [activeTab, setActiveTab] = useState<'books' | 'categories' | 'submissions' | 'newsletter' | 'sections' | 'ads' | 'analytics' | 'settings'>('books');
+  const [activeTab, setActiveTab] = useState<'books' | 'categories' | 'submissions' | 'newsletter' | 'sections' | 'ads' | 'analytics' | 'settings' | 'reviews'>('books');
   const [toastMsg, setToastMsg] = useState('');
+  const [allReviews, setAllReviews] = useState<BookReview[]>([]);
 
   // Books State
   const [books, setBooks] = useState<Product[]>([]);
@@ -78,7 +79,7 @@ export default function AdminPage() {
   const [scrollSections, setScrollSections] = useState<ScrollSectionConfig[]>([]);
 
   // Ads & Site Settings
-  const [adSettings, setAdSettings] = useState({
+  const [adSettings, setAdSettings] = useState<AdSettings>({
     adNetwork: 'built-in',
     countdownSeconds: 8,
     adCode: '',
@@ -90,6 +91,9 @@ export default function AdminPage() {
     siteName: 'Bookshelf',
     siteTagline: 'Buy & Download Free PDF Books Instantly',
     supportEmail: 'support@bookshelf.com',
+    adminPasscode: '',
+    aiApiKey: '',
+    aiProvider: 'auto',
     stats: { totalDownloads: 1420, adImpressions: 3890, adUnlocks: 2740, vipReferralUnlocks: 184 },
   });
 
@@ -223,6 +227,23 @@ export default function AdminPage() {
       }
     });
     fetch('/api/settings').then(r => r.json()).then(d => { if (d.success && d.settings) setAdSettings(d.settings); });
+    fetch('/api/reviews?all=true').then(r => r.json()).then(d => { if (d.success && d.reviews) setAllReviews(d.reviews); });
+  };
+
+  const handleDeleteReview = async (reviewId: string) => {
+    if (!confirm('Are you sure you want to delete this reader review?')) return;
+    try {
+      const res = await fetch(`/api/reviews?id=${reviewId}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        setAllReviews(prev => prev.filter(r => r.id !== reviewId));
+        showToast('Review deleted successfully 🗑️');
+      } else {
+        showToast(data.message || 'Error deleting review');
+      }
+    } catch {
+      showToast('Error deleting review');
+    }
   };
 
   // BOOK ACTIONS
@@ -495,7 +516,13 @@ export default function AdminPage() {
         body: JSON.stringify({
           passcode,
           newPasscode: newPasscode || undefined,
-          updates: { siteName: adSettings.siteName, siteTagline: adSettings.siteTagline, supportEmail: adSettings.supportEmail },
+          updates: {
+            siteName: adSettings.siteName,
+            siteTagline: adSettings.siteTagline,
+            supportEmail: adSettings.supportEmail,
+            aiApiKey: adSettings.aiApiKey,
+            aiProvider: adSettings.aiProvider,
+          },
         }),
       });
       const data = await res.json();
@@ -747,10 +774,11 @@ export default function AdminPage() {
         </div>
       </div>
 
-      {/* 8 Tabs Navigation */}
+      {/* 9 Tabs Navigation */}
       <div style={{ display: 'flex', gap: 6, borderBottom: '2px solid #e2e8f0', marginBottom: 24, overflowX: 'auto', paddingBottom: 2 }}>
         {[
           { id: 'books', label: `📚 Books (${books.length})` },
+          { id: 'reviews', label: `💬 Reviews (${allReviews.length})` },
           { id: 'submissions', label: `📥 Submissions (${submissions.filter(s => s.status === 'pending').length})` },
           { id: 'categories', label: `🏷️ Categories (${categories.length})` },
           { id: 'newsletter', label: `📬 Newsletter (${subscribers.length})` },
@@ -871,6 +899,73 @@ export default function AdminPage() {
               </tbody>
             </table>
           </div>
+        </div>
+      )}
+
+      {/* TAB: READER REVIEWS */}
+      {activeTab === 'reviews' && (
+        <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 24 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
+            <div>
+              <h3 style={{ fontSize: 18, fontWeight: 900, color: 'var(--ink)', margin: 0 }}>💬 Reader Ratings &amp; Reviews ({allReviews.length})</h3>
+              <p style={{ fontSize: 13, color: 'var(--muted)', margin: '4px 0 0' }}>
+                All user-submitted customer reviews saved locally in <code>data/bookshelf-db.json</code>.
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                fetch('/api/reviews?all=true')
+                  .then(r => r.json())
+                  .then(d => { if (d.success && d.reviews) setAllReviews(d.reviews); });
+                showToast('Refreshed reviews list 🔄');
+              }}
+              style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', padding: '7px 14px', borderRadius: 6, fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}
+            >
+              🔄 Refresh
+            </button>
+          </div>
+
+          {allReviews.length === 0 ? (
+            <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)' }}>
+              No reader reviews found.
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              {allReviews.map(r => {
+                const book = books.find(b => b.id === r.bookId);
+                return (
+                  <div key={r.id} style={{ border: '1px solid #e2e8f0', borderRadius: 10, padding: 18, background: '#f8fafc', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 14 }}>
+                    <div style={{ flex: 1, minWidth: 260 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
+                        <span style={{ color: '#f59e0b', fontSize: 15, fontWeight: 800 }}>
+                          {'★'.repeat(r.rating)}{'☆'.repeat(Math.max(0, 5 - r.rating))}
+                        </span>
+                        <b style={{ fontSize: 14, color: 'var(--ink)' }}>{r.title}</b>
+                        {r.verified && (
+                          <span style={{ fontSize: 11, background: '#ecfdf5', color: '#065f46', padding: '1px 6px', borderRadius: 4, fontWeight: 700 }}>
+                            ✓ Verified Reader
+                          </span>
+                        )}
+                      </div>
+                      <p style={{ fontSize: 13, color: '#334155', margin: '4px 0 10px', lineHeight: 1.5 }}>{r.body}</p>
+                      <div style={{ fontSize: 12, color: 'var(--muted)', display: 'flex', gap: 14, flexWrap: 'wrap' }}>
+                        <span>👤 <b>{r.userName}</b></span>
+                        <span>📚 Book: <b>{book?.title || `Book #${r.bookId}`}</b></span>
+                        <span>📅 {r.date}</span>
+                        <span>👍 {r.helpfulCount || 0} helpful</span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleDeleteReview(r.id)}
+                      style={{ background: '#fee2e2', border: '1px solid #fca5a5', color: '#991b1b', padding: '6px 12px', borderRadius: 6, fontSize: 12, fontWeight: 800, cursor: 'pointer' }}
+                    >
+                      🗑️ Delete Review
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 
@@ -1031,21 +1126,64 @@ export default function AdminPage() {
       {/* TAB 6: ADS */}
       {activeTab === 'ads' && (
         <form onSubmit={handleSaveAds} style={{ background: '#fff', padding: 24, borderRadius: 12, border: '1px solid #e2e8f0' }}>
-          <h3 style={{ fontSize: 18, fontWeight: 800, marginBottom: 16 }}>💰 Ad Monetization Settings</h3>
-          <div style={{ marginBottom: 18 }}>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 6 }}>Active Ad Mode</label>
-            <select value={adSettings.adNetwork} onChange={e => setAdSettings({ ...adSettings, adNetwork: e.target.value as any })} style={{ width: '100%', padding: '10px', borderRadius: 8, border: '1.5px solid #cbd5e1', fontSize: 14 }}>
-              <option value="built-in">Featured Sponsor Card (Default High CPM)</option>
-              <option value="adsterra">Adsterra / Monetag Script Banner</option>
-              <option value="custom">Custom HTML / Direct SmartLink</option>
-            </select>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <h3 style={{ fontSize: 18, fontWeight: 800, margin: 0 }}>💰 Ad Monetization &amp; Sponsor Settings</h3>
+            <span style={{ fontSize: 12, background: '#fef3c7', color: '#92400e', padding: '4px 10px', borderRadius: 20, fontWeight: 700 }}>
+              ⚡ Rewarded PDF Unlock Model
+            </span>
           </div>
-          <div style={{ marginBottom: 18 }}>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 6 }}>Countdown Duration ({adSettings.countdownSeconds}s)</label>
-            <input type="range" min="3" max="30" value={adSettings.countdownSeconds} onChange={e => setAdSettings({ ...adSettings, countdownSeconds: Number(e.target.value) })} style={{ width: '100%', accentColor: 'var(--amber)' }} />
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16, marginBottom: 18 }}>
+            <div>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 6 }}>Active Ad Mode</label>
+              <select value={adSettings.adNetwork} onChange={e => setAdSettings({ ...adSettings, adNetwork: e.target.value as any })} style={{ width: '100%', padding: '10px', borderRadius: 8, border: '1.5px solid #cbd5e1', fontSize: 14 }}>
+                <option value="built-in">Featured Sponsor Card (Default High CPM)</option>
+                <option value="adsterra">Adsterra / Monetag Script Banner</option>
+                <option value="custom">Custom HTML / Direct SmartLink</option>
+              </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 6 }}>Countdown Duration ({adSettings.countdownSeconds}s)</label>
+              <input type="range" min="3" max="30" value={adSettings.countdownSeconds} onChange={e => setAdSettings({ ...adSettings, countdownSeconds: Number(e.target.value) })} style={{ width: '100%', accentColor: 'var(--amber)', marginTop: 8 }} />
+            </div>
           </div>
+
+          <div style={{ background: '#f8fafc', padding: 18, borderRadius: 10, border: '1px solid #e2e8f0', marginBottom: 18 }}>
+            <h4 style={{ fontSize: 14, fontWeight: 800, color: 'var(--ink)', marginBottom: 12 }}>⭐ Featured Sponsor Configuration</h4>
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 4 }}>Sponsor Headline</label>
+              <input type="text" value={adSettings.sponsorTitle} onChange={e => setAdSettings({ ...adSettings, sponsorTitle: e.target.value })} placeholder="e.g. SkillBoost Pro — Master Tech Skills" style={{ width: '100%', padding: '9px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 14 }} />
+            </div>
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 4 }}>Sponsor Subtitle / Pitch</label>
+              <input type="text" value={adSettings.sponsorSubtitle} onChange={e => setAdSettings({ ...adSettings, sponsorSubtitle: e.target.value })} placeholder="e.g. Get 85% off premium project roadmaps &amp; AI certifications" style={{ width: '100%', padding: '9px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 14 }} />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 4 }}>Button CTA Text</label>
+                <input type="text" value={adSettings.sponsorCta} onChange={e => setAdSettings({ ...adSettings, sponsorCta: e.target.value })} placeholder="e.g. Explore Free Trial ↗" style={{ width: '100%', padding: '9px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 14 }} />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 4 }}>Sponsor / Affiliate Target URL</label>
+                <input type="url" value={adSettings.sponsorUrl} onChange={e => setAdSettings({ ...adSettings, sponsorUrl: e.target.value })} placeholder="https://your-affiliate-link.com" style={{ width: '100%', padding: '9px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 14 }} />
+              </div>
+            </div>
+          </div>
+
+          <div style={{ background: '#f8fafc', padding: 18, borderRadius: 10, border: '1px solid #e2e8f0', marginBottom: 18 }}>
+            <h4 style={{ fontSize: 14, fontWeight: 800, color: 'var(--ink)', marginBottom: 12 }}>⚡ Direct SmartLink &amp; Custom Ad Script</h4>
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 4 }}>Direct SmartLink URL (Auto-opened on Unlock Click)</label>
+              <input type="url" value={adSettings.directSmartLink} onChange={e => setAdSettings({ ...adSettings, directSmartLink: e.target.value })} placeholder="https://your-monetag-or-adsterra-smartlink.com" style={{ width: '100%', padding: '9px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 14 }} />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 4 }}>Custom Ad Banner / Script Code (Adsterra, Monetag, Google AdSense)</label>
+              <textarea rows={4} value={adSettings.adCode} onChange={e => setAdSettings({ ...adSettings, adCode: e.target.value })} placeholder="<!-- Paste your ad network <script> or iframe code here -->" style={{ width: '100%', padding: '9px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 13, fontFamily: 'monospace' }} />
+            </div>
+          </div>
+
           <button type="submit" style={{ width: '100%', background: 'var(--ink)', color: '#fff', fontSize: 15, fontWeight: 800, padding: '13px', borderRadius: 8, border: 'none', cursor: 'pointer' }}>
-            💾 Save Ad Settings
+            💾 Save Ad &amp; Sponsor Settings
           </button>
         </form>
       )}
@@ -1053,14 +1191,28 @@ export default function AdminPage() {
       {/* TAB 7: ANALYTICS */}
       {activeTab === 'analytics' && (
         <div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginBottom: 28 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 28 }}>
             <div style={{ background: '#fff', padding: 20, borderRadius: 12, border: '1px solid #e2e8f0' }}>
               <div style={{ fontSize: 13, color: 'var(--muted)', fontWeight: 700 }}>Total PDF Downloads</div>
               <div style={{ fontSize: 32, fontWeight: 900, color: '#059669', marginTop: 4 }}>{adSettings.stats?.totalDownloads || 1420}</div>
             </div>
             <div style={{ background: '#fff', padding: 20, borderRadius: 12, border: '1px solid #e2e8f0' }}>
-              <div style={{ fontSize: 13, color: 'var(--muted)', fontWeight: 700 }}>VIP Referral Unlocks</div>
-              <div style={{ fontSize: 32, fontWeight: 900, color: 'var(--amber)', marginTop: 4 }}>{adSettings.stats?.vipReferralUnlocks || 184}</div>
+              <div style={{ fontSize: 13, color: 'var(--muted)', fontWeight: 700 }}>Ad Impressions</div>
+              <div style={{ fontSize: 32, fontWeight: 900, color: '#3b82f6', marginTop: 4 }}>{adSettings.stats?.adImpressions || 3890}</div>
+            </div>
+            <div style={{ background: '#fff', padding: 20, borderRadius: 12, border: '1px solid #e2e8f0' }}>
+              <div style={{ fontSize: 13, color: 'var(--muted)', fontWeight: 700 }}>Completed Ad Unlocks</div>
+              <div style={{ fontSize: 32, fontWeight: 900, color: 'var(--amber)', marginTop: 4 }}>{adSettings.stats?.adUnlocks || 2740}</div>
+            </div>
+            <div style={{ background: '#fff', padding: 20, borderRadius: 12, border: '1px solid #e2e8f0' }}>
+              <div style={{ fontSize: 13, color: 'var(--muted)', fontWeight: 700 }}>Unlock Completion Rate</div>
+              <div style={{ fontSize: 32, fontWeight: 900, color: '#8b5cf6', marginTop: 4 }}>
+                {Math.round(((adSettings.stats?.adUnlocks || 2740) / (adSettings.stats?.adImpressions || 3890)) * 100)}%
+              </div>
+            </div>
+            <div style={{ background: '#fff', padding: 20, borderRadius: 12, border: '1px solid #e2e8f0' }}>
+              <div style={{ fontSize: 13, color: 'var(--muted)', fontWeight: 700 }}>VIP Referral Passes</div>
+              <div style={{ fontSize: 32, fontWeight: 900, color: '#ec4899', marginTop: 4 }}>{adSettings.stats?.vipReferralUnlocks || 184}</div>
             </div>
           </div>
         </div>
@@ -1074,6 +1226,44 @@ export default function AdminPage() {
             <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 4 }}>Site Name</label>
             <input type="text" value={adSettings.siteName} onChange={e => setAdSettings({ ...adSettings, siteName: e.target.value })} style={{ width: '100%', padding: '9px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 14 }} />
           </div>
+
+          {/* AI Book Assistant Configuration */}
+          <div style={{ background: '#f8fafc', padding: 16, borderRadius: 10, border: '1px solid #e2e8f0', marginBottom: 18 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+              <span style={{ fontSize: 16 }}>🤖</span>
+              <b style={{ fontSize: 14, color: 'var(--ink)' }}>AI Book Assistant Configuration</b>
+            </div>
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ display: 'block', fontSize: 12.5, fontWeight: 700, marginBottom: 4 }}>AI Provider</label>
+              <select
+                value={adSettings.aiProvider || 'auto'}
+                onChange={e => setAdSettings({ ...adSettings, aiProvider: e.target.value as any })}
+                style={{ width: '100%', padding: '9px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 14 }}
+              >
+                <option value="auto">Auto-Detect from API Key (Recommended)</option>
+                <option value="gemini">Google Gemini (Gemini 1.5 Flash)</option>
+                <option value="openai">OpenAI (GPT-4o Mini)</option>
+                <option value="groq">Groq (Ultra-Fast Llama 3)</option>
+                <option value="deepseek">DeepSeek / OpenRouter</option>
+              </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: 12.5, fontWeight: 700, marginBottom: 4 }}>
+                AI API Key (Google Gemini / OpenAI / Groq)
+              </label>
+              <input
+                type="password"
+                placeholder="Paste your AI API Key (e.g. AIzaSy... or sk-...)"
+                value={adSettings.aiApiKey || ''}
+                onChange={e => setAdSettings({ ...adSettings, aiApiKey: e.target.value })}
+                style={{ width: '100%', padding: '9px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 14, fontFamily: 'monospace' }}
+              />
+              <span style={{ fontSize: 11.5, color: '#64748b', display: 'block', marginTop: 4 }}>
+                💡 Or add <code>GEMINI_API_KEY=...</code> or <code>OPENAI_API_KEY=...</code> in your <code>.env.local</code> file.
+              </span>
+            </div>
+          </div>
+
           <div style={{ marginBottom: 18 }}>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 4 }}>New Admin Passcode</label>
             <input type="password" placeholder="Minimum 6 characters" value={newPasscode} onChange={e => setNewPasscode(e.target.value)} style={{ width: '100%', padding: '9px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 14 }} />

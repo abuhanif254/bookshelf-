@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Product } from '@/lib/products';
 
 interface Message {
@@ -19,6 +19,13 @@ export default function BookAiChat({ book }: { book: Product }) {
   ]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const chatContainerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [messages, isTyping]);
 
   const suggestedPrompts = [
     '✨ Summarize the 3 core takeaways',
@@ -27,10 +34,10 @@ export default function BookAiChat({ book }: { book: Product }) {
     '🎯 Who will get the highest ROI from this PDF?',
   ];
 
-  const generateAnswer = (query: string): string => {
+  const generateFallbackAnswer = (query: string): string => {
     const q = query.toLowerCase();
     if (q.includes('summar') || q.includes('takeaway') || q.includes('core')) {
-      return `### 📌 3 Core Takeaways from *"${book.title}"*:\n\n1. **System Architecture over Willpower**: Attention and productivity are engineering problems. Eliminate friction at the point of starting.\n2. **The 90-Minute Ultradian Sprint**: Align your highest-leverage deep work with natural cognitive energy peaks.\n3. **Relentless Subtraction**: Remove lower-priority commitments before adding new productivity tools.`;
+      return `### 📌 3 Core Takeaways from *"${book.title}"*:\n\n1. **System Architecture over Willpower**: Attention and productivity are engineering problems. Eliminate friction at the point of starting.\n2. **The 90-Minute Focus Block**: Align your highest-leverage deep work with natural cognitive energy peaks.\n3. **Relentless Subtraction**: Remove lower-priority commitments before adding new productivity tools.`;
     }
     if (q.includes('protocol') || q.includes('step') || q.includes('framework')) {
       return `### ⚡ The Core Framework Protocol:\n\n1. **Environment Audit (0-10m)**: Clear desktop, close all irrelevant browser tabs, and write 1 singular goal on paper.\n2. **Deep Work Sprint (10-100m)**: 90 minutes of uninterrupted execution with zero notifications.\n3. **Cognitive Reset (100-120m)**: 20-minute physical walk/hydration reset before reviewing output.`;
@@ -44,9 +51,9 @@ export default function BookAiChat({ book }: { book: Product }) {
     return `In *"${book.title}"*, ${book.author} explains that achieving mastery in **${book.cat}** requires systematic constraints. By applying the ${book.pages}-page framework outlined in this guide, you can eliminate operational friction and achieve predictable results. Download the complete free edition to read all printable worksheets and case studies!`;
   };
 
-  const handleSend = (textToSend?: string) => {
+  const handleSend = async (textToSend?: string) => {
     const text = (textToSend || input).trim();
-    if (!text) return;
+    if (!text || isTyping) return;
 
     const userMsg: Message = {
       role: 'user',
@@ -54,22 +61,61 @@ export default function BookAiChat({ book }: { book: Product }) {
       timestamp: 'Just now',
     };
 
-    setMessages(prev => [...prev, userMsg]);
+    const newMessages = [...messages, userMsg];
+    setMessages(newMessages);
     setInput('');
     setIsTyping(true);
 
-    setTimeout(() => {
-      const reply = generateAnswer(text);
+    try {
+      const res = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bookId: book.id,
+          bookSlug: book.slug,
+          bookTitle: book.title,
+          bookAuthor: book.author,
+          bookCat: book.cat,
+          bookDesc: book.desc,
+          bookPages: book.pages,
+          messages: newMessages.map(m => ({ role: m.role, content: m.content })),
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success && data.reply) {
+        setMessages(prev => [
+          ...prev,
+          {
+            role: 'assistant',
+            content: data.reply,
+            timestamp: 'Just now',
+          },
+        ]);
+      } else {
+        const fallbackReply = generateFallbackAnswer(text);
+        setMessages(prev => [
+          ...prev,
+          {
+            role: 'assistant',
+            content: fallbackReply,
+            timestamp: 'Just now',
+          },
+        ]);
+      }
+    } catch {
+      const fallbackReply = generateFallbackAnswer(text);
       setMessages(prev => [
         ...prev,
         {
           role: 'assistant',
-          content: reply,
+          content: fallbackReply,
           timestamp: 'Just now',
         },
       ]);
+    } finally {
       setIsTyping(false);
-    }, 600);
+    }
   };
 
   return (
@@ -95,12 +141,12 @@ export default function BookAiChat({ book }: { book: Product }) {
         {suggestedPrompts.map((p, i) => (
           <button
             key={i}
-            onClick={() => handleSend(p)}
+            onClick={() => handleSend(p.replace(/^[^\w]+/, ''))}
             style={{
               background: '#ffffff',
               border: '1px solid #cbd5e1',
-              padding: '4px 10px',
               borderRadius: 20,
+              padding: '5px 12px',
               fontSize: 12,
               fontWeight: 600,
               color: '#334155',
@@ -113,53 +159,88 @@ export default function BookAiChat({ book }: { book: Product }) {
         ))}
       </div>
 
-      {/* Messages Feed */}
-      <div style={{ padding: '18px 20px', maxHeight: 340, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
-        {messages.map((m, idx) => {
+      {/* Chat Messages Log */}
+      <div
+        ref={chatContainerRef}
+        style={{ padding: '20px 16px', minHeight: 280, maxHeight: 420, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 14, background: '#ffffff' }}
+      >
+        {messages.map((m, i) => {
           const isUser = m.role === 'user';
           return (
             <div
-              key={idx}
+              key={i}
               style={{
                 alignSelf: isUser ? 'flex-end' : 'flex-start',
                 maxWidth: '85%',
-                background: isUser ? '#0f172a' : '#f8fafc',
-                color: isUser ? '#ffffff' : '#1e293b',
+                background: isUser ? 'var(--amber)' : '#f8fafc',
+                color: isUser ? '#0f172a' : '#1e293b',
                 padding: '12px 16px',
-                borderRadius: 12,
+                borderRadius: isUser ? '16px 16px 2px 16px' : '16px 16px 16px 2px',
                 border: isUser ? 'none' : '1px solid #e2e8f0',
                 fontSize: 13.5,
-                lineHeight: 1.6,
-                boxShadow: isUser ? '0 4px 12px rgba(15, 23, 42, 0.15)' : 'none',
+                lineHeight: 1.55,
+                whiteSpace: 'pre-wrap',
+                boxShadow: isUser ? '0 2px 8px rgba(245, 158, 11, 0.2)' : '0 1px 3px rgba(0,0,0,0.02)',
               }}
             >
-              <div dangerouslySetInnerHTML={{ __html: m.content.replace(/\n/g, '<br/>') }} />
+              {m.content}
             </div>
           );
         })}
 
         {isTyping && (
-          <div style={{ alignSelf: 'flex-start', background: '#f1f5f9', padding: '8px 14px', borderRadius: 8, fontSize: 12, color: 'var(--muted)' }}>
-            🤖 Synthesizing answer from PDF chapters…
+          <div
+            style={{
+              alignSelf: 'flex-start',
+              background: '#f8fafc',
+              border: '1px solid #e2e8f0',
+              padding: '10px 16px',
+              borderRadius: '16px 16px 16px 2px',
+              fontSize: 13,
+              color: '#64748b',
+              fontStyle: 'italic',
+            }}
+          >
+            🤖 AI Study Companion is thinking…
           </div>
         )}
       </div>
 
       {/* Input Form */}
       <form
-        onSubmit={e => { e.preventDefault(); handleSend(); }}
-        style={{ padding: '12px 16px', borderTop: '1px solid #f1f5f9', display: 'flex', gap: 8, background: '#ffffff' }}
+        onSubmit={(e) => { e.preventDefault(); handleSend(); }}
+        style={{ display: 'flex', gap: 8, padding: '12px 16px', background: '#f8fafc', borderTop: '1px solid #e2e8f0' }}
       >
         <input
           type="text"
-          placeholder="Ask a question about this book’s frameworks, chapters, or lessons…"
+          placeholder={`Ask a question about ${book.title}'s frameworks, chapters, or lessons…`}
           value={input}
-          onChange={e => setInput(e.target.value)}
-          style={{ flex: 1, padding: '10px 14px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 13.5, outline: 'none' }}
+          onChange={(e) => setInput(e.target.value)}
+          disabled={isTyping}
+          style={{
+            flex: 1,
+            padding: '10px 14px',
+            borderRadius: 8,
+            border: '1.5px solid #cbd5e1',
+            fontSize: 13.5,
+            outline: 'none',
+          }}
         />
         <button
           type="submit"
-          style={{ background: 'var(--amber)', color: '#0f172a', fontWeight: 800, fontSize: 13, padding: '10px 20px', borderRadius: 8, border: 'none', cursor: 'pointer' }}
+          disabled={isTyping || !input.trim()}
+          style={{
+            background: 'var(--amber)',
+            color: '#0f172a',
+            fontWeight: 800,
+            fontSize: 13.5,
+            padding: '10px 18px',
+            borderRadius: 8,
+            border: 'none',
+            cursor: (isTyping || !input.trim()) ? 'not-allowed' : 'pointer',
+            opacity: (isTyping || !input.trim()) ? 0.6 : 1,
+            boxShadow: '0 2px 8px rgba(245, 158, 11, 0.25)',
+          }}
         >
           Ask ↵
         </button>

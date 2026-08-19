@@ -18,6 +18,8 @@ import ReaderNotes from '@/components/ReaderNotes';
 import ReadingPaceCalculator from '@/components/ReadingPaceCalculator';
 import AmbientSoundPlayer from '@/components/AmbientSoundPlayer';
 import { useCurrency } from '@/lib/currency';
+import WriteReviewModal from '@/components/WriteReviewModal';
+import { BookReview } from '@/lib/db';
 
 function normalizeSlug(str: string): string {
   return str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
@@ -32,6 +34,42 @@ export default function ProductClient({ p, faqs }: { p: Product; faqs?: FAQItem[
   const [activeTab, setActiveTab] = useState(0);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [showKindleModal, setShowKindleModal] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewsList, setReviewsList] = useState<BookReview[]>([]);
+  const [currentRating, setCurrentRating] = useState(p.rating);
+  const [totalReviewsCount, setTotalReviewsCount] = useState(p.reviews);
+
+  // Fetch real reviews from local JSON database
+  React.useEffect(() => {
+    fetch(`/api/reviews?bookId=${p.id}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.reviews) && data.reviews.length > 0) {
+          setReviewsList(data.reviews);
+        }
+      })
+      .catch(() => {});
+  }, [p.id]);
+
+  const handleReviewSubmitted = (newReview: BookReview) => {
+    setReviewsList(prev => [newReview, ...prev]);
+    setTotalReviewsCount(prev => prev + 1);
+    toast('Review Submitted! ⭐', 'Your review is now live.');
+  };
+
+  const handleVoteHelpful = async (reviewId: string) => {
+    try {
+      await fetch('/api/reviews', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reviewId }),
+      });
+      setReviewsList(prev =>
+        prev.map(r => (r.id === reviewId ? { ...r, helpfulCount: (r.helpfulCount || 0) + 1 } : r))
+      );
+      toast('Thanks for your feedback!', 'Marked as helpful');
+    } catch {}
+  };
 
   const isAff = p.type === 'affiliate';
   const isFree = p.type === 'free';
@@ -89,6 +127,13 @@ export default function ProductClient({ p, faqs }: { p: Product; faqs?: FAQItem[
   return (
     <>
       {showKindleModal && <SendToKindleModal book={p} onClose={() => setShowKindleModal(false)} />}
+      {showReviewModal && (
+        <WriteReviewModal
+          book={p}
+          onClose={() => setShowReviewModal(false)}
+          onReviewSubmitted={handleReviewSubmitted}
+        />
+      )}
 
       <div className="wrap" onClick={handleAction}>
         {/* Breadcrumbs */}
@@ -235,9 +280,9 @@ export default function ProductClient({ p, faqs }: { p: Product; faqs?: FAQItem[
         {/* Reviews */}
         <div className="revwrap">
           <div className="revsum">
-            <div className="score">{p.rating} <span style={{ fontSize: 16, color: 'var(--muted)', fontWeight: 600 }}>out of 5</span></div>
-            <span dangerouslySetInnerHTML={{ __html: stars(p.rating, 19) }} />
-            {' '}<span style={{ fontSize: 13.5, color: 'var(--muted)' }}>{p.reviews.toLocaleString()} global ratings</span>
+            <div className="score">{currentRating} <span style={{ fontSize: 16, color: 'var(--muted)', fontWeight: 600 }}>out of 5</span></div>
+            <span dangerouslySetInnerHTML={{ __html: stars(currentRating, 19) }} />
+            {' '}<span style={{ fontSize: 13.5, color: 'var(--muted)' }}>{totalReviewsCount.toLocaleString()} global ratings</span>
             <div className="bars">
               {hist.map((h, i) => (
                 <div key={i} className="bar">
@@ -247,24 +292,47 @@ export default function ProductClient({ p, faqs }: { p: Product; faqs?: FAQItem[
                 </div>
               ))}
             </div>
-            <button className="write-rev" data-toast="Reviews open to verified purchasers only">✍️ Write a customer review</button>
+            <button className="write-rev" onClick={() => setShowReviewModal(true)}>✍️ Write a customer review</button>
           </div>
           <div>
-            <h2 style={{ fontSize: 21, fontWeight: 800, marginBottom: 16 }}>Top reviews from readers</h2>
-            {revs.map((r, i) => (
-              <div key={i} className="revcard">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <h2 style={{ fontSize: 21, fontWeight: 800, margin: 0 }}>Top reviews from readers</h2>
+              <button
+                onClick={() => setShowReviewModal(true)}
+                style={{ background: '#f8fafc', color: 'var(--ink)', border: '1px solid #cbd5e1', padding: '6px 14px', borderRadius: 20, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+              >
+                + Rate This PDF
+              </button>
+            </div>
+
+            {(reviewsList.length > 0 ? reviewsList : revs.map((r, i) => ({
+              id: 'mock-' + i,
+              userName: names[i][0],
+              rating: 5 - i * 0.5,
+              title: r.t,
+              body: r.b,
+              date: r.d,
+              verified: true,
+              helpfulCount: 140 - i * 37,
+            }))).map((r: any, i: number) => (
+              <div key={r.id || i} className="revcard">
                 <div className="top">
-                  <span className="ava" style={{ background: names[i][1] }}>{names[i][0][0]}</span>
-                  <div className="who"><b>{names[i][0]}</b><div className="vp">✓ Verified Purchase</div></div>
+                  <span className="ava" style={{ background: names[i % names.length][1] }}>
+                    {(r.userName || 'R')[0].toUpperCase()}
+                  </span>
+                  <div className="who">
+                    <b>{r.userName || 'Reader'}</b>
+                    {r.verified && <div className="vp">✓ Verified Reader</div>}
+                  </div>
                 </div>
-                <span dangerouslySetInnerHTML={{ __html: stars(5 - i * 0.5, 14) }} />
-                <h4>{r.t}</h4>
-                <p style={{ fontSize: 12.5, color: 'var(--muted)', marginBottom: 6 }}>Reviewed on {r.d}</p>
-                <p>{r.b}</p>
+                <span dangerouslySetInnerHTML={{ __html: stars(r.rating, 14) }} />
+                <h4>{r.title}</h4>
+                <p style={{ fontSize: 12.5, color: 'var(--muted)', marginBottom: 6 }}>Reviewed on {r.date}</p>
+                <p>{r.body}</p>
                 <div className="help">
-                  <span>{140 - i * 37} people found this helpful</span>
-                  <button data-toast="Thanks for your feedback!">Helpful</button>
-                  <button>Report</button>
+                  <span>{r.helpfulCount || 0} people found this helpful</span>
+                  <button onClick={() => handleVoteHelpful(r.id)}>Helpful</button>
+                  <button onClick={() => toast('Feedback received', 'Thank you')}>Report</button>
                 </div>
               </div>
             ))}

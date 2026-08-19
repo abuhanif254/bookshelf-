@@ -15,6 +15,7 @@ export default function Footer() {
         <div className="cols">
           <div>
             <h4>Explore Bookshelf</h4>
+            <Link href="/about">📖 About Bookshelf</Link>
             <Link href="/bundles/indie-founder-stack">📦 Curated PDF Bundles</Link>
             <Link href="/best/free-programming-books-2026">🏆 Best Coding Books 2026</Link>
             <Link href="/best/top-productivity-books-for-founders">⚡ Best Productivity Books</Link>
@@ -79,7 +80,7 @@ export default function Footer() {
           </select>
           <span className="sel">🌍 Global DRM-Free</span>
           <div>
-            Terms of Service · Privacy Policy · Cookie Preferences<br />
+            <Link href="/terms" style={{ color: '#94a3b8', textDecoration: 'none' }}>Terms of Service</Link> · <Link href="/privacy" style={{ color: '#94a3b8', textDecoration: 'none' }}>Privacy Policy</Link> · Cookie Preferences<br />
             © 2026 Bookshelf Inc. All rights reserved.
           </div>
         </div>
