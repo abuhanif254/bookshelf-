@@ -1,5 +1,6 @@
 import { MetadataRoute } from 'next';
 import { getAllBooks } from '@/lib/db';
+import { getSupabaseBooks } from '@/lib/supabaseDb';
 import { BUNDLES } from '@/lib/bundles';
 
 function normalizeSlug(str: string): string {
@@ -8,7 +9,8 @@ function normalizeSlug(str: string): string {
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://bookshelf.com';
-  const books = getAllBooks();
+  const supaBooks = await getSupabaseBooks();
+  const books = supaBooks && supaBooks.length > 0 ? supaBooks : getAllBooks();
 
   // Static core canonical routes (no query params)
   const staticRoutes: MetadataRoute.Sitemap = [

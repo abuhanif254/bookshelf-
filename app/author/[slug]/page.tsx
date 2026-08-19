@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getAllBooks } from '@/lib/db';
+import { getSupabaseBooks } from '@/lib/supabaseDb';
 import { BreadcrumbJsonLd, PersonJsonLd } from '@/components/JsonLd';
 import AuthorClient from './AuthorClient';
 
@@ -18,7 +19,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     ? await (params as Promise<{ slug: string }>)
     : (params as { slug: string });
 
-  const allBooks = getAllBooks();
+  const supaBooks = await getSupabaseBooks();
+  const allBooks = supaBooks && supaBooks.length > 0 ? supaBooks : getAllBooks();
   const authorBooks = allBooks.filter(b => normalizeSlug(b.author) === resolved.slug.toLowerCase());
 
   if (authorBooks.length === 0) {
@@ -72,7 +74,8 @@ export default async function AuthorPage({ params }: Props) {
     : (params as { slug: string });
 
   const slug = resolved.slug.toLowerCase();
-  const allBooks = getAllBooks();
+  const supaBooks = await getSupabaseBooks();
+  const allBooks = supaBooks && supaBooks.length > 0 ? supaBooks : getAllBooks();
   const authorBooks = allBooks.filter(b => normalizeSlug(b.author) === slug);
 
   if (authorBooks.length === 0) {

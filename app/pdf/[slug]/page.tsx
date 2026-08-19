@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getBookBySlug, getAllBooks } from '@/lib/db';
+import { getSupabaseBooks } from '@/lib/supabaseDb';
 import { BookJsonLd, BreadcrumbJsonLd, FAQJsonLd } from '@/components/JsonLd';
 import ProductClient from './ProductClient';
 import DynamicBookFallback from './DynamicBookFallback';
@@ -18,7 +19,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     ? await (params as Promise<{ slug: string }>)
     : (params as { slug: string });
 
-  const book = getBookBySlug(resolvedParams.slug);
+  const supaBooks = await getSupabaseBooks();
+  const allBooks = supaBooks && supaBooks.length > 0 ? supaBooks : getAllBooks();
+  const book = allBooks.find(b => b.slug === resolvedParams.slug || normalizeSlug(b.title) === resolvedParams.slug) || getBookBySlug(resolvedParams.slug);
 
   if (!book) {
     const formattedTitle = resolvedParams.slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
@@ -77,7 +80,9 @@ export default async function ProductPage({ params }: Props) {
     ? await (params as Promise<{ slug: string }>)
     : (params as { slug: string });
 
-  const book = getBookBySlug(resolvedParams.slug);
+  const supaBooks = await getSupabaseBooks();
+  const allBooks = supaBooks && supaBooks.length > 0 ? supaBooks : getAllBooks();
+  const book = allBooks.find(b => b.slug === resolvedParams.slug || normalizeSlug(b.title) === resolvedParams.slug) || getBookBySlug(resolvedParams.slug);
 
   if (!book) {
     return <DynamicBookFallback slug={resolvedParams.slug} />;

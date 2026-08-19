@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getAllBooks } from '@/lib/db';
+import { getSupabaseBooks } from '@/lib/supabaseDb';
 import { BreadcrumbJsonLd, CollectionPageJsonLd, FAQJsonLd } from '@/components/JsonLd';
 import TopicClient from './TopicClient';
 
@@ -116,7 +117,8 @@ export default async function TopicPage({ params }: Props) {
     notFound();
   }
 
-  const allBooks = getAllBooks();
+  const supaBooks = await getSupabaseBooks();
+  const allBooks = supaBooks && supaBooks.length > 0 ? supaBooks : getAllBooks();
   const matched = allBooks.filter(b => {
     const hay = (b.title + ' ' + b.sub + ' ' + b.cat + ' ' + b.blurb + ' ' + b.feat.join(' ')).toLowerCase();
     return info.keywords.some(kw => hay.includes(kw));

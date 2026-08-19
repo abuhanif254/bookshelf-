@@ -269,6 +269,54 @@ export async function addSupabaseReview(review: Omit<BookReview, 'id' | 'date' |
   }
 }
 
+// ── Categories ──────────────────────────────────────────────────────────────
+
+export async function getSupabaseCategories(): Promise<CategoryConfig[] | null> {
+  try {
+    const { data, error } = await supabase.from('categories').select('*');
+    if (error || !data || data.length === 0) return null;
+    return data.map((c: any) => ({
+      id: c.id,
+      name: c.name,
+      slug: c.slug,
+      badge: c.badge || 'Popular',
+      seoTitle: c.seo_title,
+      h1: c.h1,
+      intro: c.intro,
+    }));
+  } catch {
+    return null;
+  }
+}
+
+export async function saveSupabaseCategory(cat: CategoryConfig): Promise<CategoryConfig | null> {
+  try {
+    const row = {
+      id: cat.id,
+      name: cat.name,
+      slug: cat.slug,
+      badge: cat.badge || 'Popular',
+      seo_title: cat.seoTitle || cat.name,
+      h1: cat.h1 || cat.name,
+      intro: cat.intro || '',
+    };
+    const { error } = await supabase.from('categories').upsert(row, { onConflict: 'id' });
+    if (error) return null;
+    return cat;
+  } catch {
+    return null;
+  }
+}
+
+export async function deleteSupabaseCategory(id: string): Promise<boolean> {
+  try {
+    const { error } = await supabase.from('categories').delete().eq('id', id);
+    return !error;
+  } catch {
+    return false;
+  }
+}
+
 // ── Subscribers ─────────────────────────────────────────────────────────────
 
 export async function addSupabaseSubscriber(email: string): Promise<boolean> {

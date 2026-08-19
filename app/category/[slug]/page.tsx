@@ -1,7 +1,8 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { getAllBooks } from '@/lib/db';
+import { getAllBooks, getCategories } from '@/lib/db';
+import { getSupabaseBooks, getSupabaseCategories } from '@/lib/supabaseDb';
 import { Product } from '@/lib/products';
 import { cardHTML } from '@/lib/helpers';
 import { BreadcrumbJsonLd, CollectionPageJsonLd, FAQJsonLd } from '@/components/JsonLd';
@@ -128,23 +129,32 @@ export default async function CategoryPage({ params }: Props) {
     : (params as { slug: string });
 
   const slug = resolved.slug.toLowerCase();
-  const allBooks = getAllBooks();
+  const supaBooks = await getSupabaseBooks();
+  const allBooks = supaBooks && supaBooks.length > 0 ? supaBooks : getAllBooks();
 
   // Match category by slug
   const matchingBooks = allBooks.filter(
     b => b.cat.toLowerCase().replace(/[^a-z0-9]+/g, '-') === slug || b.cat.toLowerCase() === slug
   );
 
-  if (matchingBooks.length === 0 && !CATEGORY_META[slug]) {
+  const supaCats = await getSupabaseCategories();
+  const foundCustomCat = supaCats?.find(c => c.slug === slug);
+
+  if (matchingBooks.length === 0 && !CATEGORY_META[slug] && !foundCustomCat) {
     notFound();
   }
 
-  const catInfo = CATEGORY_META[slug] || {
+  const catInfo = CATEGORY_META[slug] || (foundCustomCat ? {
+    title: foundCustomCat.seoTitle || `Free ${foundCustomCat.name} PDF Books`,
+    desc: foundCustomCat.intro || `Download free ${foundCustomCat.name} PDF books and guides.`,
+    h1: foundCustomCat.h1 || `Free ${foundCustomCat.name} PDF Books`,
+    intro: foundCustomCat.intro || `Explore our collection of free ${foundCustomCat.name} books with instant Google Drive downloads.`,
+  } : {
     title: `Free ${slug.toUpperCase()} PDF Books`,
     desc: `Browse all free ${slug} PDF books and toolkits.`,
     h1: `Free ${slug.charAt(0).toUpperCase() + slug.slice(1)} PDF Books`,
     intro: `Explore our collection of free ${slug} books with instant Google Drive downloads.`,
-  };
+  });
 
   const breadcrumbs = [
     { name: 'Home', url: 'https://bookshelf.com' },

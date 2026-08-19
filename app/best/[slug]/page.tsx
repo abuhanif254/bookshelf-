@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getAllBooks } from '@/lib/db';
+import { getSupabaseBooks } from '@/lib/supabaseDb';
 import { Product } from '@/lib/products';
 import { BreadcrumbJsonLd, FAQJsonLd, ItemListJsonLd } from '@/components/JsonLd';
 import BestClient from './BestClient';
@@ -133,7 +134,8 @@ export default async function BestOfPage({ params }: Props) {
     notFound();
   }
 
-  const allBooks = getAllBooks();
+  const supaBooks = await getSupabaseBooks();
+  const allBooks = supaBooks && supaBooks.length > 0 ? supaBooks : getAllBooks();
   const filteredBooks = allBooks.filter(b => listicle.categories.some(cat => cat.toLowerCase() === b.cat.toLowerCase())).slice(0, 7);
 
   const breadcrumbs = [

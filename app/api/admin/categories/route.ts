@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server';
 import { getCategories, saveCategory, deleteCategory } from '@/lib/db';
+import { getSupabaseCategories, saveSupabaseCategory, deleteSupabaseCategory } from '@/lib/supabaseDb';
 import { isRequestAuthorized } from '@/lib/auth';
 import { sanitizeString } from '@/lib/security';
 
 export async function GET() {
   try {
-    const categories = getCategories();
+    const supaCats = await getSupabaseCategories();
+    const categories = supaCats && supaCats.length > 0 ? supaCats : getCategories();
     return NextResponse.json({ success: true, categories });
   } catch (error) {
     return NextResponse.json({ success: false, message: 'Failed to fetch categories' }, { status: 500 });
@@ -28,7 +30,7 @@ export async function POST(request: Request) {
     const name = sanitizeString(category.name);
     const slug = (category.slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''));
 
-    const saved = saveCategory({
+    const catObj = {
       id: sanitizeString(category.id) || slug,
       name,
       slug,
@@ -37,7 +39,14 @@ export async function POST(request: Request) {
       seoDesc: sanitizeString(category.seoDesc) || `Download verified free ${name} PDF books and toolkits with instant direct delivery.`,
       h1: sanitizeString(category.h1) || `Free ${name} PDF Books & Handbooks`,
       intro: sanitizeString(category.intro) || `Explore our curated collection of free ${name} books and practical guides.`,
-    });
+    };
+
+    let saved = await saveSupabaseCategory(catObj);
+    if (!saved) {
+      saved = saveCategory(catObj);
+    } else {
+      try { saveCategory(catObj); } catch {}
+    }
 
     return NextResponse.json({ success: true, category: saved });
   } catch (error) {
@@ -59,8 +68,9 @@ export async function DELETE(request: Request) {
     }
 
     const cleanId = sanitizeString(id);
+    await deleteSupabaseCategory(cleanId);
     const success = deleteCategory(cleanId);
-    return NextResponse.json({ success, message: success ? 'Category deleted' : 'Category not found' });
+    return NextResponse.json({ success: true, message: 'Category deleted' });
   } catch (error) {
     return NextResponse.json({ success: false, message: 'Failed to delete category' }, { status: 500 });
   }
