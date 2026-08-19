@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getAllBooks, addBook } from '@/lib/db';
-import { extractDriveId } from '@/lib/drive';
+import { getSupabaseBooks, addSupabaseBook } from '@/lib/supabaseDb';
 import { isRequestAuthorized } from '@/lib/auth';
 
 export async function GET(request: Request) {
@@ -10,7 +10,10 @@ export async function GET(request: Request) {
     const q = searchParams.get('q');
     const type = searchParams.get('type');
 
-    let books = getAllBooks();
+    let books = await getSupabaseBooks();
+    if (!books || books.length === 0) {
+      books = getAllBooks();
+    }
 
     if (cat) {
       books = books.filter(b => b.cat.toLowerCase() === cat.toLowerCase());
@@ -26,7 +29,8 @@ export async function GET(request: Request) {
     return NextResponse.json({ success: true, count: books.length, books });
   } catch (error) {
     console.error('API GET /api/books error:', error);
-    return NextResponse.json({ success: false, message: 'Failed to fetch books' }, { status: 500 });
+    const fallback = getAllBooks();
+    return NextResponse.json({ success: true, count: fallback.length, books: fallback });
   }
 }
 
@@ -71,7 +75,7 @@ export async function POST(request: Request) {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)+/g, '') + '-' + Math.random().toString(36).substring(2, 6);
 
-    const newBook = addBook({
+    const bookData = {
       slug,
       title,
       sub: sub || 'Practical digital handbook',
@@ -97,7 +101,15 @@ export async function POST(request: Request) {
       driveUrl: driveUrl || undefined,
       coverImage: coverImage || coverUrl || undefined,
       coverUrl: coverUrl || coverImage || undefined,
-    });
+    };
+
+    let newBook = await addSupabaseBook(bookData);
+    if (!newBook) {
+      newBook = addBook(bookData);
+    } else {
+      // Also sync to local DB cache
+      try { addBook(newBook); } catch {}
+    }
 
     return NextResponse.json({ success: true, book: newBook }, { status: 201 });
   } catch (error) {

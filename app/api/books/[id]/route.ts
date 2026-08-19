@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getBookById, updateBook, deleteBook } from '@/lib/db';
+import { updateSupabaseBook, deleteSupabaseBook } from '@/lib/supabaseDb';
 import { isRequestAuthorized } from '@/lib/auth';
 
 interface Params {
@@ -36,7 +37,13 @@ export async function PUT(request: Request, { params }: Params) {
     const id = parseInt(resolved.id, 10);
     const updates = await request.json();
 
-    const updated = updateBook(id, updates);
+    let updated = await updateSupabaseBook(id, updates);
+    if (!updated) {
+      updated = updateBook(id, updates);
+    } else {
+      try { updateBook(id, updates); } catch {}
+    }
+
     if (!updated) {
       return NextResponse.json({ success: false, message: 'Book not found' }, { status: 404 });
     }
@@ -57,9 +64,11 @@ export async function DELETE(request: Request, { params }: Params) {
       ? await (params as Promise<{ id: string }>)
       : (params as { id: string });
     const id = parseInt(resolved.id, 10);
-    const success = deleteBook(id);
 
-    if (!success) {
+    const supaSuccess = await deleteSupabaseBook(id);
+    const localSuccess = deleteBook(id);
+
+    if (!supaSuccess && !localSuccess) {
       return NextResponse.json({ success: false, message: 'Book not found' }, { status: 404 });
     }
 
