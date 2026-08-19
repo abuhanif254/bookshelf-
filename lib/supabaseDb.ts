@@ -143,6 +143,144 @@ export async function deleteSupabaseBook(id: number): Promise<boolean> {
   }
 }
 
+// ── Settings ────────────────────────────────────────────────────────────────
+
+export async function getSupabaseSettings(): Promise<AdSettings | null> {
+  try {
+    const { data, error } = await supabase
+      .from('settings')
+      .select('*')
+      .eq('id', 'global')
+      .single();
+
+    if (error || !data) return null;
+
+    return {
+      adNetwork: 'monetag',
+      countdownSeconds: Number(data.ad_timer_seconds) || 8,
+      adCode: data.banner_ad_code || '',
+      directSmartLink: data.direct_smart_link || 'https://omg10.com/4/11608657',
+      sponsorTitle: 'Sponsored Partner Recommendation',
+      sponsorSubtitle: 'Support our free PDF library by checking out our partner.',
+      sponsorCta: 'Access Sponsor Offer ↗',
+      sponsorUrl: data.direct_smart_link || 'https://omg10.com/4/11608657',
+      adminPasscode: data.passcode || 'bookshelf2026',
+      siteName: 'Bookshelf',
+      siteTagline: '100% Free & DRM-Free PDF Books',
+      supportEmail: data.admin_email || 'mohammadbitullah@gmail.com',
+      stats: {
+        totalDownloads: 0,
+        adImpressions: 0,
+        adUnlocks: 0,
+        vipReferralUnlocks: 0,
+      },
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function updateSupabaseSettings(updates: Partial<AdSettings>): Promise<boolean> {
+  try {
+    const row: any = {
+      id: 'global',
+      updated_at: new Date().toISOString(),
+    };
+    if (updates.adminPasscode !== undefined) row.passcode = updates.adminPasscode;
+    if (updates.supportEmail !== undefined) row.admin_email = updates.supportEmail;
+    if (updates.directSmartLink !== undefined) row.direct_smart_link = updates.directSmartLink;
+    if (updates.adCode !== undefined) row.banner_ad_code = updates.adCode;
+    if (updates.countdownSeconds !== undefined) row.ad_timer_seconds = updates.countdownSeconds;
+
+    const { error } = await supabase
+      .from('settings')
+      .upsert(row, { onConflict: 'id' });
+
+    return !error;
+  } catch {
+    return false;
+  }
+}
+
+// ── Reviews ─────────────────────────────────────────────────────────────────
+
+export async function getSupabaseReviews(bookId?: number): Promise<BookReview[] | null> {
+  try {
+    let query = supabase.from('reviews').select('*').order('created_at', { ascending: false });
+    if (bookId) {
+      query = query.eq('book_id', bookId);
+    }
+    const { data, error } = await query;
+    if (error || !data) return null;
+
+    return data.map((r: any) => ({
+      id: r.id,
+      bookId: Number(r.book_id),
+      userName: r.author || 'Reader',
+      rating: Number(r.rating) || 5,
+      title: r.title,
+      body: r.body,
+      date: r.date || 'Aug 2026',
+      verified: r.verified ?? true,
+      helpfulCount: Number(r.helpful_count) || 0,
+      approved: true,
+      createdAt: r.created_at || new Date().toISOString(),
+    }));
+  } catch {
+    return null;
+  }
+}
+
+export async function addSupabaseReview(review: Omit<BookReview, 'id' | 'date' | 'helpfulCount' | 'approved' | 'createdAt'>): Promise<BookReview | null> {
+  try {
+    const newId = `rev-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+    const nowIso = new Date().toISOString();
+    const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const row = {
+      id: newId,
+      book_id: review.bookId,
+      title: review.title,
+      body: review.body,
+      author: review.userName,
+      rating: review.rating,
+      date: dateStr,
+      verified: review.verified ?? true,
+      helpful_count: 0,
+    };
+
+    const { error } = await supabase.from('reviews').insert(row);
+    if (error) return null;
+
+    return {
+      id: newId,
+      bookId: review.bookId,
+      userName: review.userName,
+      rating: review.rating,
+      title: review.title,
+      body: review.body,
+      date: dateStr,
+      verified: review.verified ?? true,
+      helpfulCount: 0,
+      approved: true,
+      createdAt: nowIso,
+    };
+  } catch {
+    return null;
+  }
+}
+
+// ── Subscribers ─────────────────────────────────────────────────────────────
+
+export async function addSupabaseSubscriber(email: string): Promise<boolean> {
+  try {
+    const newId = `sub-${Date.now()}`;
+    const { error } = await supabase.from('subscribers').upsert({ id: newId, email }, { onConflict: 'email' });
+    return !error;
+  } catch {
+    return false;
+  }
+}
+
 // ── Auto-Seed Initial Catalog ───────────────────────────────────────────────
 
 async function seedInitialBooks() {

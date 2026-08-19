@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { addSubscriber, getSubscribers } from '@/lib/db';
+import { addSupabaseSubscriber } from '@/lib/supabaseDb';
 import { isRequestAuthorized } from '@/lib/auth';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 import { isValidEmail } from '@/lib/security';
@@ -21,6 +22,7 @@ export async function POST(request: Request) {
     }
 
     const cleanEmail = email.trim().toLowerCase();
+    await addSupabaseSubscriber(cleanEmail);
     const result = addSubscriber(cleanEmail);
     return NextResponse.json(result);
   } catch (error) {

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getBookReviews, getAllReviews, addBookReview, voteReviewHelpful, deleteReview } from '@/lib/db';
+import { getSupabaseReviews, addSupabaseReview } from '@/lib/supabaseDb';
 import { sanitizeString } from '@/lib/security';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 import { isRequestAuthorized } from '@/lib/auth';
@@ -18,7 +19,8 @@ export async function GET(request: Request) {
       if (!isRequestAuthorized(request)) {
         return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
       }
-      return NextResponse.json({ success: true, reviews: getAllReviews() });
+      const supaAll = await getSupabaseReviews();
+      return NextResponse.json({ success: true, reviews: supaAll || getAllReviews() });
     }
 
     if (!bookIdParam) {
@@ -26,7 +28,8 @@ export async function GET(request: Request) {
     }
 
     const bookId = Number(bookIdParam);
-    const reviews = getBookReviews(bookId);
+    const supaReviews = await getSupabaseReviews(bookId);
+    const reviews = supaReviews && supaReviews.length > 0 ? supaReviews : getBookReviews(bookId);
     return NextResponse.json({ success: true, reviews });
   } catch (error) {
     return NextResponse.json({ success: false, message: 'Error retrieving reviews' }, { status: 500 });
@@ -64,14 +67,21 @@ export async function POST(request: Request) {
     const cleanTitle = sanitizeString(title).slice(0, 100);
     const cleanBody = sanitizeString(reviewBody).slice(0, 2000);
 
-    const newReview = addBookReview({
+    const reviewData = {
       bookId: Number(bookId),
       userName: cleanUserName,
       rating: cleanRating,
       title: cleanTitle,
       body: cleanBody,
       verified: Boolean(verified),
-    });
+    };
+
+    let newReview = await addSupabaseReview(reviewData);
+    if (!newReview) {
+      newReview = addBookReview(reviewData);
+    } else {
+      try { addBookReview(newReview); } catch {}
+    }
 
     return NextResponse.json({
       success: true,
