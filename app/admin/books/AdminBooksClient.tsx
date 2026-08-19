@@ -836,7 +836,7 @@ export default function AdminBooksClient() {
             {/* Modal Header */}
             <div style={{ background: '#0f172a', color: '#fff', padding: '18px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <h2 style={{ margin: 0, fontSize: 18, fontWeight: 900 }}>
+                <h2 style={{ margin: 0, fontSize: 18, fontWeight: 900, color: '#ffffff' }}>
                   {editingBook ? `✏️ Edit: ${editingBook.title}` : '＋ Add New PDF Book to Catalog'}
                 </h2>
                 <p style={{ margin: '2px 0 0', fontSize: 12, color: '#94a3b8' }}>
@@ -908,9 +908,18 @@ export default function AdminBooksClient() {
                             <button
                               type="button"
                               onClick={() => set('coverImage', '')}
-                              style={{ fontSize: 11, color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700 }}
+                              style={{
+                                fontSize: 11,
+                                color: '#64748b',
+                                background: '#f1f5f9',
+                                border: '1px solid #cbd5e1',
+                                padding: '2px 8px',
+                                borderRadius: 4,
+                                cursor: 'pointer',
+                                fontWeight: 700,
+                              }}
                             >
-                              ✕ Remove (Use Canvas Cover)
+                              🗑️ Clear (Use Default Canvas)
                             </button>
                           )}
                         </div>
