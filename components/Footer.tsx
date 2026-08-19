@@ -16,11 +16,11 @@ export default function Footer() {
           <div>
             <h4>Explore Bookshelf</h4>
             <Link href="/bundles/indie-founder-stack">📦 Curated PDF Bundles</Link>
-            <Link href="/library?preset=best">Best Selling PDFs</Link>
-            <Link href="/library?preset=new">New Releases</Link>
-            <Link href="/library?preset=free">Free PDF Library</Link>
-            <Link href="/library?preset=deals">Daily Reading Deals</Link>
-            <Link href="/library?preset=partner">Partner Editions</Link>
+            <Link href="/best/free-programming-books-2026">🏆 Best Coding Books 2026</Link>
+            <Link href="/best/top-productivity-books-for-founders">⚡ Best Productivity Books</Link>
+            <Link href="/compare/deep-focus-vs-morning-reset">⚖️ Book Comparisons</Link>
+            <Link href="/library">📚 Complete Catalog</Link>
+            <Link href="/feed.xml">📡 RSS Feed</Link>
           </div>
           <div>
             <h4>Free PDF Categories</h4>
@@ -31,20 +31,19 @@ export default function Footer() {
             <Link href="/category/marketing">Marketing &amp; Growth</Link>
           </div>
           <div>
-            <h4>More Topics</h4>
-            <Link href="/category/self-help">Self-Help &amp; Habits</Link>
-            <Link href="/category/technology">AI &amp; Technology</Link>
-            <Link href="/category/finance">Finance &amp; Investing</Link>
-            <Link href="/category/health">Health &amp; Sleep Protocols</Link>
-            <Link href="/admin">⚙️ Admin Control Panel</Link>
+            <h4>Trending Topics</h4>
+            <Link href="/topic/deep-work">Deep Work &amp; Focus</Link>
+            <Link href="/topic/javascript-patterns">JavaScript &amp; TypeScript</Link>
+            <Link href="/topic/ai-prompts">AI Prompts &amp; Workflows</Link>
+            <Link href="/topic/personal-finance">Personal Finance &amp; Wealth</Link>
+            <Link href="/topic/habit-building">Habit Protocols</Link>
           </div>
           <div>
-            <h4>Help &amp; Support</h4>
+            <h4>Creators &amp; Admin</h4>
             <Link href="/publish">🚀 Publish Your PDF Book</Link>
-            <Link href="/account/library">Your Library</Link>
+            <Link href="/account/library">Your Offline Library</Link>
             <Link href="/cart">Your Cart</Link>
             <Link href="/admin">⚙️ Admin Dashboard</Link>
-            <a>FAQ &amp; Guides</a>
           </div>
         </div>
         <div className="ft-bot">

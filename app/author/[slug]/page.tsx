@@ -48,6 +48,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: `Download verified PDF books and playbooks by ${authorName}.`,
       url: canonicalUrl,
       type: 'profile',
+      images: [
+        {
+          url: `/api/og?title=${encodeURIComponent('Books by ' + authorName)}`,
+          width: 1200,
+          height: 630,
+          alt: `Books by ${authorName}`,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `Free PDF Books by ${authorName}`,
+      description: `Download verified PDF books and playbooks by ${authorName}.`,
+      images: [`/api/og?title=${encodeURIComponent('Books by ' + authorName)}`],
     },
   };
 }

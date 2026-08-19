@@ -47,6 +47,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: desc,
       url: canonicalUrl,
       type: 'article',
+      images: [
+        {
+          url: `/api/og?title=${encodeURIComponent(bookA.title + ' vs ' + bookB.title)}`,
+          width: 1200,
+          height: 630,
+          alt: `${bookA.title} vs ${bookB.title}`,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description: desc,
+      images: [`/api/og?title=${encodeURIComponent(bookA.title + ' vs ' + bookB.title)}`],
     },
   };
 }

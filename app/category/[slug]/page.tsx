@@ -104,6 +104,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: meta.desc,
       url: canonicalUrl,
       type: 'website',
+      images: [
+        {
+          url: `/api/og?title=${encodeURIComponent(meta.title)}`,
+          width: 1200,
+          height: 630,
+          alt: meta.title,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: meta.title,
+      description: meta.desc,
+      images: [`/api/og?title=${encodeURIComponent(meta.title)}`],
     },
   };
 }

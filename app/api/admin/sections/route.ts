@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { getSectionsData, updateSectionsData, getAdSettings } from '@/lib/db';
+import { getSectionsData, updateSectionsData } from '@/lib/db';
+import { isRequestAuthorized } from '@/lib/auth';
 
 export async function GET() {
   try {
@@ -12,13 +13,12 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { passcode, sections } = body;
-
-    const currentSettings = getAdSettings();
-    if (passcode !== currentSettings.adminPasscode) {
-      return NextResponse.json({ success: false, message: 'Invalid Admin Passcode' }, { status: 401 });
+    if (!isRequestAuthorized(request)) {
+      return NextResponse.json({ success: false, message: 'Unauthorized. Admin session required.' }, { status: 401 });
     }
+
+    const body = await request.json();
+    const { sections } = body;
 
     if (!sections) {
       return NextResponse.json({ success: false, message: 'No section updates provided' }, { status: 400 });

@@ -1,9 +1,20 @@
 import { NextResponse } from 'next/server';
 import { createMagicLink, AUTHORIZED_ADMIN_EMAIL } from '@/lib/auth';
 import { sendMagicLinkEmail } from '@/lib/mailer';
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 
 export async function POST(request: Request) {
   try {
+    const clientIp = getClientIp(request);
+    // Max 5 attempts per 15 minutes per IP
+    const rateLimit = checkRateLimit(`magic-link:${clientIp}`, 5, 15 * 60 * 1000);
+    if (!rateLimit.allowed) {
+      return NextResponse.json({
+        success: false,
+        message: 'Too many login attempts. Please wait 15 minutes before trying again.',
+      }, { status: 429 });
+    }
+
     const body = await request.json();
     const { email } = body;
 
@@ -15,11 +26,11 @@ export async function POST(request: Request) {
     if (cleanEmail !== AUTHORIZED_ADMIN_EMAIL) {
       return NextResponse.json({
         success: false,
-        message: `Unauthorized. Only ${AUTHORIZED_ADMIN_EMAIL} is allowed to access this admin panel.`,
+        message: 'Unauthorized. This email does not have administrator privileges.',
       }, { status: 403 });
     }
 
-    const result = createMagicLink(cleanEmail);
+    const result = createMagicLink(cleanEmail, clientIp);
     if (!result.success || !result.token || !result.pin) {
       return NextResponse.json({ success: false, message: result.message || 'Failed to create login token' }, { status: 500 });
     }

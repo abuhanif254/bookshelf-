@@ -1,8 +1,11 @@
 import { NextResponse } from 'next/server';
-import { COOKIE_NAME } from '@/lib/auth';
+import { COOKIE_NAME, revokeAllSessions } from '@/lib/auth';
 
 export async function POST() {
-  const response = NextResponse.json({ success: true, message: 'Logged out successfully' });
+  // Invalidate all sessions server-side
+  revokeAllSessions();
+
+  const response = NextResponse.json({ success: true, message: 'Logged out securely' });
   response.cookies.set({
     name: COOKIE_NAME,
     value: '',

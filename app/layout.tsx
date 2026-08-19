@@ -10,7 +10,8 @@ import QuickViewWrapper from '@/components/QuickViewWrapper';
 import AdUnlockWrapper from '@/components/AdUnlockWrapper';
 import SpotlightSearch from '@/components/SpotlightSearch';
 import { PdfReaderProvider } from '@/components/PdfReaderWrapper';
-import { WebSiteJsonLd } from '@/components/JsonLd';
+import { WebSiteJsonLd, OrganizationJsonLd } from '@/components/JsonLd';
+import { CurrencyProvider } from '@/lib/currency';
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://bookshelf.com'),
@@ -32,6 +33,13 @@ export const metadata: Metadata = {
   authors: [{ name: 'Bookshelf Editorial Team' }],
   creator: 'Bookshelf Inc.',
   publisher: 'Bookshelf Inc.',
+  manifest: '/manifest.webmanifest',
+  alternates: {
+    canonical: 'https://bookshelf.com',
+    types: {
+      'application/rss+xml': 'https://bookshelf.com/feed.xml',
+    },
+  },
   robots: {
     index: true,
     follow: true,
@@ -48,17 +56,24 @@ export const metadata: Metadata = {
     locale: 'en_US',
     url: 'https://bookshelf.com',
     siteName: 'Bookshelf',
-    title: 'Bookshelf — Buy & Download Free PDF Books Instantly',
-    description: 'Instant PDF delivery. Thousands of books on productivity, design, programming, finance and more. Free titles every Friday.',
+    title: 'Bookshelf — Download & Read Free PDF Books Instantly',
+    description: 'Instant PDF delivery. Thousands of free books on productivity, design, programming, finance and more. Free titles every Friday.',
+    images: [
+      {
+        url: '/api/og',
+        width: 1200,
+        height: 630,
+        alt: 'Bookshelf — Free PDF Books Library',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Bookshelf — Free PDF Books & Digital Library',
-    description: 'Instant PDF delivery. Thousands of books on productivity, design, programming, finance and more.',
+    description: 'Instant PDF delivery. Thousands of free books on productivity, design, programming, finance and more.',
+    images: ['/api/og'],
   },
 };
-
-import { CurrencyProvider } from '@/lib/currency';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -69,10 +84,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="dns-prefetch" href="https://drive.google.com" />
         <link rel="dns-prefetch" href="https://lh3.googleusercontent.com" />
         <link
+          rel="alternate"
+          type="application/rss+xml"
+          title="Bookshelf Free PDF Drops RSS Feed"
+          href="/feed.xml"
+        />
+        <link
           href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Source+Sans+3:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap"
           rel="stylesheet"
         />
         <WebSiteJsonLd />
+        <OrganizationJsonLd />
       </head>
       <body>
         <StoreProvider>

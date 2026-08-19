@@ -1,13 +1,27 @@
 import { NextResponse } from 'next/server';
-import { addSubscriber, getSubscribers, getAdSettings } from '@/lib/db';
+import { addSubscriber, getSubscribers } from '@/lib/db';
+import { isRequestAuthorized } from '@/lib/auth';
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
+import { isValidEmail } from '@/lib/security';
 
 export async function POST(request: Request) {
   try {
-    const { email } = await request.json();
-    if (!email) {
-      return NextResponse.json({ success: false, message: 'Email is required' }, { status: 400 });
+    const clientIp = getClientIp(request);
+    const rateLimit = checkRateLimit(`subscribe:${clientIp}`, 10, 10 * 60 * 1000);
+    if (!rateLimit.allowed) {
+      return NextResponse.json({
+        success: false,
+        message: 'Too many subscription attempts. Please try again later.',
+      }, { status: 429 });
     }
-    const result = addSubscriber(email);
+
+    const { email } = await request.json();
+    if (!email || typeof email !== 'string' || !isValidEmail(email)) {
+      return NextResponse.json({ success: false, message: 'A valid email address is required' }, { status: 400 });
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const result = addSubscriber(cleanEmail);
     return NextResponse.json(result);
   } catch (error) {
     return NextResponse.json({ success: false, message: 'Failed to subscribe' }, { status: 500 });
@@ -16,12 +30,8 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
   try {
-    const { searchParams } = new URL(request.url);
-    const passcode = searchParams.get('passcode');
-
-    const currentSettings = getAdSettings();
-    if (passcode !== currentSettings.adminPasscode) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+    if (!isRequestAuthorized(request)) {
+      return NextResponse.json({ success: false, message: 'Unauthorized. Admin session required.' }, { status: 401 });
     }
 
     const subscribers = getSubscribers();

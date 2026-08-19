@@ -4,8 +4,38 @@ import { BreadcrumbJsonLd } from '@/components/JsonLd';
 import PublishClient from './PublishClient';
 
 export const metadata: Metadata = {
-  title: 'Publish Your PDF Book | Bookshelf Creator Program',
-  description: 'Distribute your PDF book, playbook, or cheat sheet to 40,000+ active readers. 100% free submission with instant author distribution.',
+  title: 'Publish & Distribute Your PDF Book | Bookshelf Creator Program',
+  description: 'Distribute your free or premium PDF book, playbook, or cheat sheet to 40,000+ active readers. 100% free submission with instant author distribution.',
+  keywords: [
+    'publish pdf book',
+    'distribute ebook',
+    'self publish pdf',
+    'author book submission',
+    'free ebook distributor',
+  ],
+  alternates: {
+    canonical: 'https://bookshelf.com/publish',
+  },
+  openGraph: {
+    title: 'Publish & Distribute Your PDF Book to 40,000+ Readers',
+    description: 'Reach engineers, founders, and creators worldwide. Upload your Google Drive link and get featured in our catalog.',
+    url: 'https://bookshelf.com/publish',
+    type: 'website',
+    images: [
+      {
+        url: '/api/og?title=' + encodeURIComponent('Bookshelf Creator Publishing Portal'),
+        width: 1200,
+        height: 630,
+        alt: 'Bookshelf Creator Publishing Portal',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Publish & Distribute Your PDF Book | Bookshelf',
+    description: 'Reach thousands of active readers. Free author distribution for high-quality PDFs.',
+    images: ['/api/og?title=' + encodeURIComponent('Bookshelf Creator Publishing Portal')],
+  },
 };
 
 export default function PublishPage() {

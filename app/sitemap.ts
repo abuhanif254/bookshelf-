@@ -1,5 +1,6 @@
 import { MetadataRoute } from 'next';
 import { getAllBooks } from '@/lib/db';
+import { BUNDLES } from '@/lib/bundles';
 
 function normalizeSlug(str: string): string {
   return str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
@@ -9,13 +10,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://bookshelf.com';
   const books = getAllBooks();
 
-  // Static core routes
+  // Static core canonical routes (no query params)
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: `${baseUrl}`, lastModified: new Date(), changeFrequency: 'daily', priority: 1.0 },
-    { url: `${baseUrl}/library`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 },
-    { url: `${baseUrl}/library?preset=free`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 },
-    { url: `${baseUrl}/library?preset=deals`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.8 },
-    { url: `${baseUrl}/library?preset=best`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.8 },
+    { url: `${baseUrl}/library`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.95 },
+    { url: `${baseUrl}/publish`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.8 },
   ];
 
   // Category Hubs
@@ -27,13 +26,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.9,
   }));
 
-  // Author Entity Profiles
-  const authors = Array.from(new Set(books.map(b => normalizeSlug(b.author))));
-  const authorRoutes: MetadataRoute.Sitemap = authors.map(author => ({
-    url: `${baseUrl}/author/${author}`,
+  // Curated Multi-Book PDF Bundles
+  const bundleRoutes: MetadataRoute.Sitemap = BUNDLES.map(bundle => ({
+    url: `${baseUrl}/bundles/${bundle.slug}`,
     lastModified: new Date(),
     changeFrequency: 'weekly',
-    priority: 0.8,
+    priority: 0.9,
+  }));
+
+  // Individual PDF Books
+  const bookRoutes: MetadataRoute.Sitemap = books.map(book => ({
+    url: `${baseUrl}/pdf/${book.slug}`,
+    lastModified: new Date(),
+    changeFrequency: 'weekly',
+    priority: 0.9,
   }));
 
   // Best-Of Curated Listicles
@@ -48,7 +54,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     url: `${baseUrl}/best/${slug}`,
     lastModified: new Date(),
     changeFrequency: 'weekly',
-    priority: 0.9,
+    priority: 0.85,
   }));
 
   // Topic Micro-Silos
@@ -69,6 +75,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.85,
   }));
 
+  // Author Entity Profiles
+  const authors = Array.from(new Set(books.map(b => normalizeSlug(b.author))));
+  const authorRoutes: MetadataRoute.Sitemap = authors.map(author => ({
+    url: `${baseUrl}/author/${author}`,
+    lastModified: new Date(),
+    changeFrequency: 'weekly',
+    priority: 0.8,
+  }));
+
   // Selected High-Volume Comparisons
   const comparePairs = [
     'deep-focus-vs-morning-reset',
@@ -82,21 +97,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }));
 
-  // Individual PDF Books
-  const bookRoutes: MetadataRoute.Sitemap = books.map(book => ({
-    url: `${baseUrl}/pdf/${book.slug}`,
-    lastModified: new Date(),
-    changeFrequency: 'weekly',
-    priority: 0.9,
-  }));
-
   return [
     ...staticRoutes,
     ...categoryRoutes,
-    ...authorRoutes,
+    ...bundleRoutes,
+    ...bookRoutes,
     ...bestRoutes,
     ...topicRoutes,
+    ...authorRoutes,
     ...compareRoutes,
-    ...bookRoutes,
   ];
 }

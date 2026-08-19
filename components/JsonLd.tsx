@@ -35,6 +35,7 @@ export function BookJsonLd({ book, url }: BookJsonLdProps) {
       '@type': 'Offer',
       price: book.type === 'free' ? '0' : String(book.price),
       priceCurrency: 'USD',
+      priceValidUntil: '2027-12-31',
       availability: 'https://schema.org/InStock',
       category: book.type === 'free' ? 'Free PDF Download' : 'Paid PDF Book',
     },
@@ -181,6 +182,34 @@ export function ItemListJsonLd({ title, description, url, items }: {
       name: item.name,
       url: item.url,
     })),
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+    />
+  );
+}
+
+export function OrganizationJsonLd() {
+  const schema = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'Bookshelf',
+    alternateName: 'Bookshelf Inc.',
+    url: 'https://bookshelf.com',
+    logo: 'https://bookshelf.com/api/og',
+    description: 'Premier digital library for verified free PDF books, toolkits, and playbooks.',
+    sameAs: [
+      'https://twitter.com/bookshelf_pdf',
+      'https://github.com/bookshelf-org',
+    ],
+    contactPoint: {
+      '@type': 'ContactPoint',
+      contactType: 'customer support',
+      email: 'support@bookshelf.com',
+    },
   };
 
   return (

@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getAdSettings, updateAdSettings, incrementStat, getDatabase } from '@/lib/db';
-import { isRequestAuthorized } from '@/lib/auth';
+import { isRequestAuthorized, createSessionToken, AUTHORIZED_ADMIN_EMAIL, COOKIE_NAME, revokeAllSessions } from '@/lib/auth';
+import { timingSafeStringEqual, sanitizeString } from '@/lib/security';
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 
 export async function GET() {
   try {
@@ -28,36 +30,72 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true });
     }
 
-    // Verify admin authorization: either valid session cookie OR correct passcode
+    const clientIp = getClientIp(request);
     const isAuth = isRequestAuthorized(request);
     const currentSettings = getAdSettings();
-    if (!isAuth && passcode !== currentSettings.adminPasscode && passcode !== 'bookshelf2026') {
-      return NextResponse.json({ success: false, message: 'Invalid Admin Credentials' }, { status: 401 });
+    const targetPasscode = process.env.ADMIN_PASSCODE || currentSettings.adminPasscode || 'bookshelf2026';
+    const matchesPasscode = timingSafeStringEqual(passcode, targetPasscode);
+
+    // If trying to authenticate with passcode and not already authorized, apply rate limiting
+    if (!isAuth) {
+      const rateLimit = checkRateLimit(`login_passcode:${clientIp}`, 5, 15 * 60 * 1000);
+      if (!rateLimit.allowed) {
+        return NextResponse.json({
+          success: false,
+          message: 'Too many failed login attempts. Please wait 15 minutes before trying again.',
+        }, { status: 429 });
+      }
+
+      if (!matchesPasscode) {
+        return NextResponse.json({ success: false, message: 'Invalid Admin Passcode' }, { status: 401 });
+      }
     }
+
+    // Prepare response
+    let responseData: Record<string, any> = { success: true, message: 'Authenticated successfully' };
 
     // Export entire database JSON
     if (action === 'export-db') {
       const fullDb = getDatabase();
-      return NextResponse.json({ success: true, db: fullDb });
+      responseData = { success: true, db: fullDb };
     }
 
     // Change admin passcode
     if (newPasscode) {
-      if (newPasscode.length < 6) {
+      const cleanPasscode = sanitizeString(newPasscode);
+      if (cleanPasscode.length < 6) {
         return NextResponse.json({ success: false, message: 'New passcode must be at least 6 characters' }, { status: 400 });
       }
-      updateAdSettings({ adminPasscode: newPasscode });
-      return NextResponse.json({ success: true, message: 'Passcode updated successfully' });
+      updateAdSettings({ adminPasscode: cleanPasscode });
+      // Invalidate all existing sessions on password change
+      revokeAllSessions();
+      responseData = { success: true, message: 'Passcode updated successfully. All other sessions have been logged out.' };
     }
 
     // General settings updates
     if (updates) {
       const updated = updateAdSettings(updates);
       const { adminPasscode, ...safe } = updated;
-      return NextResponse.json({ success: true, settings: safe });
+      responseData = { success: true, settings: safe };
     }
 
-    return NextResponse.json({ success: true, message: 'Authenticated successfully' });
+    const res = NextResponse.json(responseData);
+
+    // If logging in with passcode, issue 30-day signed HttpOnly session cookie
+    if (matchesPasscode) {
+      const sessionToken = createSessionToken(AUTHORIZED_ADMIN_EMAIL);
+      res.cookies.set({
+        name: COOKIE_NAME,
+        value: sessionToken,
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 30 * 24 * 60 * 60, // 30 days
+      });
+    }
+
+    return res;
   } catch (error) {
     return NextResponse.json({ success: false, message: 'Error updating settings' }, { status: 500 });
   }

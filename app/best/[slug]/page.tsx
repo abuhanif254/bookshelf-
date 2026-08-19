@@ -103,6 +103,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: listicle.metaDesc,
       url: canonicalUrl,
       type: 'article',
+      images: [
+        {
+          url: `/api/og?title=${encodeURIComponent(listicle.title)}`,
+          width: 1200,
+          height: 630,
+          alt: listicle.title,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: listicle.metaTitle,
+      description: listicle.metaDesc,
+      images: [`/api/og?title=${encodeURIComponent(listicle.title)}`],
     },
   };
 }

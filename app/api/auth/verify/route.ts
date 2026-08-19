@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { verifyMagicTokenOrPin, COOKIE_NAME } from '@/lib/auth';
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 
 /**
  * Handle 1-Click Link from Email (GET /api/auth/verify?token=...)
@@ -37,6 +38,16 @@ export async function GET(request: Request) {
  */
 export async function POST(request: Request) {
   try {
+    const clientIp = getClientIp(request);
+    // Rate limit: Max 5 PIN attempts per 5 minutes per IP
+    const rateLimit = checkRateLimit(`verify:${clientIp}`, 5, 5 * 60 * 1000);
+    if (!rateLimit.allowed) {
+      return NextResponse.json({
+        success: false,
+        message: 'Too many verification attempts. Please wait 5 minutes before trying again.',
+      }, { status: 429 });
+    }
+
     const body = await request.json();
     const { token, pin } = body;
     const identifier = token || pin;

@@ -212,8 +212,8 @@ export default function AdminPage() {
   const loadAllData = () => {
     fetch('/api/books').then(r => r.json()).then(d => { if (d.success) setBooks(d.books); });
     fetch('/api/admin/categories').then(r => r.json()).then(d => { if (d.success) setCategories(d.categories); });
-    fetch('/api/publish?passcode=' + encodeURIComponent(passcode || 'bookshelf2026')).then(r => r.json()).then(d => { if (d.success) setSubmissions(d.submissions); });
-    fetch('/api/subscribe?passcode=' + encodeURIComponent(passcode || 'bookshelf2026')).then(r => r.json()).then(d => { if (d.success) setSubscribers(d.subscribers); });
+    fetch('/api/publish').then(r => r.json()).then(d => { if (d.success) setSubmissions(d.submissions); });
+    fetch('/api/subscribe').then(r => r.json()).then(d => { if (d.success) setSubscribers(d.subscribers); });
     fetch('/api/admin/sections').then(r => r.json()).then(d => {
       if (d.success) {
         if (d.promoBar) setPromoBar(d.promoBar);
@@ -442,7 +442,7 @@ export default function AdminPage() {
   const handleDeleteCategory = async (id: string, name: string) => {
     if (!confirm(`Delete category "${name}"?`)) return;
     try {
-      const res = await fetch(`/api/admin/categories?id=${id}&passcode=${encodeURIComponent(passcode)}`, { method: 'DELETE' });
+      const res = await fetch(`/api/admin/categories?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
       const data = await res.json();
       if (data.success) {
         showToast(`Category "${name}" deleted.`);

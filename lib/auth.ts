@@ -5,11 +5,21 @@ export const AUTHORIZED_ADMIN_EMAIL = (process.env.ADMIN_EMAIL || 'mohammadbitul
 const SESSION_SECRET = process.env.SESSION_SECRET || 'bookshelf_master_security_secret_2026_key_99x';
 const COOKIE_NAME = 'bookshelf_admin_session';
 
+// Server-side session revocation epoch
+let sessionVersion = 1;
+let lastRevokedAt = 0;
+
+export function revokeAllSessions() {
+  sessionVersion += 1;
+  lastRevokedAt = Date.now();
+}
+
 interface MagicTokenRecord {
   email: string;
   token: string;
   pin: string;
   expiresAt: number;
+  attempts: number;
   ip?: string;
 }
 
@@ -38,7 +48,7 @@ export function createMagicLink(email: string, ip?: string): { success: boolean;
   if (cleanEmail !== AUTHORIZED_ADMIN_EMAIL) {
     return {
       success: false,
-      message: `Access denied. Only the authorized administrator (${AUTHORIZED_ADMIN_EMAIL}) can request login links.`,
+      message: 'Unauthorized. This email does not have administrator privileges.',
     };
   }
 
@@ -52,6 +62,7 @@ export function createMagicLink(email: string, ip?: string): { success: boolean;
     token,
     pin,
     expiresAt,
+    attempts: 0,
     ip,
   };
 
@@ -68,16 +79,27 @@ export function createMagicLink(email: string, ip?: string): { success: boolean;
 
 /**
  * Verify Magic Token (from link) or 6-Digit PIN (from input box)
+ * Implements 5-Attempt Lockout & Burn protection against brute-forcing
  */
 export function verifyMagicTokenOrPin(identifier: string): { success: boolean; email?: string; sessionToken?: string; message?: string } {
   const clean = identifier.trim();
   let token = clean;
 
-  // If user entered a 6-digit PIN, resolve it to its token
+  // If user entered a 6-digit PIN
   if (/^\d{6}$/.test(clean)) {
     const resolved = pinLookup.get(clean);
     if (!resolved) {
-      return { success: false, message: 'Invalid or expired 6-digit PIN. Please request a new link.' };
+      // Find the active token for this user to increment failed attempt counter
+      for (const [tok, rec] of magicTokens.entries()) {
+        rec.attempts += 1;
+        if (rec.attempts >= 5) {
+          magicTokens.delete(tok);
+          pinLookup.delete(rec.pin);
+          return { success: false, message: 'Too many incorrect attempts. For security, this PIN was burned. Please request a new link.' };
+        }
+        return { success: false, message: `Invalid PIN code. (${5 - rec.attempts} attempts remaining)` };
+      }
+      return { success: false, message: 'Invalid or expired 6-digit PIN. Please request a new code.' };
     }
     token = resolved;
   }
@@ -90,7 +112,7 @@ export function verifyMagicTokenOrPin(identifier: string): { success: boolean; e
   if (Date.now() > record.expiresAt) {
     magicTokens.delete(token);
     pinLookup.delete(record.pin);
-    return { success: false, message: 'This login link has expired (15m limit). Please request a new link.' };
+    return { success: false, message: 'This login code has expired (15m limit). Please request a new code.' };
   }
 
   // One-time use: consume the token immediately
@@ -114,6 +136,7 @@ export function createSessionToken(email: string): string {
   const payload = {
     email: email.toLowerCase(),
     role: 'super_admin',
+    ver: sessionVersion,
     iat: Date.now(),
     exp: Date.now() + 30 * 24 * 60 * 60 * 1000, // 30 days
   };
@@ -124,7 +147,7 @@ export function createSessionToken(email: string): string {
 }
 
 /**
- * Validate a signed session token
+ * Validate a signed session token with server-side revocation checks
  */
 export function verifySessionToken(tokenString: string | undefined | null): { valid: boolean; email?: string } {
   if (!tokenString || typeof tokenString !== 'string') return { valid: false };
@@ -150,6 +173,13 @@ export function verifySessionToken(tokenString: string | undefined | null): { va
     if (payload.email !== AUTHORIZED_ADMIN_EMAIL) {
       return { valid: false };
     }
+    // Check server-side revocation version and timestamp
+    if (payload.ver !== sessionVersion) {
+      return { valid: false };
+    }
+    if (lastRevokedAt && payload.iat && payload.iat < lastRevokedAt) {
+      return { valid: false };
+    }
     return { valid: true, email: payload.email };
   } catch {
     return { valid: false };
@@ -172,10 +202,27 @@ export async function verifyAdminSession(): Promise<boolean> {
 }
 
 /**
- * Check request headers/cookies directly (useful for Next.js Route Handlers)
+ * Check request headers/cookies directly with CSRF protection for mutating HTTP methods
  */
 export function isRequestAuthorized(request: Request): boolean {
   try {
+    // CSRF check on mutating methods
+    const method = request.method.toUpperCase();
+    if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
+      const origin = request.headers.get('origin');
+      const host = request.headers.get('host');
+      if (origin && host) {
+        try {
+          const originHost = new URL(origin).host;
+          if (originHost !== host) {
+            return false; // Cross-origin mutation rejected
+          }
+        } catch {
+          return false;
+        }
+      }
+    }
+
     const cookieHeader = request.headers.get('cookie') || '';
     const match = cookieHeader.match(new RegExp(`${COOKIE_NAME}=([^;]+)`));
     if (!match || !match[1]) return false;
