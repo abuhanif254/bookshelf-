@@ -1,12 +1,17 @@
 import { NextResponse } from 'next/server';
 import { getAdSettings, updateAdSettings, incrementStat, getDatabase } from '@/lib/db';
+import { getSupabaseSettings, updateSupabaseSettings } from '@/lib/supabaseDb';
 import { isRequestAuthorized, createSessionToken, AUTHORIZED_ADMIN_EMAIL, COOKIE_NAME, revokeAllSessions } from '@/lib/auth';
 import { timingSafeStringEqual, sanitizeString } from '@/lib/security';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 
 export async function GET() {
   try {
-    const settings = getAdSettings();
+    let settings = getAdSettings();
+    const supaSettings = await getSupabaseSettings();
+    if (supaSettings) {
+      settings = { ...settings, ...supaSettings };
+    }
     const { adminPasscode, ...safeSettings } = settings;
     return NextResponse.json({ success: true, settings: safeSettings });
   } catch (error) {
@@ -32,12 +37,18 @@ export async function POST(request: Request) {
 
     const clientIp = getClientIp(request);
     const isAuth = isRequestAuthorized(request);
-    const currentSettings = getAdSettings();
+    
+    let currentSettings = getAdSettings();
+    const supaSettings = await getSupabaseSettings();
+    if (supaSettings) {
+      currentSettings = { ...currentSettings, ...supaSettings };
+    }
+    
     const targetPasscode = process.env.ADMIN_PASSCODE || currentSettings.adminPasscode || 'bookshelf2026';
     const matchesPasscode = timingSafeStringEqual(passcode, targetPasscode);
 
     // If trying to authenticate with passcode and not already authorized, apply rate limiting
-    if (!isAuth) {
+    if (!isAuth && typeof passcode === 'string') {
       const rateLimit = checkRateLimit(`login_passcode:${clientIp}`, 5, 15 * 60 * 1000);
       if (!rateLimit.allowed) {
         return NextResponse.json({
@@ -49,6 +60,10 @@ export async function POST(request: Request) {
       if (!matchesPasscode) {
         return NextResponse.json({ success: false, message: 'Invalid Admin Passcode' }, { status: 401 });
       }
+    }
+
+    if (!isAuth && !matchesPasscode) {
+      return NextResponse.json({ success: false, message: 'Unauthorized. Admin session required.' }, { status: 401 });
     }
 
     // Prepare response
@@ -67,6 +82,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: false, message: 'New passcode must be at least 6 characters' }, { status: 400 });
       }
       updateAdSettings({ adminPasscode: cleanPasscode });
+      await updateSupabaseSettings({ adminPasscode: cleanPasscode });
       // Invalidate all existing sessions on password change
       revokeAllSessions();
       responseData = { success: true, message: 'Passcode updated successfully. All other sessions have been logged out.' };
@@ -75,7 +91,10 @@ export async function POST(request: Request) {
     // General settings updates
     if (updates) {
       const updated = updateAdSettings(updates);
-      const { adminPasscode, ...safe } = updated;
+      await updateSupabaseSettings(updates); // Persist to Supabase!
+      
+      const merged = { ...updated, ...updates };
+      const { adminPasscode, ...safe } = merged;
       responseData = { success: true, settings: safe };
     }
 
