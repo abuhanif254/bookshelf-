@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { byId } from '@/lib/products';
+import { getClientBooks } from '@/lib/customBooks';
 import { coverHTML } from '@/lib/helpers';
 import { useStore } from '@/lib/store';
 import { useRouter } from 'next/navigation';
@@ -36,7 +36,7 @@ export default function MyLibraryPage() {
 
       <div className="wrap" style={{ paddingBottom: 60 }}>
         {list.length ? list.map(l => {
-          const p = byId(l.id);
+          const p = getClientBooks().find(b => b.id === l.id);
           if (!p) return null;
           return (
             <div key={l.id} className="librow">

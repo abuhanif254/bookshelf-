@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { coverHTML } from '@/lib/helpers';
-import { byId, P } from '@/lib/products';
+import { getClientBooks } from '@/lib/customBooks';
+import { P } from '@/lib/products';
 
 interface HeroCarouselProps {
   stacks: [number[], number[], number[], number[]];
@@ -90,7 +91,7 @@ export default function HeroCarousel({ stacks }: HeroCarouselProps) {
               </div>
               <div
                 className="stack"
-                dangerouslySetInnerHTML={{ __html: s.stack.map(id => coverHTML(byId(id)!)).join('') }}
+                dangerouslySetInnerHTML={{ __html: s.stack.map(id => coverHTML(getClientBooks().find(b => b.id === id)!)).join('') }}
               />
             </div>
           </div>

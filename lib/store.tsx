@@ -1,7 +1,8 @@
 'use client';
 
-import React, { createContext, useContext, useReducer, useCallback } from 'react';
-import { Product, byId } from './products';
+import React, { createContext, useContext, useReducer, useCallback, useEffect } from 'react';
+import { Product } from './products';
+import { getClientBooks } from './customBooks';
 
 export interface LibraryItem {
   id: number;
@@ -112,7 +113,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const cartQty = useCallback(() => Object.values(state.cart).reduce((a, b) => a + b, 0), [state.cart]);
 
   const addToCart = useCallback((id: number, qty: number = 1, silent: boolean = false) => {
-    const p = byId(id);
+    const p = getClientBooks().find(b => b.id === id);
     if (!p) return;
     dispatch({ type: 'ADD_TO_CART', id, qty });
     if (!silent) toast('Added to Cart', `${p.title} · ${p.type === 'free' ? 'Free' : '$' + p.price.toFixed(2)}`);
@@ -120,14 +121,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   // When clicking free download, open the ad-gated unlock modal
   const downloadFree = useCallback((id: number) => {
-    const p = byId(id);
+    const p = getClientBooks().find(b => b.id === id);
     if (!p) return;
     dispatch({ type: 'SET_AD_UNLOCK', id });
   }, []);
 
   // Called after ad is watched or direct unlock
   const triggerDirectDownload = useCallback((id: number, customUrl?: string) => {
-    const p = byId(id);
+    const p = getClientBooks().find(b => b.id === id);
     if (!p) return;
     dispatch({ type: 'DOWNLOAD_FREE', id });
     toast('Download starting ⤓', `${p.title}.pdf — saved to My Library`);
@@ -147,7 +148,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }, [toast]);
 
   const openPartner = useCallback((id: number) => {
-    const p = byId(id);
+    const p = getClientBooks().find(b => b.id === id);
     if (!p) return;
     toast(`Opening ${p.partner}…`, "You'll complete purchase on the partner site", true);
   }, [toast]);

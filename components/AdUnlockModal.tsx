@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { useStore } from '@/lib/store';
-import { byId } from '@/lib/products';
+import { getClientBooks } from '@/lib/customBooks';
 import { coverHTML } from '@/lib/helpers';
 import { getDirectDownloadUrl } from '@/lib/drive';
 import ReferralModal from './ReferralModal';
@@ -10,7 +10,7 @@ import ReferralModal from './ReferralModal';
 export default function AdUnlockModal() {
   const { state, dispatch, triggerDirectDownload, toast } = useStore();
   const bookId = state.adUnlockBookId;
-  const book = bookId ? byId(bookId) : null;
+  const book = bookId ? getClientBooks().find(b => b.id === bookId) : null;
 
   const [settings, setSettings] = useState<{
     adNetwork: string;

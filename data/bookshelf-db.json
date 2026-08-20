@@ -1,6 +1,40 @@
 {
   "books": [
     {
+      "id": 23,
+      "slug": "hello-world-nitc",
+      "title": "hello world",
+      "sub": "by hanif",
+      "author": "mohammad bitullah",
+      "cat": "Productivity",
+      "type": "free",
+      "price": 0,
+      "list": null,
+      "rating": 4.8,
+      "reviews": 132,
+      "pages": 100,
+      "badge": "Free",
+      "bought": "Instant download",
+      "bg": "#0f2a43",
+      "fg": "#ffffff",
+      "ac": "#f59e0b",
+      "pat": "p-grid",
+      "blurb": "hello world",
+      "feat": [
+        "Instant PDF download",
+        "DRM-free for personal use",
+        "Clean layout for screen & print"
+      ],
+      "desc": "<p>Enter a rich description for this book here.</p>",
+      "driveUrl": "https://drive.google.com/file/d/1s0lnTBCISmGr_Ljldqls-l6YBXRexEWH/view?usp=drive_link",
+      "coverImage": "",
+      "coverUrl": "",
+      "partner": "",
+      "partnerUrl": "",
+      "downloads": 0,
+      "createdAt": "2026-08-20T02:35:18.958Z"
+    },
+    {
       "slug": "abu-hanif-177c",
       "title": "abu hanif",
       "sub": "mohammad",
@@ -27,7 +61,7 @@
       "desc": "<p>Enter a rich description for this book here.</p>",
       "driveUrl": "https://drive.google.com/file/d/1s0lnTBCISmGr_Ljldqls-l6YBXRexEWH/view?usp=drive_link",
       "id": 22,
-      "downloads": 0,
+      "downloads": 1,
       "createdAt": "2026-08-20T02:09:53.148Z"
     },
     {
@@ -910,9 +944,9 @@
     "siteTagline": "Buy & Download Free PDF Books Instantly",
     "supportEmail": "support@bookshelf.com",
     "stats": {
-      "totalDownloads": 1425,
-      "adImpressions": 3900,
-      "adUnlocks": 2745
+      "totalDownloads": 1427,
+      "adImpressions": 3902,
+      "adUnlocks": 2747
     }
   }
 }

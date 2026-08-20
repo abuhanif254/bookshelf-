@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useStore } from '@/lib/store';
-import { P, byId, Product } from '@/lib/products';
+import { P, Product } from '@/lib/products';
 import { cardHTML, coverHTML, stars } from '@/lib/helpers';
 import HeroCarousel from '@/components/HeroCarousel';
 import ScrollSection from '@/components/ScrollSection';
@@ -73,7 +73,7 @@ export default function HomePage() {
     }
   };
 
-  const getBook = (id: number) => allBooks.find(b => b.id === id) || byId(id);
+  const getBook = (id: number) => allBooks.find(b => b.id === id);
 
   // Data
   const deals = allBooks.filter(p => p.list && p.price > 0).sort((a, b) => (1 - b.price / b.list!) - (1 - a.price / a.list!));
@@ -203,7 +203,7 @@ export default function HomePage() {
                 onClick={handleAction}
                 dangerouslySetInnerHTML={{
                   __html: q.ids.map(id => {
-                    const p = byId(id)!;
+                    const p = getBook(id)!;
                     return `<div class="qitem" data-open="${p.slug}">${coverHTML(p, 'sm')}<span>${p.title}</span></div>`;
                   }).join('')
                 }}

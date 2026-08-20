@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect } from 'react';
 import { coverHTML, stars, priceRow, actionBtn, flagCls } from '@/lib/helpers';
-import { byId } from '@/lib/products';
+import { getClientBooks } from '@/lib/customBooks';
 import { useStore } from '@/lib/store';
 import { useRouter } from 'next/navigation';
 
@@ -10,7 +10,7 @@ export default function QuickViewModal() {
   const { state, dispatch, addToCart, downloadFree, openPartner } = useStore();
   const router = useRouter();
   const id = state.quickViewId;
-  const p = id ? byId(id) : null;
+  const p = id ? getClientBooks().find(b => b.id === id) : null;
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {

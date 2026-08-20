@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { byId, P } from '@/lib/products';
+import { getClientBooks } from '@/lib/customBooks';
 import { coverHTML, cardHTML } from '@/lib/helpers';
 import { useStore } from '@/lib/store';
 import ScrollSection from '@/components/ScrollSection';
@@ -10,13 +10,15 @@ import ScrollSection from '@/components/ScrollSection';
 export default function CartPage() {
   const { state, dispatch, addToCart, downloadFree, openPartner, toast } = useStore();
   const router = useRouter();
+  
+  const allBooks = getClientBooks();
 
   const cartQty = Object.values(state.cart).reduce((a, b) => a + b, 0);
   const ids = Object.keys(state.cart).map(Number);
-  const items = ids.map(id => ({ p: byId(id)!, q: state.cart[id] })).filter(x => x.p);
+  const items = ids.map(id => ({ p: allBooks.find(b => b.id === id)!, q: state.cart[id] })).filter(x => x.p);
   const subtotal = items.reduce((s, { p, q }) => s + p.price * q, 0);
   const savings = items.reduce((s, { p, q }) => s + ((p.list ? p.list - p.price : 0) * q), 0);
-  const also = P.filter(p => !state.cart[p.id] && p.type === 'paid').sort((a, b) => b.reviews - a.reviews).slice(0, 6);
+  const also = allBooks.filter(p => !state.cart[p.id] && p.type === 'paid').sort((a, b) => b.reviews - a.reviews).slice(0, 6);
 
   const handleAction = (e: React.MouseEvent<HTMLElement>) => {
     const btn = (e.target as HTMLElement).closest('[data-add],[data-free],[data-ext],[data-qv],[data-open],[data-toast]') as HTMLElement | null;
