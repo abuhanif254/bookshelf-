@@ -16,7 +16,7 @@ const AdInjector = React.memo(({ adCode }: { adCode: string }) => {
       if (e.data?.type === 'AD_FRAME_READY' && iframeRef.current?.contentWindow === e.source) {
         const safeAdCode = adCode.replace(/(src|href)=['"]\/\//g, '$1="https://');
         
-        iframeRef.current.contentWindow.postMessage({
+        iframeRef.current?.contentWindow?.postMessage({
           type: 'INJECT_AD',
           code: `
             <!DOCTYPE html>
