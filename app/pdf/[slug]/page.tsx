@@ -60,7 +60,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       tags: [book.cat, 'PDF Book', 'Free Download'],
       images: [
         {
-          url: `/api/og?slug=${book.slug}`,
+          url: `${getBaseUrl()}/api/og?slug=${book.slug}`,
           width: 1200,
           height: 630,
           alt: `${book.title} by ${book.author}`,
@@ -71,7 +71,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       card: 'summary_large_image',
       title: `${book.title} by ${book.author} (Free PDF Download)`,
       description,
-      images: [`/api/og?slug=${book.slug}`],
+      images: [`${getBaseUrl()}/api/og?slug=${book.slug}`],
     },
   };
 }

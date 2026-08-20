@@ -65,7 +65,7 @@ export const metadata: Metadata = {
     description: 'Instant PDF delivery. Thousands of free books on productivity, design, programming, finance and more. Free titles every Friday.',
     images: [
       {
-        url: '/api/og',
+        url: `${baseUrl}/api/og`,
         width: 1200,
         height: 630,
         alt: 'Bookshelf — Free PDF Books Library',
@@ -76,7 +76,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Bookshelf — Free PDF Books & Digital Library',
     description: 'Instant PDF delivery. Thousands of free books on productivity, design, programming, finance and more.',
-    images: ['/api/og'],
+    images: [`${baseUrl}/api/og`],
   },
 };
 
