@@ -94,11 +94,16 @@ export default function HomePage() {
     return `<a href="/pdf/${p.slug}" class="row" data-open="${p.slug}" style="text-decoration:none; display:flex;"><span class="num">${String(i + 1).padStart(2, '0')}</span><div><div class="t">${p.title}</div><div class="a">${p.author} · ${p.cat}</div></div><span class="pr">${p.type === 'free' ? 'Free' : '$' + p.price.toFixed(2)}</span></a>`;
   }).join('');
 
+  const categories = [...new Set(allBooks.map(b => b.cat))];
+  const cat1 = categories[0] || 'Productivity';
+  const cat2 = categories[1] || 'Design';
+  const cat3 = categories[2] || 'Programming';
+
   const quadCards = [
-    { title: 'Best Sellers in Productivity', ids: [1, 15, 17, 2], href: '/library?cat=Productivity', label: 'See more in Productivity →' },
-    { title: 'Free this week', ids: [5, 7, 11, 14], href: '/library?preset=free', label: 'Browse all free PDFs →' },
-    { title: 'Most-wished-for Design PDFs', ids: [4, 10, 16, 14], href: '/library?cat=Design', label: 'See more in Design →' },
-    { title: 'Trending Coding & AI Guides', ids: [20, 5, 8, 12], href: '/category/programming', label: 'Explore Programming PDFs →' },
+    { title: `Best Sellers in ${cat1}`, ids: allBooks.filter(b => b.cat === cat1).slice(0, 4).map(b => b.id), href: `/library?cat=${encodeURIComponent(cat1)}`, label: `See more in ${cat1} →` },
+    { title: 'Free this week', ids: freeBooks.slice(0, 4).map(b => b.id), href: '/library?preset=free', label: 'Browse all free PDFs →' },
+    { title: `Most-wished-for ${cat2}`, ids: allBooks.filter(b => b.cat === cat2).slice(0, 4).map(b => b.id), href: `/library?cat=${encodeURIComponent(cat2)}`, label: `See more in ${cat2} →` },
+    { title: `Trending ${cat3}`, ids: allBooks.filter(b => b.cat === cat3).slice(0, 4).map(b => b.id), href: `/library?cat=${encodeURIComponent(cat3)}`, label: `Explore ${cat3} →` },
   ];
 
   const faqs = [
@@ -203,7 +208,8 @@ export default function HomePage() {
                 onClick={handleAction}
                 dangerouslySetInnerHTML={{
                   __html: q.ids.map(id => {
-                    const p = getBook(id)!;
+                    const p = getBook(id);
+                    if (!p) return '';
                     return `<div class="qitem" data-open="${p.slug}">${coverHTML(p, 'sm')}<span>${p.title}</span></div>`;
                   }).join('')
                 }}

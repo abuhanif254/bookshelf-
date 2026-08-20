@@ -8,7 +8,7 @@ import { getClientBooks, saveClientBooks, addClientBook, deleteClientBook } from
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const PATTERNS = ['p-rings', 'p-lines', 'p-dots', 'p-grid', 'p-blocks', 'p-waves'];
-const CATEGORIES = ['Productivity', 'Programming', 'Business', 'Design', 'Marketing', 'Self-Help', 'Technology', 'Finance', 'Health'];
+const DEFAULT_CATEGORIES = ['Productivity', 'Programming', 'Business', 'Design', 'Marketing', 'Self-Help', 'Technology', 'Finance', 'Health'];
 const BOOK_TYPES = ['free', 'paid', 'affiliate'] as const;
 const BADGES = ['Free', 'Best Seller', '#1 New Release', "Editor's Choice", 'Deal', 'Hot', 'Partner Pick', 'Trending', ''];
 
@@ -155,6 +155,7 @@ export default function AdminBooksClient() {
   const [pinInput, setPinInput] = useState('');
   const [magicLoading, setMagicLoading] = useState(false);
   const [authError, setAuthError] = useState('');
+  const [categories, setCategories] = useState<string[]>(DEFAULT_CATEGORIES);
 
   const [search, setSearch] = useState('');
   const [filterCat, setFilterCat] = useState('');
@@ -274,6 +275,13 @@ export default function AdminBooksClient() {
     try {
       const res = await fetch(`/api/books?_t=${Date.now()}`, { cache: 'no-store' });
       const data = await res.json();
+
+      const catRes = await fetch(`/api/admin/categories?_t=${Date.now()}`, { cache: 'no-store' });
+      const catData = await catRes.json();
+      if (catData.success && Array.isArray(catData.categories) && catData.categories.length > 0) {
+        setCategories(catData.categories.map((c: any) => c.name));
+      }
+
       if (data.success && Array.isArray(data.books)) {
         // Merge with any newly added local books that might not be indexed yet (just in case)
         const stored = getClientBooks();
@@ -702,7 +710,7 @@ export default function AdminBooksClient() {
         />
         <select value={filterCat} onChange={e => setFilterCat(e.target.value)} style={selStyle}>
           <option value="">All Categories</option>
-          {CATEGORIES.map(c => <option key={c}>{c}</option>)}
+          {categories.map(c => <option key={c}>{c}</option>)}
         </select>
         <select value={filterType} onChange={e => setFilterType(e.target.value)} style={selStyle}>
           <option value="">All Types</option>
@@ -919,7 +927,7 @@ export default function AdminBooksClient() {
                         </Field>
                         <Field label="Category">
                           <select value={form.cat} onChange={e => set('cat', e.target.value)} style={inp}>
-                            {CATEGORIES.map(c => <option key={c}>{c}</option>)}
+                            {categories.map(c => <option key={c}>{c}</option>)}
                           </select>
                         </Field>
                       </div>

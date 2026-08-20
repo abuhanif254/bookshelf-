@@ -93,9 +93,7 @@ export default function Header() {
               <option>Free</option>
               <option>Paid</option>
               <option>Partners</option>
-              <option>Business</option>
-              <option>Design</option>
-              <option>Programming</option>
+              {[...new Set(allBooks.map(b => b.cat))].slice(0, 5).map(c => <option key={c}>{c}</option>)}
             </select>
             <input
               ref={inputRef}

@@ -101,7 +101,7 @@ export default function LibraryClient() {
   const totalPages = Math.max(1, Math.ceil(allFiltered.length / PAGE_SIZE));
   const currentPage = Math.min(filter.page, totalPages);
   const slice = allFiltered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
-  const cats = [...new Set(P.map(p => p.cat))];
+  const cats = [...new Set(allBooks.map(p => p.cat))];
 
   const label = filter.preset === 'deals' ? "Today's Deals"
     : filter.preset === 'free' ? 'Free PDFs'
@@ -154,7 +154,7 @@ export default function LibraryClient() {
                 onChange={e => updateFilter({ cats: toggleSet(filter.cats, c, e.target.checked) })}
               />
               {c}
-              <span className="cnt">{P.filter(p => p.cat === c).length}</span>
+              <span className="cnt">{allBooks.filter(p => p.cat === c).length}</span>
             </label>
           ))}
 
