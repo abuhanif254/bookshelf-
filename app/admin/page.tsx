@@ -1402,7 +1402,7 @@ export default function AdminPage() {
 
       {/* ADD / EDIT CAT MODAL */}
       {showCatModal && (
-        <div className="overlay open" style={{ zIndex: 400, background: 'rgba(15, 23, 42, 0.75)' }} onClick={() => setShowCatModal(false)}>
+        <div className="overlay open" style={{ zIndex: 400, background: 'rgba(15, 23, 42, 0.75)' }} onClick={(e) => { if ((e.target as HTMLElement).classList.contains('overlay')) setShowCatModal(false); }}>
           <div className="modal" style={{ maxWidth: 520, padding: 26, borderRadius: 14 }}>
             <button className="x" onClick={() => setShowCatModal(false)}>✕</button>
             <h2 style={{ fontSize: 20, fontWeight: 900, marginBottom: 16 }}>{editingCat ? 'Edit Category' : 'Add Category'}</h2>
