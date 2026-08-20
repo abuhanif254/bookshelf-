@@ -934,7 +934,7 @@
   "settings": {
     "adNetwork": "monetag",
     "countdownSeconds": 8,
-    "adCode": "<script async type=\"application/javascript\" src=\"https://a.magsrv.com/ad-provider.js\"></script> <ins class=\"eas6a97888e37\" data-zoneid=\"6006918\"></ins> <script>(AdProvider = window.AdProvider || []).push({\"serve\": {}});</script>",
+    "adCode": "<div id=\"video-ad-test\" style=\"width:100%;height:220px;background:#000;border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center;\"><span style=\"color:#fff;font-size:12px;font-family:sans-serif;\">Loading Video Ad...</span></div><script>setTimeout(function(){const el = document.getElementById('video-ad-test'); if(el) el.innerHTML = '<iframe width=\"100%\" height=\"100%\" src=\"https://www.youtube.com/embed/jfKfPfyJRdk?autoplay=1&mute=1&controls=0\" frameborder=\"0\" allow=\"autoplay; encrypted-media\"></iframe>';}, 800);</script>",
     "directSmartLink": "https://omg10.com/4/11608657",
     "sponsorTitle": "SkillBoost Pro — Master High-Income Tech Skills",
     "sponsorSubtitle": "Get 85% off premium project-based roadmaps, certifications, and AI tools for developers.",
@@ -945,9 +945,9 @@
     "siteTagline": "Buy & Download Free PDF Books Instantly",
     "supportEmail": "support@bookshelf.com",
     "stats": {
-      "totalDownloads": 1432,
-      "adImpressions": 3914,
-      "adUnlocks": 2752
+      "totalDownloads": 1434,
+      "adImpressions": 3918,
+      "adUnlocks": 2754
     }
   }
 }
