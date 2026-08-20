@@ -42,10 +42,10 @@ export const coverHTML = (p: Product, size: string = ''): string => {
     if (isValidHttpUrl(resolvedImg)) {
       const safeImgUrl = escapeHtml(resolvedImg);
       const safeSlug = escapeHtml(p.slug);
-      return `<div class="coverwrap" data-open="${safeSlug}" style="cursor:pointer"><div class="cover ${safeSize ? 'cover--' + safeSize : ''}" style="padding:0;overflow:hidden;background:#0f172a;position:relative;">
+      return `<a href="/pdf/${safeSlug}" class="coverwrap" data-open="${safeSlug}" style="cursor:pointer; display:block;"><div class="cover ${safeSize ? 'cover--' + safeSize : ''}" style="padding:0;overflow:hidden;background:#0f172a;position:relative;">
         <img src="${safeImgUrl}" alt="${safeTitle}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;" loading="lazy" onerror="this.style.display='none';this.parentElement.classList.add('cover--fallback');" />
         <div style="position:absolute;inset:0;box-shadow:inset 10px 0 14px -10px rgba(0,0,0,.6), inset 0 0 0 1px rgba(255,255,255,0.08);pointer-events:none;"></div>
-      </div></div>`;
+      </div></a>`;
     }
   }
 
@@ -56,13 +56,13 @@ export const coverHTML = (p: Product, size: string = ''): string => {
   const safePages = Number(p.pages) || 80;
   const safeSlug = escapeHtml(p.slug);
 
-  return `<div class="coverwrap" data-open="${safeSlug}" style="cursor:pointer"><div class="cover ${safeSize ? 'cover--' + safeSize : ''}" style="--cbg:${safeBg};--fg:${safeFg};--cac:${safeAc}">
+  return `<a href="/pdf/${safeSlug}" class="coverwrap" data-open="${safeSlug}" style="cursor:pointer; display:block;"><div class="cover ${safeSize ? 'cover--' + safeSize : ''}" style="--cbg:${safeBg};--fg:${safeFg};--cac:${safeAc}">
     <div class="pat ${safePat}"></div><span class="cac"></span>
     <span class="ccat">${safeCat}</span>
     <div><div class="cttl">${safeTitle}</div>${safeSize === 'lg' ? `<div class="csub">${safeSub}</div>` : ''}</div>
     <div><div class="caut">${safeAuthor}</div>
     <div class="cfoot"><span class="cpdf">PDF</span><span class="cpg">${safePages} pages</span></div></div>
-  </div></div>`;
+  </div></a>`;
 };
 
 export const priceRow = (p: Product): string => {
@@ -97,9 +97,9 @@ export const cardHTML = (p: Product, rank: number | null = null, deal: boolean =
     <button class="heart ${wishlistIds.has(safeId) ? 'on' : ''}" data-wish="${safeId}" aria-label="Add to wishlist"><svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.7-10-9.3C.3 8.6 2.4 4.5 6.2 4.5c2.2 0 3.9 1.2 5.8 3.4 1.9-2.2 3.6-3.4 5.8-3.4 3.8 0 5.9 4.1 4.2 7.2C19.5 16.3 12 21 12 21z"/></svg></button>
     <button class="qview" data-qv="${safeId}">Quick view</button>
     ${coverHTML(p)}
-    <h3 class="ttl"><a data-open="${safeSlug}">${safeTitle}</a></h3>
+    <h3 class="ttl"><a href="/pdf/${safeSlug}" data-open="${safeSlug}">${safeTitle}</a></h3>
     <div class="auth">by <b>${safeAuthor}</b></div>
-    <div class="rrow">${stars(p.rating)}<a class="rcount" data-open="${safeSlug}">${safeReviews}</a></div>
+    <div class="rrow">${stars(p.rating)}<a href="/pdf/${safeSlug}#reviews" class="rcount" data-open="${safeSlug}">${safeReviews}</a></div>
     <div class="bought">${safeBought}</div>
     ${deal ? `<span class="deal-timer">⏱ Deal ends in <span class="dt">--:--:--</span></span>` : ''}
     ${priceRow(p)}

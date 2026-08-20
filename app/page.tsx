@@ -91,7 +91,7 @@ export default function HomePage() {
   const edlistHTML = editorPicks.map((id, i) => {
     const p = getBook(id);
     if (!p) return '';
-    return `<div class="row" data-open="${p.slug}"><span class="num">${String(i + 1).padStart(2, '0')}</span><div><div class="t">${p.title}</div><div class="a">${p.author} · ${p.cat}</div></div><span class="pr">${p.type === 'free' ? 'Free' : '$' + p.price.toFixed(2)}</span></div>`;
+    return `<a href="/pdf/${p.slug}" class="row" data-open="${p.slug}" style="text-decoration:none; display:flex;"><span class="num">${String(i + 1).padStart(2, '0')}</span><div><div class="t">${p.title}</div><div class="a">${p.author} · ${p.cat}</div></div><span class="pr">${p.type === 'free' ? 'Free' : '$' + p.price.toFixed(2)}</span></a>`;
   }).join('');
 
   const quadCards = [
@@ -204,7 +204,7 @@ export default function HomePage() {
                 dangerouslySetInnerHTML={{
                   __html: q.ids.map(id => {
                     const p = getBook(id)!;
-                    return `<div class="qitem" data-open="${p.slug}">${coverHTML(p, 'sm')}<span>${p.title}</span></div>`;
+                    return `<a href="/pdf/${p.slug}" class="qitem" data-open="${p.slug}" style="text-decoration:none; color:inherit;">${coverHTML(p, 'sm')}<span>${p.title}</span></a>`;
                   }).join('')
                 }}
               />
