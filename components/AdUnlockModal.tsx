@@ -8,41 +8,12 @@ import { getDirectDownloadUrl } from '@/lib/drive';
 import ReferralModal from './ReferralModal';
 
 const AdInjector = React.memo(({ adCode }: { adCode: string }) => {
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-
-  useEffect(() => {
-    const handleMessage = (e: MessageEvent) => {
-      // When the iframe announces it's ready, send it the ad code!
-      if (e.data?.type === 'AD_FRAME_READY' && iframeRef.current?.contentWindow === e.source) {
-        const safeAdCode = adCode.replace(/(src|href)=['"]\/\//g, '$1="https://');
-        
-        iframeRef.current?.contentWindow?.postMessage({
-          type: 'INJECT_AD',
-          code: `
-            <!DOCTYPE html>
-            <html>
-              <head>
-                <base target="_blank">
-                <style>
-                  body { margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; background: transparent; }
-                </style>
-              </head>
-              <body>
-                ${safeAdCode}
-              </body>
-            </html>
-          `
-        }, '*');
-      }
-    };
-
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
-  }, [adCode]);
-
+  // A completely dumb iframe that just loads the server route.
+  // The server route dynamically injects the adCode using raw HTML,
+  // bypassing all client-side React rendering restrictions.
   return (
     <iframe
-      ref={iframeRef}
+      key={adCode}
       src="/ad-frame"
       style={{ width: '100%', height: '100%', minHeight: 250, border: 'none', overflow: 'hidden' }}
       scrolling="no"
