@@ -155,7 +155,7 @@ export default function Header() {
 
       <nav className="hd-sub">
         <div className="wrap">
-          <button className="cell all">☰ All</button>
+          <Link href="/library" className="cell all">☰ All</Link>
           <Link href="/library?preset=deals" className="cell">Today&apos;s Deals</Link>
           <Link href="/library?preset=free" className="cell">Free PDFs</Link>
           <Link href="/library?preset=best" className="cell">Best Sellers</Link>
