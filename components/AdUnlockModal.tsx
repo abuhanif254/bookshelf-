@@ -56,14 +56,16 @@ export default function AdUnlockModal() {
   // Dynamically execute external ad network scripts (Monetag, Adsterra, AdSense)
   useEffect(() => {
     if (settings.adCode && adContainerRef.current && bookId) {
-      adContainerRef.current.innerHTML = '';
-      try {
-        const range = document.createRange();
-        const documentFragment = range.createContextualFragment(settings.adCode);
-        adContainerRef.current.appendChild(documentFragment);
-      } catch (err) {
-        console.error('Error executing ad script:', err);
-      }
+      adContainerRef.current.innerHTML = settings.adCode;
+      const scripts = adContainerRef.current.querySelectorAll('script');
+      scripts.forEach(oldScript => {
+        const newScript = document.createElement('script');
+        Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+        newScript.text = oldScript.text;
+        if (oldScript.parentNode) {
+          oldScript.parentNode.replaceChild(newScript, oldScript);
+        }
+      });
     }
   }, [settings.adCode, bookId]);
 
@@ -124,9 +126,6 @@ export default function AdUnlockModal() {
 
   const handleStartWatch = () => {
     setIsWatching(true);
-    if (settings.directSmartLink) {
-      window.open(settings.directSmartLink, '_blank');
-    }
   };
 
   const handleExecuteDownload = async () => {
