@@ -204,7 +204,7 @@ export default function HomePage() {
                 dangerouslySetInnerHTML={{
                   __html: q.ids.map(id => {
                     const p = getBook(id)!;
-                    return `<a href="/pdf/${p.slug}" class="qitem" data-open="${p.slug}" style="text-decoration:none; color:inherit;">${coverHTML(p, 'sm')}<span>${p.title}</span></a>`;
+                    return `<div class="qitem" data-open="${p.slug}">${coverHTML(p, 'sm')}<span>${p.title}</span></div>`;
                   }).join('')
                 }}
               />
