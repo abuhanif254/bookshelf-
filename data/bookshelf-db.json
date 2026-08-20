@@ -593,7 +593,8 @@
         "Window function visualizer",
         "Index & performance quick rules"
       ],
-      "desc": "<p>The sheets pinned above 40,000 desks worldwide. Free, printable, forever.</p>"
+      "desc": "<p>The sheets pinned above 40,000 desks worldwide. Free, printable, forever.</p>",
+      "downloads": 1
     },
     {
       "id": 19,
@@ -944,9 +945,9 @@
     "siteTagline": "Buy & Download Free PDF Books Instantly",
     "supportEmail": "support@bookshelf.com",
     "stats": {
-      "totalDownloads": 1430,
-      "adImpressions": 3910,
-      "adUnlocks": 2750
+      "totalDownloads": 1432,
+      "adImpressions": 3914,
+      "adUnlocks": 2752
     }
   }
 }
