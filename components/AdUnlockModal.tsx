@@ -8,24 +8,40 @@ import { getDirectDownloadUrl } from '@/lib/drive';
 import ReferralModal from './ReferralModal';
 
 const AdInjector = React.memo(({ adCode }: { adCode: string }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
-    if (adCode && containerRef.current) {
-      containerRef.current.innerHTML = adCode;
-      const scripts = containerRef.current.querySelectorAll('script');
-      scripts.forEach(oldScript => {
-        const newScript = document.createElement('script');
-        Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
-        newScript.text = oldScript.text;
-        if (oldScript.parentNode) {
-          oldScript.parentNode.replaceChild(newScript, oldScript);
-        }
-      });
+    if (adCode && iframeRef.current) {
+      const doc = iframeRef.current.contentWindow?.document;
+      if (doc) {
+        doc.open();
+        doc.write(`
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <base target="_blank">
+              <style>
+                body { margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; background: transparent; }
+              </style>
+            </head>
+            <body>
+              ${adCode}
+            </body>
+          </html>
+        `);
+        doc.close();
+      }
     }
   }, [adCode]);
 
-  return <div ref={containerRef} style={{ width: '100%', minHeight: 120, display: 'flex', justifyContent: 'center', alignItems: 'center' }} />;
+  return (
+    <iframe
+      ref={iframeRef}
+      style={{ width: '100%', height: '100%', minHeight: 150, border: 'none', overflow: 'hidden' }}
+      scrolling="no"
+      sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
+    />
+  );
 }, (prevProps, nextProps) => prevProps.adCode === nextProps.adCode);
 
 export default function AdUnlockModal() {
