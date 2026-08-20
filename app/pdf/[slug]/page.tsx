@@ -5,6 +5,7 @@ import { getSupabaseBooks } from '@/lib/supabaseDb';
 import { BookJsonLd, BreadcrumbJsonLd, FAQJsonLd } from '@/components/JsonLd';
 import ProductClient from './ProductClient';
 import DynamicBookFallback from './DynamicBookFallback';
+import { getBaseUrl } from '@/lib/url';
 
 interface Props {
   params: Promise<{ slug: string }> | { slug: string };
@@ -33,7 +34,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const title = `${book.title} by ${book.author} — Download Free PDF (${book.pages} Pages)`;
   const description = `Download "${book.title}" PDF book by ${book.author}. ${book.blurb || book.sub} 100% free direct Google Drive download. DRM-free for personal use.`;
-  const canonicalUrl = `https://bookshelf.com/pdf/${book.slug}`;
+  const canonicalUrl = `${getBaseUrl()}/pdf/${book.slug}`;
 
   return {
     title,

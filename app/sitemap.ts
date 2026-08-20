@@ -2,13 +2,14 @@ import { MetadataRoute } from 'next';
 import { getAllBooks } from '@/lib/db';
 import { getSupabaseBooks } from '@/lib/supabaseDb';
 import { BUNDLES } from '@/lib/bundles';
+import { getBaseUrl } from '@/lib/url';
 
 function normalizeSlug(str: string): string {
   return str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://bookshelf.com';
+  const baseUrl = getBaseUrl();
   const supaBooks = await getSupabaseBooks();
   const books = supaBooks && supaBooks.length > 0 ? supaBooks : getAllBooks();
 

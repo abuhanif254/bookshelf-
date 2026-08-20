@@ -14,8 +14,12 @@ import { PdfReaderProvider } from '@/components/PdfReaderWrapper';
 import { WebSiteJsonLd, OrganizationJsonLd } from '@/components/JsonLd';
 import { CurrencyProvider } from '@/lib/currency';
 
+import { getBaseUrl } from '@/lib/url';
+
+const baseUrl = getBaseUrl();
+
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://bookshelf.com'),
+  metadataBase: new URL(baseUrl),
   title: {
     default: 'Bookshelf — Download & Read Free PDF Books Instantly',
     template: '%s | Bookshelf',
@@ -36,9 +40,9 @@ export const metadata: Metadata = {
   publisher: 'Bookshelf Inc.',
   manifest: '/manifest.webmanifest',
   alternates: {
-    canonical: 'https://bookshelf.com',
+    canonical: baseUrl,
     types: {
-      'application/rss+xml': 'https://bookshelf.com/feed.xml',
+      'application/rss+xml': `${baseUrl}/feed.xml`,
     },
   },
   robots: {
@@ -55,7 +59,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://bookshelf.com',
+    url: baseUrl,
     siteName: 'Bookshelf',
     title: 'Bookshelf — Download & Read Free PDF Books Instantly',
     description: 'Instant PDF delivery. Thousands of free books on productivity, design, programming, finance and more. Free titles every Friday.',

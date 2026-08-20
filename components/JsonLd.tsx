@@ -1,5 +1,6 @@
 import React from 'react';
 import { Product } from '@/lib/products';
+import { getBaseUrl } from '@/lib/url';
 
 interface BookJsonLdProps {
   book: Product;
@@ -7,6 +8,7 @@ interface BookJsonLdProps {
 }
 
 export function BookJsonLd({ book, url }: BookJsonLdProps) {
+  const baseUrl = getBaseUrl();
   const schema = {
     '@context': 'https://schema.org',
     '@type': 'Book',
@@ -16,14 +18,14 @@ export function BookJsonLd({ book, url }: BookJsonLdProps) {
     author: {
       '@type': 'Person',
       name: book.author,
-      url: `https://bookshelf.com/author/${book.author.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '')}`,
+      url: `${baseUrl}/author/${book.author.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '')}`,
     },
     genre: book.cat,
     numberOfPages: book.pages,
     inLanguage: 'en',
     bookFormat: 'https://schema.org/EBook',
     encodingFormat: 'application/pdf',
-    url: url || `https://bookshelf.com/pdf/${book.slug}`,
+    url: url || `${baseUrl}/pdf/${book.slug}`,
     aggregateRating: {
       '@type': 'AggregateRating',
       ratingValue: book.rating,
@@ -50,18 +52,19 @@ export function BookJsonLd({ book, url }: BookJsonLdProps) {
 }
 
 export function WebSiteJsonLd() {
+  const baseUrl = getBaseUrl();
   const schema = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: 'Bookshelf',
     alternateName: ['Bookshelf PDF Library', 'Bookshelf.com'],
-    url: 'https://bookshelf.com',
+    url: baseUrl,
     description: 'Download thousands of high-quality free PDF books on productivity, programming, design, and business.',
     potentialAction: {
       '@type': 'SearchAction',
       target: {
         '@type': 'EntryPoint',
-        urlTemplate: 'https://bookshelf.com/library?q={search_term_string}',
+        urlTemplate: `${baseUrl}/library?q={search_term_string}`,
       },
       'query-input': 'required name=search_term_string',
     },
@@ -193,13 +196,14 @@ export function ItemListJsonLd({ title, description, url, items }: {
 }
 
 export function OrganizationJsonLd() {
+  const baseUrl = getBaseUrl();
   const schema = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
     name: 'Bookshelf',
     alternateName: 'Bookshelf Inc.',
-    url: 'https://bookshelf.com',
-    logo: 'https://bookshelf.com/api/og',
+    url: baseUrl,
+    logo: `${baseUrl}/api/og`,
     description: 'Premier digital library for verified free PDF books, toolkits, and playbooks.',
     sameAs: [
       'https://twitter.com/bookshelf_pdf',
