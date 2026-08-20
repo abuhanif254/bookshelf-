@@ -1,6 +1,36 @@
 {
   "books": [
     {
+      "slug": "abu-hanif-177c",
+      "title": "abu hanif",
+      "sub": "mohammad",
+      "author": "mohammad bitullah",
+      "cat": "Productivity",
+      "type": "free",
+      "price": 0,
+      "list": null,
+      "rating": 4.8,
+      "reviews": 122,
+      "pages": 100,
+      "badge": "Free",
+      "bought": "Instant download",
+      "bg": "#18181b",
+      "fg": "#fafafa",
+      "ac": "#f59e0b",
+      "pat": "p-lines",
+      "blurb": "abu hanif",
+      "feat": [
+        "Instant PDF download",
+        "DRM-free for personal use",
+        "Clean layout for screen & print"
+      ],
+      "desc": "<p>Enter a rich description for this book here.</p>",
+      "driveUrl": "https://drive.google.com/file/d/1s0lnTBCISmGr_Ljldqls-l6YBXRexEWH/view?usp=drive_link",
+      "id": 22,
+      "downloads": 0,
+      "createdAt": "2026-08-20T02:09:53.148Z"
+    },
+    {
       "slug": "clean-code-in-python-2026",
       "title": "Clean Code in Python 2026",
       "sub": "Architecture patterns for scalable backend services",

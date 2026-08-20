@@ -94,7 +94,15 @@ export async function getSupabaseBooks(): Promise<Product[] | null> {
 export async function addSupabaseBook(bookData: Omit<Product, 'id'>): Promise<Product | null> {
   try {
     const row = mapProductToDbRow(bookData);
-    delete row.id;
+    
+    // Fetch max ID to bypass out-of-sync PostgreSQL sequence caused by seeding
+    const { data: maxData } = await supabase.from('books').select('id').order('id', { ascending: false }).limit(1);
+    if (maxData && maxData.length > 0) {
+      row.id = maxData[0].id + 1;
+    } else {
+      delete row.id;
+    }
+
     const { data, error } = await supabase
       .from('books')
       .insert(row)

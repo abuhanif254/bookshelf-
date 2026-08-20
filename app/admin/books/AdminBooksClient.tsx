@@ -272,11 +272,19 @@ export default function AdminBooksClient() {
   const fetchBooks = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/books');
+      const res = await fetch(`/api/books?_t=${Date.now()}`, { cache: 'no-store' });
       const data = await res.json();
       if (data.success && Array.isArray(data.books)) {
-        setBooks(data.books);
-        saveClientBooks(data.books);
+        // Merge with any newly added local books that might not be indexed yet (just in case)
+        const stored = getClientBooks();
+        const apiBooks = data.books;
+        
+        // Find any stored books that are newer/missing from API result
+        const missingStored = stored.filter((s: Product) => !apiBooks.some((a: Product) => a.id === s.id));
+        const merged = [...missingStored, ...apiBooks].sort((a, b) => b.id - a.id);
+        
+        setBooks(merged);
+        saveClientBooks(merged);
       } else {
         const stored = getClientBooks();
         if (stored.length > 0) setBooks(stored);

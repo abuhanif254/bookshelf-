@@ -3,6 +3,8 @@ import { getAllBooks, addBook } from '@/lib/db';
 import { getSupabaseBooks, addSupabaseBook } from '@/lib/supabaseDb';
 import { isRequestAuthorized } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);

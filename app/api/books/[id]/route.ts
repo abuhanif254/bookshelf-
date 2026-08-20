@@ -3,6 +3,8 @@ import { getBookById, updateBook, deleteBook } from '@/lib/db';
 import { updateSupabaseBook, deleteSupabaseBook } from '@/lib/supabaseDb';
 import { isRequestAuthorized } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 interface Params {
   params: Promise<{ id: string }> | { id: string };
 }
