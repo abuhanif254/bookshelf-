@@ -8,43 +8,35 @@ import { getDirectDownloadUrl } from '@/lib/drive';
 import ReferralModal from './ReferralModal';
 
 const AdInjector = React.memo(({ adCode }: { adCode: string }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  useEffect(() => {
-    if (!adCode || !containerRef.current) return;
-    
-    // Clear the container
-    containerRef.current.innerHTML = '';
-    
-    // Create a shadow wrapper so we can safely parse HTML
-    const wrapper = document.createElement('div');
-    // Fix protocol-relative URLs (//) which cause issues in some environments
-    wrapper.innerHTML = adCode.replace(/(src|href)=['"]\/\//g, '$1="https://');
+  // Clean protocol-relative URLs (//) to (https://)
+  const safeAdCode = adCode.replace(/(src|href)=['"]\/\//g, '$1="https://');
 
-    // Move all non-script elements to the container (e.g. adsterra div containers)
-    const children = Array.from(wrapper.childNodes);
-    children.forEach(node => {
-      if (node.nodeName.toLowerCase() !== 'script') {
-        containerRef.current!.appendChild(node.cloneNode(true));
-      }
-    });
+  // We use an unrestricted iframe so ad networks (ExoClick, Adsterra) can use document.write safely
+  const srcDoc = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <base target="_blank">
+        <style>
+          body { margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; background: transparent; }
+        </style>
+      </head>
+      <body>
+        ${safeAdCode}
+      </body>
+    </html>
+  `;
 
-    // Re-inject scripts to force the browser to execute them
-    const scripts = Array.from(wrapper.querySelectorAll('script'));
-    scripts.forEach(oldScript => {
-      const newScript = document.createElement('script');
-      Array.from(oldScript.attributes).forEach(attr => {
-        newScript.setAttribute(attr.name, attr.value);
-      });
-      if (oldScript.innerHTML) newScript.innerHTML = oldScript.innerHTML;
-      if (oldScript.text) newScript.text = oldScript.text;
-      
-      containerRef.current!.appendChild(newScript);
-    });
-
-  }, [adCode]);
-
-  return <div ref={containerRef} style={{ width: '100%', minHeight: 120, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }} />;
+  return (
+    <iframe
+      ref={iframeRef}
+      srcDoc={srcDoc}
+      style={{ width: '100%', height: '100%', minHeight: 250, border: 'none', overflow: 'hidden' }}
+      scrolling="no"
+    />
+  );
 }, (prevProps, nextProps) => prevProps.adCode === nextProps.adCode);
 
 export default function AdUnlockModal() {
