@@ -934,7 +934,7 @@
   "settings": {
     "adNetwork": "monetag",
     "countdownSeconds": 8,
-    "adCode": "<div id=\"video-ad-test\" style=\"width:100%;height:220px;background:#000;border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center;\"><span style=\"color:#fff;font-size:12px;font-family:sans-serif;\">Loading Video Ad...</span></div><script>setTimeout(function(){const el = document.getElementById('video-ad-test'); if(el) el.innerHTML = '<iframe width=\"100%\" height=\"100%\" src=\"https://www.youtube.com/embed/jfKfPfyJRdk?autoplay=1&mute=1&controls=0\" frameborder=\"0\" allow=\"autoplay; encrypted-media\"></iframe>';}, 800);</script>",
+    "adCode": "<script async=\"async\" data-cfasync=\"false\" src=\"https://pl30933342.effectivecpmnetwork.com/e0d4316b2ca77b0196a17bef73465abb/invoke.js\"></script><div id=\"container-e0d4316b2ca77b0196a17bef73465abb\"></div>",
     "directSmartLink": "https://omg10.com/4/11608657",
     "sponsorTitle": "SkillBoost Pro — Master High-Income Tech Skills",
     "sponsorSubtitle": "Get 85% off premium project-based roadmaps, certifications, and AI tools for developers.",
