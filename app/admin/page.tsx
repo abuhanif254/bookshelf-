@@ -1320,8 +1320,8 @@ export default function AdminPage() {
                     <div>
                       <label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 4 }}>Category</label>
                       <select value={bookFormData.cat} onChange={e => setBookFormData({ ...bookFormData, cat: e.target.value })} style={{ width: '100%', padding: '9px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 14, background: '#fff' }}>
-                        {['Productivity', 'Programming', 'Business', 'Design', 'Marketing', 'Self-Help', 'Technology', 'Finance', 'Health'].map(c => (
-                          <option key={c} value={c}>{c}</option>
+                        {categories.map(c => (
+                          <option key={c.name} value={c.name}>{c.name}</option>
                         ))}
                       </select>
                     </div>
