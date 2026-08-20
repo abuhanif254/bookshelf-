@@ -1,5 +1,5 @@
 const fs = require('fs');
 const db = JSON.parse(fs.readFileSync('data/bookshelf-db.json'));
-db.settings.adCode = `<script async type="application/javascript" src="https://a.magsrv.com/ad-provider.js"></script> <ins class="eas6a97888e37" data-zoneid="6006918"></ins> <script>(AdProvider = window.AdProvider || []).push({"serve": {}});</script>`;
+db.settings.adCode = `<script async="async" data-cfasync="false" src="https://pl30933342.effectivecpmnetwork.com/e0d4316b2ca77b0196a17bef73465abb/invoke.js"></script><div id="container-e0d4316b2ca77b0196a17bef73465abb"></div>`;
 fs.writeFileSync('data/bookshelf-db.json', JSON.stringify(db, null, 2));
 console.log('Done!');
