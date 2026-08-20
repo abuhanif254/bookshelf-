@@ -7,6 +7,27 @@ import { coverHTML } from '@/lib/helpers';
 import { getDirectDownloadUrl } from '@/lib/drive';
 import ReferralModal from './ReferralModal';
 
+const AdInjector = React.memo(({ adCode }: { adCode: string }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (adCode && containerRef.current) {
+      containerRef.current.innerHTML = adCode;
+      const scripts = containerRef.current.querySelectorAll('script');
+      scripts.forEach(oldScript => {
+        const newScript = document.createElement('script');
+        Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+        newScript.text = oldScript.text;
+        if (oldScript.parentNode) {
+          oldScript.parentNode.replaceChild(newScript, oldScript);
+        }
+      });
+    }
+  }, [adCode]);
+
+  return <div ref={containerRef} style={{ width: '100%', minHeight: 120, display: 'flex', justifyContent: 'center', alignItems: 'center' }} />;
+}, (prevProps, nextProps) => prevProps.adCode === nextProps.adCode);
+
 export default function AdUnlockModal() {
   const { state, dispatch, triggerDirectDownload, toast } = useStore();
   const bookId = state.adUnlockBookId;
@@ -38,7 +59,6 @@ export default function AdUnlockModal() {
   const [downloading, setDownloading] = useState(false);
   const [showReferralModal, setShowReferralModal] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const adContainerRef = useRef<HTMLDivElement | null>(null);
 
   // Fetch settings from API
   useEffect(() => {
@@ -52,22 +72,6 @@ export default function AdUnlockModal() {
       })
       .catch(() => {});
   }, []);
-
-  // Dynamically execute external ad network scripts (Monetag, Adsterra, AdSense)
-  useEffect(() => {
-    if (settings.adCode && adContainerRef.current && bookId) {
-      adContainerRef.current.innerHTML = settings.adCode;
-      const scripts = adContainerRef.current.querySelectorAll('script');
-      scripts.forEach(oldScript => {
-        const newScript = document.createElement('script');
-        Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
-        newScript.text = oldScript.text;
-        if (oldScript.parentNode) {
-          oldScript.parentNode.replaceChild(newScript, oldScript);
-        }
-      });
-    }
-  }, [settings.adCode, bookId]);
 
   // Check if user is VIP (referred 3 friends)
   useEffect(() => {
@@ -232,7 +236,7 @@ export default function AdUnlockModal() {
             </span>
 
             {settings.adCode ? (
-              <div ref={adContainerRef} style={{ width: '100%', minHeight: 120, display: 'flex', justifyContent: 'center', alignItems: 'center' }} />
+              <AdInjector adCode={settings.adCode} />
             ) : (
               <div>
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#fef3c7', color: '#92400e', fontSize: 12, fontWeight: 700, padding: '3px 10px', borderRadius: 20, marginBottom: 8 }}>
