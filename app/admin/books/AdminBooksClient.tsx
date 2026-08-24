@@ -168,6 +168,95 @@ export default function AdminBooksClient() {
   const [deleting, setDeleting] = useState<number | null>(null);
   const [toast, setToast] = useState('');
   const [activeSection, setActiveSection] = useState<'basic' | 'cover' | 'content' | 'pricing'>('basic');
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleBulkUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+      const text = evt.target?.result as string;
+      
+      // Simple robust CSV parser
+      function parseCSV(str: string) {
+        const arr: string[][] = [];
+        let quote = false;
+        for (let row = 0, col = 0, c = 0; c < str.length; c++) {
+          let cc = str[c], nc = str[c+1];
+          arr[row] = arr[row] || [];
+          arr[row][col] = arr[row][col] || '';
+
+          if (cc == '"' && quote && nc == '"') { arr[row][col] += cc; ++c; continue; }
+          if (cc == '"') { quote = !quote; continue; }
+          if (cc == ',' && !quote) { ++col; continue; }
+          if (cc == '\r' && nc == '\n' && !quote) { ++row; col = 0; ++c; continue; }
+          if (cc == '\n' && !quote) { ++row; col = 0; continue; }
+          if (cc == '\r' && !quote) { ++row; col = 0; continue; }
+          arr[row][col] += cc;
+        }
+        return arr;
+      }
+
+      const rows = parseCSV(text);
+      if (rows.length < 2) {
+        showToast('❌ Invalid CSV or empty file');
+        return;
+      }
+
+      const headers = rows[0].map(h => h.trim().toLowerCase());
+      
+      const newBooks = [];
+      for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        if (row.length === 0 || (!row[0] && !row[1])) continue;
+        
+        const bookData: any = {};
+        headers.forEach((h, index) => {
+          if (h && row[index] !== undefined) {
+            bookData[h] = row[index].trim();
+          }
+        });
+        
+        if (bookData.title && bookData.author) {
+          if (typeof bookData.feat === 'string') {
+             bookData.feat = bookData.feat.split('|').map((s: string) => s.trim()).filter(Boolean);
+          }
+          newBooks.push(bookData);
+        }
+      }
+
+      if (newBooks.length === 0) {
+        showToast('❌ No valid books found (CSV requires "title" and "author" columns)');
+        return;
+      }
+
+      showToast(`⏳ Uploading ${newBooks.length} books in bulk...`);
+      setSaving(true);
+      
+      try {
+        const res = await fetch('/api/books/bulk', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ books: newBooks })
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+          showToast(`✅ Successfully bulk uploaded ${data.count} books!`);
+          fetchBooks();
+        } else {
+          showToast(`❌ Bulk upload failed: ${data.message}`);
+        }
+      } catch (err) {
+         showToast('❌ Network error during bulk upload');
+      } finally {
+        setSaving(false);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      }
+    };
+    reader.readAsText(file);
+  };
 
   // Check auth session
   useEffect(() => {
@@ -677,6 +766,24 @@ export default function AdminBooksClient() {
           </span>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <input 
+            type="file" 
+            accept=".csv" 
+            ref={fileInputRef} 
+            onChange={handleBulkUpload} 
+            style={{ display: 'none' }} 
+          />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={saving}
+            style={{
+              background: '#38bdf8', color: '#0f172a', fontWeight: 800, fontSize: 13,
+              padding: '7px 16px', borderRadius: 6, border: 'none', cursor: saving ? 'not-allowed' : 'pointer',
+              display: 'flex', alignItems: 'center', gap: 6, opacity: saving ? 0.7 : 1
+            }}
+          >
+            {saving ? '⏳ Uploading...' : '📄 Bulk Upload CSV'}
+          </button>
           <button
             onClick={openAddModal}
             style={{

@@ -120,6 +120,33 @@ export async function addSupabaseBook(bookData: Omit<Product, 'id'>): Promise<Pr
   }
 }
 
+export async function addSupabaseBooksBulk(booksData: Omit<Product, 'id'>[]): Promise<Product[] | null> {
+  try {
+    const { data: maxData } = await supabase.from('books').select('id').order('id', { ascending: false }).limit(1);
+    let nextId = (maxData && maxData.length > 0) ? maxData[0].id + 1 : 1;
+
+    const rows = booksData.map(book => {
+      const row = mapProductToDbRow(book);
+      row.id = nextId++;
+      return row;
+    });
+
+    const { data, error } = await supabase
+      .from('books')
+      .insert(rows)
+      .select();
+
+    if (error || !data) {
+      console.error('Bulk insert error:', error);
+      return null;
+    }
+    return data.map(mapDbRowToProduct);
+  } catch (err) {
+    console.error('Bulk insert exception:', err);
+    return null;
+  }
+}
+
 export async function updateSupabaseBook(id: number, updates: Partial<Product>): Promise<Product | null> {
   try {
     const row = mapProductToDbRow(updates);
