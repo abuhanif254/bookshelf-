@@ -38,6 +38,7 @@ function MiniCover({ book }: { book: Partial<FormData> }) {
         <img
           src={resolvedImg}
           alt={title}
+          referrerPolicy="no-referrer"
           style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
           onError={(e) => {
             (e.currentTarget as HTMLElement).style.display = 'none';
@@ -915,6 +916,7 @@ export default function AdminBooksClient() {
                     <img
                       src={book.coverImage || book.coverUrl}
                       alt={book.title}
+                      referrerPolicy="no-referrer"
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                       onError={(e) => {
                         (e.currentTarget as HTMLElement).style.display = 'none';

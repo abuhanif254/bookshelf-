@@ -43,7 +43,7 @@ export const coverHTML = (p: Product, size: string = ''): string => {
       const safeImgUrl = escapeHtml(resolvedImg);
       const safeSlug = escapeHtml(p.slug);
       return `<a href="/pdf/${safeSlug}" class="coverwrap" data-open="${safeSlug}" style="cursor:pointer; display:block;"><div class="cover ${safeSize ? 'cover--' + safeSize : ''}" style="padding:0;overflow:hidden;background:#0f172a;position:relative;">
-        <img src="${safeImgUrl}" alt="${safeTitle}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;" loading="lazy" onerror="this.style.display='none';this.parentElement.classList.add('cover--fallback');" />
+        <img src="${safeImgUrl}" alt="${safeTitle}" referrerpolicy="no-referrer" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;" loading="lazy" onerror="this.style.display='none';this.parentElement.classList.add('cover--fallback');" />
         <div style="position:absolute;inset:0;box-shadow:inset 10px 0 14px -10px rgba(0,0,0,.6), inset 0 0 0 1px rgba(255,255,255,0.08);pointer-events:none;"></div>
       </div></a>`;
     }
