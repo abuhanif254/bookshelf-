@@ -36,15 +36,11 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'books.google.com',
+        hostname: '**',
       },
       {
-        protocol: 'https',
-        hostname: 'lh3.googleusercontent.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'drive.google.com',
+        protocol: 'http',
+        hostname: '**',
       }
     ],
   },
