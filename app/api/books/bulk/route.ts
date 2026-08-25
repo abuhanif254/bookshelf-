@@ -42,10 +42,10 @@ export async function POST(request: Request) {
         blurb: b.blurb || title,
         feat: Array.isArray(b.feat) && b.feat.length > 0 ? b.feat : ['Instant PDF download', 'DRM-free for personal use', 'Clean layout for screen & print'],
         desc: b.desc || `<p>${title} by ${b.author || 'Unknown'}. Download your free PDF copy instantly.</p>`,
-        driveUrl: b.driveUrl || '',
-        coverImage: b.coverImage || '',
+        driveUrl: b.driveUrl || b.driveurl || '',
+        coverImage: b.coverImage || b.coverimage || '',
         partner: b.partner || '',
-        partnerUrl: b.partnerUrl || '',
+        partnerUrl: b.partnerUrl || b.partnerurl || '',
       };
     });
 

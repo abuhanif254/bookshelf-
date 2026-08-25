@@ -204,7 +204,16 @@ export default function AdminBooksClient() {
         return;
       }
 
-      const headers = rows[0].map(h => h.trim().toLowerCase());
+      const rawHeaders = rows[0].map(h => h.trim().toLowerCase());
+      
+      const headerMap: Record<string, string> = {
+        'driveurl': 'driveUrl',
+        'coverimage': 'coverImage',
+        'partnerurl': 'partnerUrl',
+        'coverurl': 'coverUrl',
+      };
+      
+      const headers = rawHeaders.map(h => headerMap[h] || h);
       
       const newBooks = [];
       for (let i = 1; i < rows.length; i++) {

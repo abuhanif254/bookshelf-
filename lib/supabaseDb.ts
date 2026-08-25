@@ -72,21 +72,42 @@ function mapProductToDbRow(p: Partial<Product>): any {
 
 export async function getSupabaseBooks(): Promise<Product[] | null> {
   try {
-    const { data, error } = await supabase
-      .from('books')
-      .select('*')
-      .order('id', { ascending: false });
+    let allBooks: any[] = [];
+    let from = 0;
+    const step = 1000;
 
-    if (error || !data) return null;
+    while (true) {
+      const { data, error } = await supabase
+        .from('books')
+        .select('*')
+        .order('id', { ascending: false })
+        .range(from, from + step - 1);
 
-    if (data.length === 0) {
+      if (error) {
+        console.error('Fetch books error:', error);
+        break;
+      }
+      
+      if (data) {
+        allBooks.push(...data);
+      }
+      
+      if (!data || data.length < step) {
+        break;
+      }
+      
+      from += step;
+    }
+
+    if (allBooks.length === 0) {
       // Seed default books if table is empty
       await seedInitialBooks();
       return P;
     }
 
-    return data.map(mapDbRowToProduct);
-  } catch {
+    return allBooks.map(mapDbRowToProduct);
+  } catch (err) {
+    console.error('Fetch books exception:', err);
     return null;
   }
 }
