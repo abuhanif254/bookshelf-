@@ -26,6 +26,12 @@ export async function POST(request: Request) {
       const catName = b.cat || 'General';
       uniqueCategories.add(catName);
 
+      let finalCoverImage = b.coverImage || b.coverimage || b.image || b.imageurl || '';
+      const driveMatch = finalCoverImage.match(/\/d\/([a-zA-Z0-9_-]+)/) || finalCoverImage.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+      if (driveMatch && driveMatch[1]) {
+        finalCoverImage = `https://drive.google.com/uc?export=view&id=${driveMatch[1]}`;
+      }
+
       return {
         slug,
         title,
@@ -48,7 +54,7 @@ export async function POST(request: Request) {
         feat: Array.isArray(b.feat) && b.feat.length > 0 ? b.feat : ['Instant PDF download', 'DRM-free for personal use', 'Clean layout for screen & print'],
         desc: b.desc || `<p>${title} by ${b.author || 'Unknown'}. Download your free PDF copy instantly.</p>`,
         driveUrl: b.driveUrl || b.driveurl || '',
-        coverImage: b.coverImage || b.coverimage || '',
+        coverImage: finalCoverImage,
         partner: b.partner || '',
         partnerUrl: b.partnerUrl || b.partnerurl || '',
       };

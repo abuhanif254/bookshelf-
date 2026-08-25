@@ -208,9 +208,24 @@ export default function AdminBooksClient() {
       
       const headerMap: Record<string, string> = {
         'driveurl': 'driveUrl',
+        'drive url': 'driveUrl',
+        'drive link': 'driveUrl',
+        'drivelink': 'driveUrl',
+        'download link': 'driveUrl',
+        'downloadurl': 'driveUrl',
+        
         'coverimage': 'coverImage',
+        'cover image': 'coverImage',
+        'image': 'coverImage',
+        'image url': 'coverImage',
+        'imageurl': 'coverImage',
+        'image link': 'coverImage',
+        'coverurl': 'coverImage',
+        'cover url': 'coverImage',
+        
         'partnerurl': 'partnerUrl',
-        'coverurl': 'coverUrl',
+        'partner url': 'partnerUrl',
+        'affiliate link': 'partnerUrl'
       };
       
       const headers = rawHeaders.map(h => headerMap[h] || h);
