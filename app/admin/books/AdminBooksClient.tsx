@@ -36,7 +36,7 @@ function MiniCover({ book }: { book: Partial<FormData> }) {
     return (
       <div style={{ width: 110, height: 156, borderRadius: 6, overflow: 'hidden', position: 'relative', background: '#0f172a', boxShadow: '0 4px 12px rgba(0,0,0,0.25)' }}>
         <img
-          src={`/api/image-proxy?url=${encodeURIComponent(resolvedImg)}`}
+          src={`/_next/image?url=${encodeURIComponent(resolvedImg)}&w=128&q=75`}
           alt={title}
           style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
           onError={(e) => {
@@ -913,7 +913,7 @@ export default function AdminBooksClient() {
                 <div style={{ width: 40, height: 56, borderRadius: 4, background: book.bg, overflow: 'hidden', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 2px 6px rgba(0,0,0,0.15)' }}>
                   {(book.coverImage || book.coverUrl) ? (
                     <img
-                      src={`/api/image-proxy?url=${encodeURIComponent(book.coverImage || book.coverUrl || '')}`}
+                      src={`/_next/image?url=${encodeURIComponent(book.coverImage || book.coverUrl || '')}&w=64&q=75`}
                       alt={book.title}
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                       onError={(e) => {

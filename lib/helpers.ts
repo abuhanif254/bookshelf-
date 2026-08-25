@@ -41,7 +41,7 @@ export const coverHTML = (p: Product, size: string = ''): string => {
     // Ensure image URL is safe HTTP/HTTPS
     if (isValidHttpUrl(resolvedImg)) {
       const safeImgUrl = escapeHtml(resolvedImg);
-      const proxiedUrl = `/api/image-proxy?url=${encodeURIComponent(resolvedImg)}`;
+      const proxiedUrl = `/_next/image?url=${encodeURIComponent(resolvedImg)}&w=384&q=75`;
       const safeSlug = escapeHtml(p.slug);
       return `<a href="/pdf/${safeSlug}" class="coverwrap" data-open="${safeSlug}" style="cursor:pointer; display:block;"><div class="cover ${safeSize ? 'cover--' + safeSize : ''}" style="padding:0;overflow:hidden;background:#0f172a;position:relative;">
         <img src="${proxiedUrl}" alt="${safeTitle}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;" loading="lazy" onerror="this.style.display='none';this.parentElement.classList.add('cover--fallback');" />
