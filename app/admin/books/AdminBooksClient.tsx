@@ -566,6 +566,15 @@ export default function AdminBooksClient() {
       return (b.id - a.id); // newest first by default
     });
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 50;
+  const paginatedBooks = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, filterCat, filterType, sortBy]);
+
   // ── Type badge colour ──────────────────────────────────────────────────────────
   const typeColor = (t: string) => ({ free: '#059669', paid: '#2563eb', affiliate: '#d97706' }[t] || '#6b7280');
 
@@ -870,7 +879,7 @@ export default function AdminBooksClient() {
             </div>
 
             {/* Rows */}
-            {filtered.map((book, idx) => (
+            {paginatedBooks.map((book, idx) => (
               <div
                 key={book.id}
                 style={{
@@ -969,6 +978,29 @@ export default function AdminBooksClient() {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Pagination UI */}
+        {totalPages > 1 && (
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 14, marginTop: 24, paddingBottom: 32 }}>
+            <button
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              style={{ padding: '8px 16px', borderRadius: 6, border: '1px solid #cbd5e1', background: currentPage === 1 ? '#f8fafc' : '#fff', color: currentPage === 1 ? '#94a3b8' : '#0f172a', fontWeight: 600, cursor: currentPage === 1 ? 'not-allowed' : 'pointer', fontSize: 13 }}
+            >
+              ← Previous
+            </button>
+            <span style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              style={{ padding: '8px 16px', borderRadius: 6, border: '1px solid #cbd5e1', background: currentPage === totalPages ? '#f8fafc' : '#fff', color: currentPage === totalPages ? '#94a3b8' : '#0f172a', fontWeight: 600, cursor: currentPage === totalPages ? 'not-allowed' : 'pointer', fontSize: 13 }}
+            >
+              Next →
+            </button>
           </div>
         )}
       </div>

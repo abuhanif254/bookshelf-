@@ -112,6 +112,53 @@ export async function getSupabaseBooks(): Promise<Product[] | null> {
   }
 }
 
+export async function getSupabaseBooksPaginated(options: { page: number, limit: number, search?: string, cat?: string, type?: string, sort?: string }) {
+  try {
+    let query = supabase.from('books').select('*', { count: 'exact' });
+
+    if (options.search) {
+      query = query.or(`title.ilike.%${options.search}%,author.ilike.%${options.search}%,cat.ilike.%${options.search}%`);
+    }
+    if (options.cat) {
+      query = query.eq('cat', options.cat);
+    }
+    if (options.type) {
+      query = query.eq('type', options.type);
+    }
+
+    if (options.sort === 'title') {
+      query = query.order('title', { ascending: true });
+    } else if (options.sort === 'rating') {
+      query = query.order('rating', { ascending: false });
+    } else if (options.sort === 'pages') {
+      query = query.order('pages', { ascending: false });
+    } else {
+      query = query.order('id', { ascending: false });
+    }
+
+    const from = (options.page - 1) * options.limit;
+    const to = from + options.limit - 1;
+
+    const { data, count, error } = await query.range(from, to);
+
+    if (error) {
+      console.error('Paginated fetch error:', error);
+      return null;
+    }
+
+    return {
+      books: data ? data.map(mapDbRowToProduct) : [],
+      total: count || 0,
+      page: options.page,
+      limit: options.limit,
+      totalPages: count ? Math.ceil(count / options.limit) : 0
+    };
+  } catch (err) {
+    console.error('Paginated exception:', err);
+    return null;
+  }
+}
+
 export async function addSupabaseBook(bookData: Omit<Product, 'id'>): Promise<Product | null> {
   try {
     const row = mapProductToDbRow(bookData);
