@@ -146,17 +146,19 @@ export default function LibraryClient() {
         {/* Sidebar */}
         <aside className="side">
           <h4>Department</h4>
-          {cats.map(c => (
-            <label key={c}>
-              <input
-                type="checkbox"
-                checked={filter.cats.has(c)}
-                onChange={e => updateFilter({ cats: toggleSet(filter.cats, c, e.target.checked) })}
-              />
-              {c}
-              <span className="cnt">{allBooks.filter(p => p.cat === c).length}</span>
-            </label>
-          ))}
+          <div style={{ maxHeight: '45vh', overflowY: 'auto', marginBottom: 20, paddingRight: 8 }} className="cat-scroll">
+            {cats.map(c => (
+              <label key={c}>
+                <input
+                  type="checkbox"
+                  checked={filter.cats.has(c)}
+                  onChange={e => updateFilter({ cats: toggleSet(filter.cats, c, e.target.checked) })}
+                />
+                <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '140px' }} title={c}>{c}</span>
+                <span className="cnt">{allBooks.filter(p => p.cat === c).length}</span>
+              </label>
+            ))}
+          </div>
 
           <h4>Price</h4>
           {[['any', 'Any price'], ['free', 'Free'], ['u10', 'Under $10'], ['10-20', '$10 to $20'], ['20p', '$20 & above']].map(([v, l]) => (
