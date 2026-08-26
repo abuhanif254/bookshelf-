@@ -227,15 +227,23 @@ export default function LibraryClient() {
 
           {totalPages > 1 && (
             <div className="pager">
-              {Array.from({ length: totalPages }, (_, i) => (
-                <button
-                  key={i}
-                  className={i + 1 === currentPage ? 'on' : ''}
-                  onClick={() => { setFilter(prev => ({ ...prev, page: i + 1 })); window.scrollTo({ top: 200, behavior: 'smooth' }); }}
-                >
-                  {i + 1}
-                </button>
-              ))}
+              <button disabled={currentPage === 1} onClick={() => { setFilter(prev => ({ ...prev, page: Math.max(1, prev.page - 1) })); window.scrollTo({ top: 200, behavior: 'smooth' }); }} style={{ padding: '0 12px' }}>Prev</button>
+              
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 2)
+                .map((p, i, arr) => (
+                  <span key={p} style={{ display: 'contents' }}>
+                    {i > 0 && p - arr[i - 1] > 1 && <span style={{ padding: '8px', color: '#94a3b8' }}>...</span>}
+                    <button
+                      className={p === currentPage ? 'on' : ''}
+                      onClick={() => { setFilter(prev => ({ ...prev, page: p })); window.scrollTo({ top: 200, behavior: 'smooth' }); }}
+                    >
+                      {p}
+                    </button>
+                  </span>
+                ))}
+                
+              <button disabled={currentPage === totalPages} onClick={() => { setFilter(prev => ({ ...prev, page: Math.min(totalPages, prev.page + 1) })); window.scrollTo({ top: 200, behavior: 'smooth' }); }} style={{ padding: '0 12px' }}>Next</button>
             </div>
           )}
         </div>

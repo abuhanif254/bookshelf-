@@ -260,7 +260,7 @@ h1,h2,h3,h4{font-family:var(--disp);color:#0f1111}
 .toolbar .res b{color:#0f1111;font-family:var(--disp)}
 .toolbar select{margin-left:auto;border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:13.5px;background:#f7f8f8;font-family:var(--body);cursor:pointer}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:18px}
-.pager{display:flex;justify-content:center;gap:6px;margin:30px 0 10px}
+.pager{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin:30px 0 10px}
 .pager button{min-width:38px;height:38px;border:1px solid var(--line);background:#fff;border-radius:8px;font-size:14px;font-weight:600;transition:all .15s}
 .pager button:hover{border-color:var(--smile);box-shadow:0 2px 8px rgba(255,153,0,.25)}
 .pager button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
