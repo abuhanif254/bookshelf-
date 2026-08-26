@@ -75,7 +75,7 @@ export interface ScrollSectionConfig {
 }
 
 export interface AdSettings {
-  adNetwork: 'built-in' | 'adsterra' | 'monetag' | 'custom';
+  adNetwork: 'built-in' | 'adsterra' | 'custom';
   countdownSeconds: number;
   adCode: string;
   directSmartLink: string;
@@ -223,11 +223,11 @@ const defaultSubmissions: CreatorSubmission[] = [
 ];
 
 const defaultSettings: AdSettings = {
-  adNetwork: 'monetag',
+  adNetwork: 'adsterra',
   countdownSeconds: 8,
-  adCode: `<script>(function(s){s.dataset.zone='11608665',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>`,
-  directSmartLink: 'https://omg10.com/4/11608657',
-  sponsorTitle: 'SkillBoost Pro — Master High-Income Tech Skills',
+  adCode: `<!-- Default Adsterra banner -->`,
+  directSmartLink: 'https://www.highcpmgate.com/example',
+  sponsorTitle: 'Sponsored Partner Recommendation',
   sponsorSubtitle: 'Get 85% off premium project-based roadmaps, certifications, and AI tools for developers.',
   sponsorCta: 'Explore SkillBoost Free Trial ↗',
   sponsorUrl: 'https://omg10.com/4/11608657',

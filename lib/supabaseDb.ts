@@ -259,14 +259,14 @@ export async function getSupabaseSettings(): Promise<AdSettings | null> {
     if (error || !data) return null;
 
     return {
-      adNetwork: 'monetag',
+      adNetwork: data.ad_network || 'adsterra',
       countdownSeconds: Number(data.ad_timer_seconds) || 8,
       adCode: data.banner_ad_code || '',
-      directSmartLink: data.direct_smart_link || 'https://omg10.com/4/11608657',
+      directSmartLink: data.direct_smart_link || 'https://www.highcpmgate.com/example',
       sponsorTitle: 'Sponsored Partner Recommendation',
       sponsorSubtitle: 'Support our free PDF library by checking out our partner.',
       sponsorCta: 'Access Sponsor Offer ↗',
-      sponsorUrl: data.direct_smart_link || 'https://omg10.com/4/11608657',
+      sponsorUrl: data.direct_smart_link || 'https://www.highcpmgate.com/example',
       adminPasscode: data.passcode || 'bookshelf2026',
       siteName: 'Bookshelf',
       siteTagline: '100% Free & DRM-Free PDF Books',
