@@ -38,7 +38,7 @@ export default function ReferralModal({ onClose, onVipUnlocked }: ReferralModalP
 
   const shareUrl = typeof window !== 'undefined'
     ? `${window.location.origin}/?ref=${refCode}`
-    : `https://bookshelf.com/?ref=${refCode}`;
+    : `https://www.pdf-bookshelf.com/?ref=${refCode}`;
 
   const shareMessage = `Download thousands of best-selling PDF books on coding, productivity, and startups 100% free on Bookshelf: ${shareUrl}`;
 

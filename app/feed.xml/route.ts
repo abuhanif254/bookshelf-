@@ -3,7 +3,7 @@ import { getAllBooks } from '@/lib/db';
 import { escapeHtml } from '@/lib/security';
 
 export async function GET() {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://bookshelf.com';
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.pdf-bookshelf.com';
   const books = getAllBooks();
 
   const itemsXml = books

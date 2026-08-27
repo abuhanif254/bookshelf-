@@ -85,7 +85,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
-  const canonicalUrl = `https://bookshelf.com/category/${slug}`;
+  const canonicalUrl = `https://www.pdf-bookshelf.com/category/${slug}`;
 
   return {
     title: meta.title,
@@ -157,9 +157,9 @@ export default async function CategoryPage({ params }: Props) {
   });
 
   const breadcrumbs = [
-    { name: 'Home', url: 'https://bookshelf.com' },
-    { name: 'Categories', url: 'https://bookshelf.com/library' },
-    { name: catInfo.h1, url: `https://bookshelf.com/category/${slug}` },
+    { name: 'Home', url: 'https://www.pdf-bookshelf.com' },
+    { name: 'Categories', url: 'https://www.pdf-bookshelf.com/library' },
+    { name: catInfo.h1, url: `https://www.pdf-bookshelf.com/category/${slug}` },
   ];
 
   const categoryFaqs = [
@@ -183,7 +183,7 @@ export default async function CategoryPage({ params }: Props) {
       <CollectionPageJsonLd
         name={catInfo.h1}
         description={catInfo.desc}
-        url={`https://bookshelf.com/category/${slug}`}
+        url={`https://www.pdf-bookshelf.com/category/${slug}`}
         count={matchingBooks.length}
       />
       <FAQJsonLd faqs={categoryFaqs} />

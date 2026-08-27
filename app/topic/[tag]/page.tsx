@@ -73,7 +73,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return { title: 'Topic Library | Bookshelf' };
   }
 
-  const canonicalUrl = `https://bookshelf.com/topic/${tag}`;
+  const canonicalUrl = `https://www.pdf-bookshelf.com/topic/${tag}`;
 
   return {
     title: `${info.title} | Bookshelf`,
@@ -127,9 +127,9 @@ export default async function TopicPage({ params }: Props) {
   const displayBooks = matched.length > 0 ? matched : allBooks.slice(0, 4);
 
   const breadcrumbs = [
-    { name: 'Home', url: 'https://bookshelf.com' },
-    { name: 'Topics', url: 'https://bookshelf.com/library' },
-    { name: info.h1, url: `https://bookshelf.com/topic/${tag}` },
+    { name: 'Home', url: 'https://www.pdf-bookshelf.com' },
+    { name: 'Topics', url: 'https://www.pdf-bookshelf.com/library' },
+    { name: info.h1, url: `https://www.pdf-bookshelf.com/topic/${tag}` },
   ];
 
   const topicFaqs = [
@@ -145,7 +145,7 @@ export default async function TopicPage({ params }: Props) {
       <CollectionPageJsonLd
         name={info.h1}
         description={info.desc}
-        url={`https://bookshelf.com/topic/${tag}`}
+        url={`https://www.pdf-bookshelf.com/topic/${tag}`}
         count={displayBooks.length}
       />
       <FAQJsonLd faqs={topicFaqs} />

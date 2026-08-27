@@ -8,17 +8,17 @@ export const metadata: Metadata = {
   description:
     'Official Privacy Policy and Cookie Disclosures for Bookshelf. Learn how we protect reader data, manage ad network cookies, and respect GDPR and CCPA privacy rights.',
   alternates: {
-    canonical: 'https://bookshelf.com/privacy',
+    canonical: 'https://www.pdf-bookshelf.com/privacy',
   },
   openGraph: {
     title: 'Privacy Policy & Cookie Disclosures | Bookshelf',
     description:
       'Learn how Bookshelf protects your privacy, manages advertising cookies, and complies with GDPR and CCPA data rights.',
-    url: 'https://bookshelf.com/privacy',
+    url: 'https://www.pdf-bookshelf.com/privacy',
     type: 'website',
     images: [
       {
-        url: 'https://bookshelf.com/api/og?title=Privacy+Policy&sub=Data+Protection+%26+Cookie+Disclosures',
+        url: 'https://www.pdf-bookshelf.com/api/og?title=Privacy+Policy&sub=Data+Protection+%26+Cookie+Disclosures',
         width: 1200,
         height: 630,
         alt: 'Bookshelf Privacy Policy',
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Privacy Policy | Bookshelf',
     description: 'Official Privacy Policy, cookie disclosures, and data protection guidelines.',
-    images: ['https://bookshelf.com/api/og?title=Privacy+Policy&sub=Data+Protection+%26+Cookie+Disclosures'],
+    images: ['https://www.pdf-bookshelf.com/api/og?title=Privacy+Policy&sub=Data+Protection+%26+Cookie+Disclosures'],
   },
 };
 
@@ -41,19 +41,19 @@ export default function PrivacyPage() {
     '@type': 'WebPage',
     name: 'Privacy Policy & Cookie Disclosures',
     description: 'Official Privacy Policy, cookie usage, and data rights for Bookshelf.',
-    url: 'https://bookshelf.com/privacy',
+    url: 'https://www.pdf-bookshelf.com/privacy',
     dateModified: '2026-01-01',
     inLanguage: 'en-US',
     publisher: {
       '@type': 'Organization',
       name: 'Bookshelf Inc.',
-      url: 'https://bookshelf.com',
+      url: 'https://www.pdf-bookshelf.com',
     },
   };
 
   const breadcrumbs = [
-    { name: 'Home', url: 'https://bookshelf.com' },
-    { name: 'Privacy Policy', url: 'https://bookshelf.com/privacy' },
+    { name: 'Home', url: 'https://www.pdf-bookshelf.com' },
+    { name: 'Privacy Policy', url: 'https://www.pdf-bookshelf.com/privacy' },
   ];
 
   return (
@@ -272,7 +272,7 @@ export default function PrivacyPage() {
                 <li><b>Right to Restrict or Object to Processing:</b> You have the right to object to certain types of processing.</li>
               </ul>
               <p>
-                To exercise any of these rights, email us at <a href="mailto:support@bookshelf.com" style={{ color: 'var(--link)', fontWeight: 700 }}>support@bookshelf.com</a>. We respond to all verified requests within 30 days free of charge.
+                To exercise any of these rights, email us at <a href="mailto:support@pdf-bookshelf.com" style={{ color: 'var(--link)', fontWeight: 700 }}>support@pdf-bookshelf.com</a>. We respond to all verified requests within 30 days free of charge.
               </p>
             </section>
 
@@ -330,8 +330,8 @@ export default function PrivacyPage() {
                 <b style={{ color: 'var(--ink)', fontSize: 15, display: 'block', marginBottom: 4 }}>Bookshelf Privacy &amp; Compliance Officer</b>
                 <span style={{ fontSize: 14, color: '#475569', display: 'block' }}>
                   Email:{' '}
-                  <a href="mailto:support@bookshelf.com" style={{ color: 'var(--link)', fontWeight: 700 }}>
-                    support@bookshelf.com
+                  <a href="mailto:support@pdf-bookshelf.com" style={{ color: 'var(--link)', fontWeight: 700 }}>
+                    support@pdf-bookshelf.com
                   </a>
                 </span>
                 <span style={{ fontSize: 12.5, color: '#94a3b8', display: 'block', marginTop: 4 }}>

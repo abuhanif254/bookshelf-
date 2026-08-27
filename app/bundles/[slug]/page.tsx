@@ -13,7 +13,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const bundle = getBundleBySlug(slug);
   if (!bundle) return { title: 'Bundle Not Found | Bookshelf' };
 
-  const canonicalUrl = `https://bookshelf.com/bundles/${bundle.slug}`;
+  const canonicalUrl = `https://www.pdf-bookshelf.com/bundles/${bundle.slug}`;
   const title = `${bundle.title} — Curated ${bundle.bookIds.length}-Book PDF Stack | Bookshelf`;
   const description = `${bundle.desc} Includes ${bundle.bookIds.length} complete PDF books with 1-click Google Drive download.`;
 
@@ -61,14 +61,14 @@ export default async function BundlePage({ params }: PageProps) {
   const books = getBundleBooks(bundle);
 
   const breadcrumbs = [
-    { name: 'Home', url: 'https://bookshelf.com' },
-    { name: 'Bundles', url: 'https://bookshelf.com/library?preset=best' },
-    { name: bundle.title, url: `https://bookshelf.com/bundles/${bundle.slug}` },
+    { name: 'Home', url: 'https://www.pdf-bookshelf.com' },
+    { name: 'Bundles', url: 'https://www.pdf-bookshelf.com/library?preset=best' },
+    { name: bundle.title, url: `https://www.pdf-bookshelf.com/bundles/${bundle.slug}` },
   ];
 
   const itemList = books.map((b, i) => ({
     name: b.title,
-    url: `https://bookshelf.com/pdf/${b.slug}`,
+    url: `https://www.pdf-bookshelf.com/pdf/${b.slug}`,
     position: i + 1,
   }));
 
@@ -89,7 +89,7 @@ export default async function BundlePage({ params }: PageProps) {
       <ItemListJsonLd
         title={bundle.title}
         description={bundle.desc}
-        url={`https://bookshelf.com/bundles/${bundle.slug}`}
+        url={`https://www.pdf-bookshelf.com/bundles/${bundle.slug}`}
         items={itemList}
       />
       <FAQJsonLd faqs={faqs} />

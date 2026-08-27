@@ -253,7 +253,7 @@ export default function ProductClient({ p, faqs }: { p: Product; faqs?: FAQItem[
                 <button className="bb-wish" data-wish={p.id}>♡ Add to Wishlist</button>
                 <div className="bb-sec">
                   <svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
-                  <span><b>Secure transaction.</b> Sold by Bookshelf.com. 30-day money-back guarantee.</span>
+                  <span><b>Secure transaction.</b> Sold by PDF-Bookshelf.com. 30-day money-back guarantee.</span>
                 </div>
                 <div className="paychips">
                   {['VISA', 'MASTERCARD', 'AMEX', 'PAYPAL', 'APPLE PAY', 'STRIPE'].map(c => <span key={c}>{c}</span>)}

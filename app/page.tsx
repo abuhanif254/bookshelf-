@@ -163,10 +163,10 @@ export default function HomePage() {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: 'Bookshelf',
-    url: 'https://bookshelf.com',
+    url: 'https://www.pdf-bookshelf.com',
     potentialAction: {
       '@type': 'SearchAction',
-      target: 'https://bookshelf.com/library?q={search_term_string}',
+      target: 'https://www.pdf-bookshelf.com/library?q={search_term_string}',
       'query-input': 'required name=search_term_string',
     },
   };

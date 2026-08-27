@@ -73,7 +73,7 @@ ${n.quote ? `> "${n.quote}"\n\n` : ''}${n.note ? `**My Takeaways:**\n${n.note}\n
 ---
 `).join('\n')}
 
-*Exported via Bookshelf (https://bookshelf.com/pdf/${book.slug})*
+*Exported via Bookshelf (https://www.pdf-bookshelf.com/pdf/${book.slug})*
 `;
 
     const blob = new Blob([mdContent], { type: 'text/markdown;charset=utf-8' });

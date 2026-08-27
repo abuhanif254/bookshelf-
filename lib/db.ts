@@ -234,7 +234,7 @@ const defaultSettings: AdSettings = {
   adminPasscode: 'bookshelf2026',
   siteName: 'Bookshelf',
   siteTagline: 'Buy & Download Free PDF Books Instantly',
-  supportEmail: 'support@bookshelf.com',
+  supportEmail: 'support@pdf-bookshelf.com',
   stats: {
     totalDownloads: 1420,
     adImpressions: 3890,

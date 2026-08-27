@@ -91,9 +91,9 @@ export default async function ProductPage({ params }: Props) {
 
   const catSlug = normalizeSlug(book.cat);
   const breadcrumbs = [
-    { name: 'Home', url: 'https://bookshelf.com' },
-    { name: book.cat, url: `https://bookshelf.com/category/${catSlug}` },
-    { name: book.title, url: `https://bookshelf.com/pdf/${book.slug}` },
+    { name: 'Home', url: 'https://www.pdf-bookshelf.com' },
+    { name: book.cat, url: `https://www.pdf-bookshelf.com/category/${catSlug}` },
+    { name: book.title, url: `https://www.pdf-bookshelf.com/pdf/${book.slug}` },
   ];
 
   const bookFaqs = [

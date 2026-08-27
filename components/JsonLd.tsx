@@ -57,7 +57,7 @@ export function WebSiteJsonLd() {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: 'Bookshelf',
-    alternateName: ['Bookshelf PDF Library', 'Bookshelf.com'],
+    alternateName: ['Bookshelf PDF Library', 'PDF-Bookshelf.com'],
     url: baseUrl,
     description: 'Download thousands of high-quality free PDF books on productivity, programming, design, and business.',
     potentialAction: {
@@ -212,7 +212,7 @@ export function OrganizationJsonLd() {
     contactPoint: {
       '@type': 'ContactPoint',
       contactType: 'customer support',
-      email: 'support@bookshelf.com',
+      email: 'support@pdf-bookshelf.com',
     },
   };
 

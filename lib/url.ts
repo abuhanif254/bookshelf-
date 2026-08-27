@@ -10,5 +10,5 @@ export function getBaseUrl() {
   }
 
   // 3. Current Live Domain
-  return 'https://free-bookshelf.vercel.app';
+  return 'https://www.pdf-bookshelf.com';
 }

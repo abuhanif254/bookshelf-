@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   const authorName = authorBooks[0].author;
-  const canonicalUrl = `https://bookshelf.com/author/${resolved.slug.toLowerCase()}`;
+  const canonicalUrl = `https://www.pdf-bookshelf.com/author/${resolved.slug.toLowerCase()}`;
 
   return {
     title: `PDF Books by ${authorName} — Free Download | Bookshelf`,
@@ -83,11 +83,11 @@ export default async function AuthorPage({ params }: Props) {
   }
 
   const authorName = authorBooks[0].author;
-  const authorUrl = `https://bookshelf.com/author/${slug}`;
+  const authorUrl = `https://www.pdf-bookshelf.com/author/${slug}`;
 
   const breadcrumbs = [
-    { name: 'Home', url: 'https://bookshelf.com' },
-    { name: 'Authors', url: 'https://bookshelf.com/library' },
+    { name: 'Home', url: 'https://www.pdf-bookshelf.com' },
+    { name: 'Authors', url: 'https://www.pdf-bookshelf.com/library' },
     { name: authorName, url: authorUrl },
   ];
 

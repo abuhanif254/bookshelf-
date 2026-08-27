@@ -14,12 +14,12 @@ export const metadata: Metadata = {
     'free ebook distributor',
   ],
   alternates: {
-    canonical: 'https://bookshelf.com/publish',
+    canonical: 'https://www.pdf-bookshelf.com/publish',
   },
   openGraph: {
     title: 'Publish & Distribute Your PDF Book to 40,000+ Readers',
     description: 'Reach engineers, founders, and creators worldwide. Upload your Google Drive link and get featured in our catalog.',
-    url: 'https://bookshelf.com/publish',
+    url: 'https://www.pdf-bookshelf.com/publish',
     type: 'website',
     images: [
       {
@@ -40,8 +40,8 @@ export const metadata: Metadata = {
 
 export default function PublishPage() {
   const breadcrumbs = [
-    { name: 'Home', url: 'https://bookshelf.com' },
-    { name: 'Creator Publishing', url: 'https://bookshelf.com/publish' },
+    { name: 'Home', url: 'https://www.pdf-bookshelf.com' },
+    { name: 'Creator Publishing', url: 'https://www.pdf-bookshelf.com/publish' },
   ];
 
   return (

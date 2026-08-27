@@ -8,17 +8,17 @@ export const metadata: Metadata = {
   description:
     'Official Terms of Service, DMCA copyright policy, licensing guidelines, and advertising disclosures for Bookshelf free digital PDF library.',
   alternates: {
-    canonical: 'https://bookshelf.com/terms',
+    canonical: 'https://www.pdf-bookshelf.com/terms',
   },
   openGraph: {
     title: 'Terms of Service & Licensing Policy | Bookshelf',
     description:
       'Official Terms of Service, DMCA copyright compliance, and advertising disclosures for Bookshelf free PDF library.',
-    url: 'https://bookshelf.com/terms',
+    url: 'https://www.pdf-bookshelf.com/terms',
     type: 'website',
     images: [
       {
-        url: 'https://bookshelf.com/api/og?title=Terms+of+Service&sub=Legal+Policies+%26+Copyright+Compliance',
+        url: 'https://www.pdf-bookshelf.com/api/og?title=Terms+of+Service&sub=Legal+Policies+%26+Copyright+Compliance',
         width: 1200,
         height: 630,
         alt: 'Bookshelf Terms of Service',
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Terms of Service | Bookshelf',
     description: 'Official Terms of Service, DMCA copyright policy, and advertising disclosures.',
-    images: ['https://bookshelf.com/api/og?title=Terms+of+Service&sub=Legal+Policies+%26+Copyright+Compliance'],
+    images: ['https://www.pdf-bookshelf.com/api/og?title=Terms+of+Service&sub=Legal+Policies+%26+Copyright+Compliance'],
   },
 };
 
@@ -41,19 +41,19 @@ export default function TermsPage() {
     '@type': 'WebPage',
     name: 'Terms of Service & Licensing Policy',
     description: 'Official Terms of Service, DMCA copyright compliance, and monetization disclosures for Bookshelf.',
-    url: 'https://bookshelf.com/terms',
+    url: 'https://www.pdf-bookshelf.com/terms',
     dateModified: '2026-01-01',
     inLanguage: 'en-US',
     publisher: {
       '@type': 'Organization',
       name: 'Bookshelf Inc.',
-      url: 'https://bookshelf.com',
+      url: 'https://www.pdf-bookshelf.com',
     },
   };
 
   const breadcrumbs = [
-    { name: 'Home', url: 'https://bookshelf.com' },
-    { name: 'Terms of Service', url: 'https://bookshelf.com/terms' },
+    { name: 'Home', url: 'https://www.pdf-bookshelf.com' },
+    { name: 'Terms of Service', url: 'https://www.pdf-bookshelf.com/terms' },
   ];
 
   return (
@@ -210,7 +210,7 @@ export default function TermsPage() {
                 <li>Your physical or electronic signature.</li>
               </ul>
               <div style={{ background: '#ecfdf5', padding: 16, borderRadius: 8, border: '1px solid #a7f3d0', color: '#065f46', fontSize: 14 }}>
-                <b>🛡️ Designated DMCA Agent Email:</b> <a href="mailto:support@bookshelf.com" style={{ color: '#065f46', fontWeight: 800 }}>support@bookshelf.com</a><br />
+                <b>🛡️ Designated DMCA Agent Email:</b> <a href="mailto:support@pdf-bookshelf.com" style={{ color: '#065f46', fontWeight: 800 }}>support@pdf-bookshelf.com</a><br />
                 <i>Our team processes all verified DMCA takedown requests within 24 to 48 business hours.</i>
               </div>
             </section>
@@ -283,8 +283,8 @@ export default function TermsPage() {
                 <b style={{ color: 'var(--ink)', fontSize: 15, display: 'block', marginBottom: 4 }}>Have questions or legal inquiries?</b>
                 <span style={{ fontSize: 14, color: '#475569' }}>
                   Please direct all compliance, DMCA takedown requests, and licensing inquiries to our legal team at:{' '}
-                  <a href="mailto:support@bookshelf.com" style={{ color: 'var(--link)', fontWeight: 700 }}>
-                    support@bookshelf.com
+                  <a href="mailto:support@pdf-bookshelf.com" style={{ color: 'var(--link)', fontWeight: 700 }}>
+                    support@pdf-bookshelf.com
                   </a>
                 </span>
               </div>

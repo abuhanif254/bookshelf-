@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const title = `${bookA.title} vs ${bookB.title} — Which PDF Should You Read? (2026)`;
   const desc = `Detailed side-by-side comparison of "${bookA.title}" by ${bookA.author} vs "${bookB.title}" by ${bookB.author}. Compare page count, difficulty, key takeaways, and free PDF download links.`;
-  const canonicalUrl = `https://bookshelf.com/compare/${resolved.slug}`;
+  const canonicalUrl = `https://www.pdf-bookshelf.com/compare/${resolved.slug}`;
 
   return {
     title,
@@ -83,9 +83,9 @@ export default async function ComparePage({ params }: Props) {
   }
 
   const breadcrumbs = [
-    { name: 'Home', url: 'https://bookshelf.com' },
-    { name: 'Comparisons', url: 'https://bookshelf.com/library' },
-    { name: `${bookA.title} vs ${bookB.title}`, url: `https://bookshelf.com/compare/${resolved.slug}` },
+    { name: 'Home', url: 'https://www.pdf-bookshelf.com' },
+    { name: 'Comparisons', url: 'https://www.pdf-bookshelf.com/library' },
+    { name: `${bookA.title} vs ${bookB.title}`, url: `https://www.pdf-bookshelf.com/compare/${resolved.slug}` },
   ];
 
   const compareFaqs = [

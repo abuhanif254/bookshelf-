@@ -8,17 +8,17 @@ export const metadata: Metadata = {
   description:
     'Discover the mission behind Bookshelf. We make high-impact programming, business, and productivity knowledge 100% free, DRM-free, and accessible to readers worldwide.',
   alternates: {
-    canonical: 'https://bookshelf.com/about',
+    canonical: 'https://www.pdf-bookshelf.com/about',
   },
   openGraph: {
     title: 'About Bookshelf | Our Mission & Open Knowledge Ecosystem',
     description:
       'Discover Bookshelf: Distilled, actionable, DRM-free PDF handbooks and cheat sheets supported by transparent advertising.',
-    url: 'https://bookshelf.com/about',
+    url: 'https://www.pdf-bookshelf.com/about',
     type: 'website',
     images: [
       {
-        url: 'https://bookshelf.com/api/og?title=About+Bookshelf&sub=Our+Mission+%26+Free+Knowledge+Ecosystem',
+        url: 'https://www.pdf-bookshelf.com/api/og?title=About+Bookshelf&sub=Our+Mission+%26+Free+Knowledge+Ecosystem',
         width: 1200,
         height: 630,
         alt: 'About Bookshelf',
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'About Bookshelf | Free PDF Library',
     description: 'Learn about our mission to make high-impact knowledge free and accessible without paywalls.',
-    images: ['https://bookshelf.com/api/og?title=About+Bookshelf&sub=Our+Mission+%26+Free+Knowledge+Ecosystem'],
+    images: ['https://www.pdf-bookshelf.com/api/og?title=About+Bookshelf&sub=Our+Mission+%26+Free+Knowledge+Ecosystem'],
   },
 };
 
@@ -40,20 +40,20 @@ export default function AboutPage() {
     name: 'About Bookshelf',
     description:
       'Bookshelf is a digital curation platform and open educational index dedicated to providing free, DRM-free PDF books and practical guides.',
-    url: 'https://bookshelf.com/about',
+    url: 'https://www.pdf-bookshelf.com/about',
     mainEntity: {
       '@type': 'Organization',
       name: 'Bookshelf Inc.',
-      url: 'https://bookshelf.com',
-      logo: 'https://bookshelf.com/manifest.webmanifest',
+      url: 'https://www.pdf-bookshelf.com',
+      logo: 'https://www.pdf-bookshelf.com/manifest.webmanifest',
       foundingDate: '2026',
       description: 'Curating world-class free digital PDF books, cheat sheets, and practical manuals for lifelong learners.',
     },
   };
 
   const breadcrumbs = [
-    { name: 'Home', url: 'https://bookshelf.com' },
-    { name: 'About Us', url: 'https://bookshelf.com/about' },
+    { name: 'Home', url: 'https://www.pdf-bookshelf.com' },
+    { name: 'About Us', url: 'https://www.pdf-bookshelf.com/about' },
   ];
 
   return (

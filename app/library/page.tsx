@@ -17,12 +17,12 @@ export const metadata: Metadata = {
     'instant google drive pdfs',
   ],
   alternates: {
-    canonical: 'https://bookshelf.com/library',
+    canonical: 'https://www.pdf-bookshelf.com/library',
   },
   openGraph: {
     title: 'Complete Free PDF Book Catalog | Bookshelf',
     description: 'Instant direct downloads of high-quality PDF books across 9 essential categories. Free titles every Friday.',
-    url: 'https://bookshelf.com/library',
+    url: 'https://www.pdf-bookshelf.com/library',
     type: 'website',
     images: [
       {
@@ -44,8 +44,8 @@ export const metadata: Metadata = {
 export default function LibraryPage() {
   const books = getAllBooks();
   const breadcrumbs = [
-    { name: 'Home', url: 'https://bookshelf.com' },
-    { name: 'Full Library Catalog', url: 'https://bookshelf.com/library' },
+    { name: 'Home', url: 'https://www.pdf-bookshelf.com' },
+    { name: 'Full Library Catalog', url: 'https://www.pdf-bookshelf.com/library' },
   ];
 
   return (
@@ -54,7 +54,7 @@ export default function LibraryPage() {
       <CollectionPageJsonLd
         name="Bookshelf Complete PDF Book Catalog"
         description="Comprehensive collection of verified DRM-free PDF books, cheat sheets, and playbooks."
-        url="https://bookshelf.com/library"
+        url="https://www.pdf-bookshelf.com/library"
         count={books.length}
       />
       <Suspense fallback={<div className="wrap" style={{ padding: '60px 0' }}>Loading library…</div>}>

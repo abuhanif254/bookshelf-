@@ -85,7 +85,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
-  const canonicalUrl = `https://bookshelf.com/best/${slug}`;
+  const canonicalUrl = `https://www.pdf-bookshelf.com/best/${slug}`;
 
   return {
     title: listicle.metaTitle,
@@ -139,14 +139,14 @@ export default async function BestOfPage({ params }: Props) {
   const filteredBooks = allBooks.filter(b => listicle.categories.some(cat => cat.toLowerCase() === b.cat.toLowerCase())).slice(0, 7);
 
   const breadcrumbs = [
-    { name: 'Home', url: 'https://bookshelf.com' },
-    { name: 'Best Of 2026', url: 'https://bookshelf.com/library' },
-    { name: listicle.title, url: `https://bookshelf.com/best/${slug}` },
+    { name: 'Home', url: 'https://www.pdf-bookshelf.com' },
+    { name: 'Best Of 2026', url: 'https://www.pdf-bookshelf.com/library' },
+    { name: listicle.title, url: `https://www.pdf-bookshelf.com/best/${slug}` },
   ];
 
   const itemList = filteredBooks.map((b, idx) => ({
     name: `${b.title} by ${b.author}`,
-    url: `https://bookshelf.com/pdf/${b.slug}`,
+    url: `https://www.pdf-bookshelf.com/pdf/${b.slug}`,
     position: idx + 1,
   }));
 
@@ -167,7 +167,7 @@ export default async function BestOfPage({ params }: Props) {
       <ItemListJsonLd
         title={listicle.title}
         description={listicle.metaDesc}
-        url={`https://bookshelf.com/best/${slug}`}
+        url={`https://www.pdf-bookshelf.com/best/${slug}`}
         items={itemList}
       />
       <FAQJsonLd faqs={listicleFaqs} />

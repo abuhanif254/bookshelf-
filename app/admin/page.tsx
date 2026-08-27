@@ -90,7 +90,7 @@ export default function AdminPage() {
     sponsorUrl: 'https://github.com',
     siteName: 'Bookshelf',
     siteTagline: 'Buy & Download Free PDF Books Instantly',
-    supportEmail: 'support@bookshelf.com',
+    supportEmail: 'support@pdf-bookshelf.com',
     adminPasscode: '',
     aiApiKey: '',
     aiProvider: 'auto',
@@ -415,7 +415,7 @@ export default function AdminPage() {
                 <h3 style="margin: 0 0 4px; font-size: 18px; color: #0f172a;">${b.title}</h3>
                 <p style="margin: 0 0 8px; font-size: 13px; color: #64748b;">by <b>${b.author}</b> · ${b.pages} Pages PDF · ${b.cat}</p>
                 <p style="margin: 0 0 14px; font-size: 14px; color: #334155; line-height: 1.5;">${b.blurb}</p>
-                <a href="https://bookshelf.com/pdf/${b.slug}" style="display: inline-block; background-color: #f59e0b; color: #0f172a; font-weight: 800; font-size: 13px; padding: 8px 18px; border-radius: 999px; text-decoration: none;">⤓ Download Free PDF</a>
+                <a href="https://www.pdf-bookshelf.com/pdf/${b.slug}" style="display: inline-block; background-color: #f59e0b; color: #0f172a; font-weight: 800; font-size: 13px; padding: 8px 18px; border-radius: 999px; text-decoration: none;">⤓ Download Free PDF</a>
               </div>
             `).join('')}
           </td>
