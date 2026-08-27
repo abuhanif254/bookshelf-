@@ -18,6 +18,7 @@ export default function AdminPage() {
   // Books State
   const [books, setBooks] = useState<Product[]>([]);
   const [search, setSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
   const [showBookModal, setShowBookModal] = useState(false);
   const [editingBook, setEditingBook] = useState<Product | null>(null);
   const [savingBook, setSavingBook] = useState(false);
@@ -739,6 +740,14 @@ export default function AdminPage() {
 
   const filteredBooks = books.filter(b => (b.title + ' ' + b.author + ' ' + b.cat).toLowerCase().includes(search.toLowerCase()));
 
+  const PAGE_SIZE = 50;
+  const paginatedBooks = filteredBooks.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const totalPages = Math.ceil(filteredBooks.length / PAGE_SIZE);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, activeTab]);
+
   return (
     <div className="wrap" style={{ padding: '28px 20px 80px' }}>
       {toastMsg && (
@@ -837,7 +846,7 @@ export default function AdminPage() {
               onChange={e => setSearch(e.target.value)}
               style={{ padding: '8px 14px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 13, minWidth: 300 }}
             />
-            <span style={{ fontSize: 13, color: 'var(--muted)' }}>Showing {filteredBooks.length} of {books.length} titles</span>
+            <span style={{ fontSize: 13, color: 'var(--muted)' }}>Showing {(currentPage - 1) * PAGE_SIZE + 1} - {Math.min(currentPage * PAGE_SIZE, filteredBooks.length)} of {filteredBooks.length} titles</span>
           </div>
 
           <div style={{ overflowX: 'auto' }}>
@@ -852,7 +861,7 @@ export default function AdminPage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredBooks.map(b => (
+                {paginatedBooks.map(b => (
                   <tr key={b.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
                     <td style={{ padding: '12px 16px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -899,6 +908,28 @@ export default function AdminPage() {
               </tbody>
             </table>
           </div>
+
+          {totalPages > 1 && (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 14, marginTop: 24, paddingBottom: 12 }}>
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                style={{ padding: '6px 12px', borderRadius: 6, border: '1px solid #cbd5e1', background: currentPage === 1 ? '#f8fafc' : '#fff', color: currentPage === 1 ? '#94a3b8' : '#0f172a', fontWeight: 700, cursor: currentPage === 1 ? 'not-allowed' : 'pointer', fontSize: 13 }}
+              >
+                ← Prev
+              </button>
+              <span style={{ fontSize: 13, fontWeight: 700, color: '#475569' }}>
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                style={{ padding: '6px 12px', borderRadius: 6, border: '1px solid #cbd5e1', background: currentPage === totalPages ? '#f8fafc' : '#fff', color: currentPage === totalPages ? '#94a3b8' : '#0f172a', fontWeight: 700, cursor: currentPage === totalPages ? 'not-allowed' : 'pointer', fontSize: 13 }}
+              >
+                Next →
+              </button>
+            </div>
+          )}
         </div>
       )}
 
