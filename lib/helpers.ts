@@ -49,10 +49,16 @@ export const coverHTML = (p: Product, size: string = ''): string => {
   const safeSize = ['sm', 'md', 'lg'].includes(size) ? size : '';
 
   const fallback = getFallbackDesign(p.title);
-  const safeBg = escapeHtml(p.bg || fallback.bg);
+  
+  // If the book has the exact default database colors injected by supabaseDb.ts, use our unique deterministic fallback instead
+  const isDefaultBg = !p.bg || p.bg === '#0f2a43';
+  const isDefaultAc = !p.ac || p.ac === '#f59e0b';
+  const isDefaultPat = !p.pat || p.pat === 'p-rings';
+
+  const safeBg = escapeHtml(isDefaultBg ? fallback.bg : p.bg);
   const safeFg = escapeHtml(p.fg || fallback.fg);
-  const safeAc = escapeHtml(p.ac || fallback.ac);
-  const safePat = escapeHtml(p.pat || fallback.pat);
+  const safeAc = escapeHtml(isDefaultAc ? fallback.ac : p.ac);
+  const safePat = escapeHtml(isDefaultPat ? fallback.pat : p.pat);
   const safePages = Number(p.pages) || 80;
   const safeSlug = escapeHtml(p.slug);
 

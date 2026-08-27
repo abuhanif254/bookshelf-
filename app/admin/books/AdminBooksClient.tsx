@@ -21,14 +21,19 @@ function slugify(str: string): string {
 function MiniCover({ book }: { book: Partial<FormData> }) {
   const coverImage = (book.coverImage || '').trim();
   const fallback = getFallbackDesign(book.title || 'Your Book Title');
-  const bg = book.bg || fallback.bg;
-  const ac = book.ac || fallback.ac;
+  
+  const isDefaultBg = !book.bg || book.bg === '#0f2a43';
+  const isDefaultAc = !book.ac || book.ac === '#f59e0b';
+  const isDefaultPat = !book.pat || book.pat === 'p-rings';
+
+  const bg = isDefaultBg ? fallback.bg : book.bg;
+  const ac = isDefaultAc ? fallback.ac : book.ac;
   const fg = book.fg || fallback.fg;
   const title = book.title || 'Your Book Title';
   const author = book.author || 'Author Name';
   const cat = book.cat || 'Category';
   const pages = book.pages || 96;
-  const pat = book.pat || fallback.pat;
+  const pat = isDefaultPat ? fallback.pat : book.pat;
 
   let imgHTML = null;
   if (coverImage) {
