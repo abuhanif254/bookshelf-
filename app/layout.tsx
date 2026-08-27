@@ -20,6 +20,9 @@ const baseUrl = getBaseUrl();
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
+  verification: {
+    google: 'nN8IJOM1mcSO_25aJu4zkY0xAQRNLtLN-RFNXCcuwys',
+  },
   title: {
     default: 'Bookshelf — Download & Read Free PDF Books Instantly',
     template: '%s | Bookshelf',
