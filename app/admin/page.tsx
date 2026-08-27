@@ -19,6 +19,9 @@ export default function AdminPage() {
   const [books, setBooks] = useState<Product[]>([]);
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, activeTab]);
   const [showBookModal, setShowBookModal] = useState(false);
   const [editingBook, setEditingBook] = useState<Product | null>(null);
   const [savingBook, setSavingBook] = useState(false);
@@ -743,10 +746,6 @@ export default function AdminPage() {
   const PAGE_SIZE = 50;
   const paginatedBooks = filteredBooks.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
   const totalPages = Math.ceil(filteredBooks.length / PAGE_SIZE);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [search, activeTab]);
 
   return (
     <div className="wrap" style={{ padding: '28px 20px 80px' }}>
