@@ -22,6 +22,24 @@ export const flagCls = (b: string | null): string => {
   return '';
 };
 
+export const getFallbackDesign = (title: string = '') => {
+  let hash = 0;
+  for (let i = 0; i < title.length; i++) {
+    hash = title.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const absHash = Math.abs(hash);
+  const bgs = ['#0f2a43', '#1e3a8a', '#1e40af', '#3730a3', '#4c1d95', '#6b21a8', '#831843', '#881337', '#7f1d1d', '#713f12', '#064e3b', '#134e4a', '#164e63', '#0f172a'];
+  const acs = ['#f59e0b', '#38bdf8', '#fb7185', '#34d399', '#a78bfa', '#fcd34d', '#4ade80'];
+  const pats = ['p-dots', 'p-lines', 'p-grid', 'p-rings', 'p-blocks'];
+  
+  return {
+    bg: bgs[absHash % bgs.length],
+    ac: acs[absHash % acs.length],
+    pat: pats[absHash % pats.length],
+    fg: '#ffffff'
+  };
+};
+
 export const coverHTML = (p: Product, size: string = ''): string => {
   const img = (p.coverImage || p.coverUrl || '').trim();
   const safeTitle = escapeHtml(p.title);
@@ -30,41 +48,42 @@ export const coverHTML = (p: Product, size: string = ''): string => {
   const safeSub = escapeHtml(p.sub);
   const safeSize = ['sm', 'md', 'lg'].includes(size) ? size : '';
 
+  const fallback = getFallbackDesign(p.title);
+  const safeBg = escapeHtml(p.bg || fallback.bg);
+  const safeFg = escapeHtml(p.fg || fallback.fg);
+  const safeAc = escapeHtml(p.ac || fallback.ac);
+  const safePat = escapeHtml(p.pat || fallback.pat);
+  const safePages = Number(p.pages) || 80;
+  const safeSlug = escapeHtml(p.slug);
+
+  let imgHTML = '';
   if (img) {
     let resolvedImg = img;
-    // If user provided a Google Drive view link for the image, convert to direct image stream
     const driveMatch = img.match(/\/d\/([a-zA-Z0-9_-]+)/) || img.match(/[?&]id=([a-zA-Z0-9_-]+)/);
     if (driveMatch && driveMatch[1]) {
       resolvedImg = `https://drive.google.com/uc?export=view&id=${driveMatch[1]}`;
     }
-
-    // Ensure image URL is safe HTTP/HTTPS
     if (isValidHttpUrl(resolvedImg)) {
       const cleanImgUrl = resolvedImg.replace('&source=gbs_api', '');
       const proxiedUrl = `https://wsrv.nl/?url=${encodeURIComponent(cleanImgUrl)}&w=400&output=webp`;
       const safeImgUrl = escapeHtml(proxiedUrl);
-      const safeSlug = escapeHtml(p.slug);
-      return `<a href="/pdf/${safeSlug}" class="coverwrap" data-open="${safeSlug}" style="cursor:pointer; display:block;"><div class="cover ${safeSize ? 'cover--' + safeSize : ''}" style="padding:0;overflow:hidden;background:#0f172a;position:relative;">
-        <img src="${safeImgUrl}" alt="${safeTitle}" crossorigin="anonymous" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;" loading="lazy" onerror="this.style.display='none';this.parentElement.classList.add('cover--fallback');" />
-        <div style="position:absolute;inset:0;box-shadow:inset 10px 0 14px -10px rgba(0,0,0,.6), inset 0 0 0 1px rgba(255,255,255,0.08);pointer-events:none;"></div>
-      </div></a>`;
+      imgHTML = `<img src="${safeImgUrl}" alt="${safeTitle}" crossorigin="anonymous" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;z-index:10;" loading="lazy" onerror="this.style.display='none';" />`;
     }
   }
 
-  const safeBg = escapeHtml(p.bg || '#0f2a43');
-  const safeFg = escapeHtml(p.fg || '#ffffff');
-  const safeAc = escapeHtml(p.ac || '#f59e0b');
-  const safePat = escapeHtml(p.pat || 'p-rings');
-  const safePages = Number(p.pages) || 80;
-  const safeSlug = escapeHtml(p.slug);
-
-  return `<a href="/pdf/${safeSlug}" class="coverwrap" data-open="${safeSlug}" style="cursor:pointer; display:block;"><div class="cover ${safeSize ? 'cover--' + safeSize : ''}" style="--cbg:${safeBg};--fg:${safeFg};--cac:${safeAc}">
-    <div class="pat ${safePat}"></div><span class="cac"></span>
-    <span class="ccat">${safeCat}</span>
-    <div><div class="cttl">${safeTitle}</div>${safeSize === 'lg' ? `<div class="csub">${safeSub}</div>` : ''}</div>
-    <div><div class="caut">${safeAuthor}</div>
-    <div class="cfoot"><span class="cpdf">PDF</span><span class="cpg">${safePages} pages</span></div></div>
-  </div></a>`;
+  return `<a href="/pdf/${safeSlug}" class="coverwrap" data-open="${safeSlug}" style="cursor:pointer; display:block;">
+    <div class="cover ${safeSize ? 'cover--' + safeSize : ''}" style="--cbg:${safeBg};--fg:${safeFg};--cac:${safeAc}; position:relative; overflow:hidden;">
+      <div class="pat ${safePat}"></div><span class="cac"></span>
+      <span class="ccat">${safeCat}</span>
+      <div><div class="cttl">${safeTitle}</div>${safeSize === 'lg' ? `<div class="csub">${safeSub}</div>` : ''}</div>
+      <div>
+        <div class="caut">${safeAuthor}</div>
+        <div class="cfoot"><span class="cpdf">PDF</span><span class="cpg">${safePages} pages</span></div>
+      </div>
+      ${imgHTML}
+      <div style="position:absolute;inset:0;box-shadow:inset 10px 0 14px -10px rgba(0,0,0,.6), inset 0 0 0 1px rgba(255,255,255,0.08);pointer-events:none;z-index:11;"></div>
+    </div>
+  </a>`;
 };
 
 export const priceRow = (p: Product): string => {

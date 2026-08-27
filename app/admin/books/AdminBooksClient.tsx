@@ -7,6 +7,8 @@ import { getClientBooks, saveClientBooks, addClientBook, deleteClientBook } from
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
+import { getFallbackDesign } from '@/lib/helpers';
+
 const PATTERNS = ['p-rings', 'p-lines', 'p-dots', 'p-grid', 'p-blocks', 'p-waves'];
 const DEFAULT_CATEGORIES = ['Productivity', 'Programming', 'Business', 'Design', 'Marketing', 'Self-Help', 'Technology', 'Finance', 'Health'];
 const BOOK_TYPES = ['free', 'paid', 'affiliate'] as const;
@@ -18,34 +20,34 @@ function slugify(str: string): string {
 
 function MiniCover({ book }: { book: Partial<FormData> }) {
   const coverImage = (book.coverImage || '').trim();
-  const bg = book.bg || '#0f2a43';
-  const ac = book.ac || '#f59e0b';
-  const fg = book.fg || '#ffffff';
+  const fallback = getFallbackDesign(book.title || 'Your Book Title');
+  const bg = book.bg || fallback.bg;
+  const ac = book.ac || fallback.ac;
+  const fg = book.fg || fallback.fg;
   const title = book.title || 'Your Book Title';
   const author = book.author || 'Author Name';
   const cat = book.cat || 'Category';
   const pages = book.pages || 96;
-  const pat = book.pat || 'p-rings';
+  const pat = book.pat || fallback.pat;
 
+  let imgHTML = null;
   if (coverImage) {
     let resolvedImg = coverImage;
     const driveMatch = coverImage.match(/\/d\/([a-zA-Z0-9_-]+)/) || coverImage.match(/[?&]id=([a-zA-Z0-9_-]+)/);
     if (driveMatch && driveMatch[1]) {
       resolvedImg = `https://drive.google.com/uc?export=view&id=${driveMatch[1]}`;
     }
-    return (
-      <div style={{ width: 110, height: 156, borderRadius: 6, overflow: 'hidden', position: 'relative', background: '#0f172a', boxShadow: '0 4px 12px rgba(0,0,0,0.25)' }}>
-        <img
-          src={`https://wsrv.nl/?url=${encodeURIComponent(resolvedImg.replace('&source=gbs_api', ''))}&w=128&output=webp`}
-          alt={title}
-          crossOrigin="anonymous"
-          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-          onError={(e) => {
-            (e.currentTarget as HTMLElement).style.display = 'none';
-          }}
-        />
-        <div style={{ position: 'absolute', inset: 0, boxShadow: 'inset 8px 0 10px -6px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.1)', pointerEvents: 'none' }} />
-      </div>
+    imgHTML = (
+      <img
+        src={`https://wsrv.nl/?url=${encodeURIComponent(resolvedImg.replace('&source=gbs_api', ''))}&w=128&output=webp`}
+        alt={title}
+        crossOrigin="anonymous"
+        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block', zIndex: 10 }}
+        loading="lazy"
+        onError={(e) => {
+          (e.currentTarget as HTMLElement).style.display = 'none';
+        }}
+      />
     );
   }
 
@@ -59,16 +61,33 @@ function MiniCover({ book }: { book: Partial<FormData> }) {
   }[pat] || '';
 
   return (
-    <svg viewBox="0 0 120 170" width="110" height="156" style={{ borderRadius: 6, display: 'block' }}>
-      <rect width="120" height="170" fill={bg} rx="6"/>
-      <g dangerouslySetInnerHTML={{ __html: patternSVG }} />
-      <rect x="8" y="8" width="104" height="154" rx="4" fill="none" stroke={`${ac}40`} strokeWidth="1"/>
-      <text x="10" y="26" fill={ac} fontSize="8" fontFamily="sans-serif" fontWeight="800" textAnchor="start" letterSpacing="1">
-        {cat.toUpperCase()}
-      </text>
-      <text x="8" y="46" fill={fg} fontSize="13" fontFamily="sans-serif" fontWeight="900">
-        {title.substring(0, 16)}
-      </text>
+    <div style={{ width: 110, height: 156, borderRadius: 6, overflow: 'hidden', position: 'relative', background: bg, boxShadow: '0 4px 12px rgba(0,0,0,0.25)', color: fg }}>
+      <div style={{ position: 'absolute', inset: 0, backgroundImage: `url('data:image/svg+xml;utf8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="120" height="160">${patternSVG}</svg>`)}')`, opacity: 0.2 }}></div>
+      <svg viewBox="0 0 120 170" width="110" height="156" style={{ position: 'absolute', inset: 0, display: 'block', zIndex: 1 }}>
+        <rect x="8" y="8" width="104" height="154" rx="4" fill="none" stroke={`${ac}40`} strokeWidth="1"/>
+        <text x="10" y="26" fill={ac} fontSize="8" fontFamily="sans-serif" fontWeight="800" textAnchor="start" letterSpacing="1">
+          {cat.toUpperCase()}
+        </text>
+        <text x="8" y="46" fill={fg} fontSize="13" fontFamily="sans-serif" fontWeight="900">
+          {title.substring(0, 16)}
+        </text>
+        <text x="8" y="62" fill={fg} fontSize="13" fontFamily="sans-serif" fontWeight="900">
+          {title.substring(16, 32)}
+        </text>
+        <text x="8" y="78" fill={fg} fontSize="13" fontFamily="sans-serif" fontWeight="900">
+          {title.substring(32, 48)}
+        </text>
+        <text x="8" y="152" fill={ac} fontSize="8" fontFamily="sans-serif" fontWeight="800">
+          {author.substring(0, 20).toUpperCase()}
+        </text>
+      </svg>
+      {imgHTML}
+      <div style={{ position: 'absolute', inset: 0, boxShadow: 'inset 8px 0 10px -6px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.1)', pointerEvents: 'none', zIndex: 11 }} />
+    </div>
+  );
+}
+
+
       <text x="8" y="62" fill={fg} fontSize="13" fontFamily="sans-serif" fontWeight="900">
         {title.substring(16, 32)}
       </text>
