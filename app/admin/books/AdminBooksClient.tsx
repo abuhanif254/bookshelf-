@@ -33,7 +33,7 @@ function MiniCover({ book }: { book: Partial<FormData> }) {
   const author = book.author || 'Author Name';
   const cat = book.cat || 'Category';
   const pages = book.pages || 96;
-  const pat = isDefaultPat ? fallback.pat : book.pat;
+  const pat = isDefaultPat ? fallback.pat : (book.pat || '');
 
   let imgHTML = null;
   if (coverImage) {
