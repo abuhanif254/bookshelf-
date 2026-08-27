@@ -88,19 +88,6 @@ function MiniCover({ book }: { book: Partial<FormData> }) {
 }
 
 
-      <text x="8" y="62" fill={fg} fontSize="13" fontFamily="sans-serif" fontWeight="900">
-        {title.substring(16, 32)}
-      </text>
-      <text x="10" y="118" fill={`${fg}aa`} fontSize="7.5" fontFamily="sans-serif" fontWeight="700" letterSpacing="0.5">
-        {author.substring(0, 22).toUpperCase()}
-      </text>
-      <rect x="8" y="125" width="20" height="10" rx="2" fill={fg}/>
-      <text x="10" y="133" fill={bg} fontSize="5.5" fontFamily="sans-serif" fontWeight="800">PDF</text>
-      <text x="116" y="133" fill={`${fg}99`} fontSize="6" fontFamily="sans-serif" textAnchor="end">{pages} pages</text>
-      <rect x="8" y="150" width={Math.min(104, Number(pages) / 3)} height="3" rx="2" fill={`${ac}60`}/>
-    </svg>
-  );
-}
 
 // ─── Form Data Types ───────────────────────────────────────────────────────────
 
