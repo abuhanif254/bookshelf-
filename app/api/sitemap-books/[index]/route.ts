@@ -8,11 +8,11 @@ export const revalidate = 43200;
 
 const BOOKS_PER_CHUNK = 40000;
 
-interface Props {
+interface RouteContext {
   params: Promise<{ index: string }> | { index: string };
 }
 
-export async function GET(_req: Request, { params }: Props) {
+export async function GET(_req: Request, { params }: RouteContext) {
   const resolved =
     typeof (params as Promise<{ index: string }>)?.then === 'function'
       ? await (params as Promise<{ index: string }>)
@@ -34,11 +34,16 @@ export async function GET(_req: Request, { params }: Props) {
     return new NextResponse('Chunk out of range', { status: 404 });
   }
 
-  const urls = chunk
-    .map(book => "  <url><loc>" + baseUrl + "/pdf/" + book.slug + "</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>")
-    .join("\n");
+  const urlTags = chunk
+    .map((
+      book
+    ) => '<url><loc>' + baseUrl + '/pdf/' + book.slug + '</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>')
+    .join('');
 
-  const xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">" + urls + "</urlset>";
+  const xml =
+    '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' +
+    urlTags +
+    '</urlset>';
 
   return new NextResponse(xml, {
     headers: {
