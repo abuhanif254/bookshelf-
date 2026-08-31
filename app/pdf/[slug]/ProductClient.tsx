@@ -40,8 +40,9 @@ export default function ProductClient({ p, faqs }: { p: Product; faqs?: FAQItem[
   const [totalReviewsCount, setTotalReviewsCount] = useState(p.reviews);
 
   const [allBooks, setAllBooks] = useState<Product[]>(P);
+  const [authorBooks, setAuthorBooks] = useState<Product[]>([]);
 
-  // Fetch real reviews & all books from local database
+  // Fetch real reviews for this book
   React.useEffect(() => {
     fetch(`/api/reviews?bookId=${p.id}`)
       .then(res => res.json())
@@ -51,8 +52,16 @@ export default function ProductClient({ p, faqs }: { p: Product; faqs?: FAQItem[
         }
       })
       .catch(() => {});
+  }, [p.id]);
 
-    fetch('/api/books')
+  // Fetch only same-category books (for "Related") and same-author books —
+  // NOT the full library. This keeps the payload tiny at any catalog size.
+  React.useEffect(() => {
+    const catParam = encodeURIComponent(p.cat);
+    const authorSlug = p.author.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+
+    // Same-category books for the "Customers who viewed this also viewed" row
+    fetch(`/api/books?cat=${catParam}&limit=24`)
       .then(res => res.json())
       .then(data => {
         if (data.success && Array.isArray(data.books) && data.books.length > 0) {
@@ -60,7 +69,17 @@ export default function ProductClient({ p, faqs }: { p: Product; faqs?: FAQItem[
         }
       })
       .catch(() => {});
-  }, [p.id]);
+
+    // Same-author books for the "More by [Author]" row
+    fetch(`/api/books?author=${authorSlug}&limit=12`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.books) && data.books.length > 1) {
+          setAuthorBooks(data.books.filter((b: Product) => b.id !== p.id));
+        }
+      })
+      .catch(() => {});
+  }, [p.id, p.cat, p.author]);
 
   const handleReviewSubmitted = (newReview: BookReview) => {
     setReviewsList(prev => [newReview, ...prev]);
@@ -85,7 +104,8 @@ export default function ProductClient({ p, faqs }: { p: Product; faqs?: FAQItem[
   const isAff = p.type === 'affiliate';
   const isFree = p.type === 'free';
   const save = p.list ? Math.round((1 - p.price / p.list) * 100) : 0;
-  const related = allBooks.filter(x => x.id !== p.id && (x.cat === p.cat || x.type === p.type)).slice(0, 6);
+  // Filter same-category books for the "Related" row (exclude current book)
+  const related = allBooks.filter(x => x.id !== p.id).slice(0, 6);
 
   const hist = [72, 17, 6, 3, 2];
   const names: [string, string][] = [['Sofia M.', '#e8590c'], ['James T.', '#0b7285'], ['Aisha B.', '#5f3dc4']];
@@ -134,6 +154,7 @@ export default function ProductClient({ p, faqs }: { p: Product; faqs?: FAQItem[
   };
 
   const relatedHTML = related.map(x => cardHTML(x, null, false, state.wishlist)).join('');
+  const authorBooksHTML = authorBooks.map(x => cardHTML(x, null, false, state.wishlist)).join('');
 
   return (
     <>
@@ -407,7 +428,20 @@ export default function ProductClient({ p, faqs }: { p: Product; faqs?: FAQItem[
           </div>
         )}
 
-        {/* Related */}
+        {/* More by same Author */}
+        {authorBooksHTML && (
+          <div className="sec">
+            <div className="sec-hd">
+              <h2>More by {p.author}</h2>
+              <a href={`/author/${authorSlug}`} style={{ fontSize: 13, color: 'var(--link)', fontWeight: 600 }}>
+                See all →
+              </a>
+            </div>
+            <ScrollSection id="sc-author" html={authorBooksHTML} onAction={handleAction} />
+          </div>
+        )}
+
+        {/* Related — same category */}
         <div className="sec" style={{ paddingBottom: 60 }}>
           <div className="sec-hd"><h2>Customers who viewed this also viewed</h2></div>
           <ScrollSection id="sc-rel" html={relatedHTML} onAction={handleAction} />

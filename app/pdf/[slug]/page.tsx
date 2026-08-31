@@ -7,6 +7,11 @@ import ProductClient from './ProductClient';
 import DynamicBookFallback from './DynamicBookFallback';
 import { getBaseUrl } from '@/lib/url';
 
+// Cache each book page at the CDN edge for 24 hours (ISR).
+// Stale pages are revalidated in the background — visitors always
+// get a fast cached response without waiting for Supabase.
+export const revalidate = 86400;
+
 interface Props {
   params: Promise<{ slug: string }> | { slug: string };
 }

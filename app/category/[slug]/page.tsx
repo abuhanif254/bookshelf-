@@ -8,6 +8,11 @@ import { cardHTML } from '@/lib/helpers';
 import { BreadcrumbJsonLd, CollectionPageJsonLd, FAQJsonLd } from '@/components/JsonLd';
 import CategoryClient from './CategoryClient';
 
+// Cache category hub pages at the CDN edge for 24 hours (ISR).
+// With 450+ categories, this prevents a Supabase full-table scan
+// on every visitor landing on any category page.
+export const revalidate = 86400;
+
 interface Props {
   params: Promise<{ slug: string }> | { slug: string };
 }

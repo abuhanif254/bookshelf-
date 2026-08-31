@@ -8,9 +8,14 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const cat = searchParams.get('cat');
-    const q = searchParams.get('q');
-    const type = searchParams.get('type');
+    const cat    = searchParams.get('cat');
+    const q      = searchParams.get('q');
+    const type   = searchParams.get('type');
+    const author = searchParams.get('author');
+    // 'limit' defaults to 200 for client-side use.
+    // Pass limit=0 from the admin panel to get the full list.
+    const limitParam = searchParams.get('limit');
+    const limit = limitParam === '0' ? 0 : Math.min(parseInt(limitParam || '200', 10), 500);
 
     let books = await getSupabaseBooks();
     if (!books || books.length === 0) {
@@ -20,6 +25,10 @@ export async function GET(request: Request) {
     if (cat) {
       books = books.filter(b => b.cat.toLowerCase() === cat.toLowerCase());
     }
+    if (author) {
+      const authorSlug = author.toLowerCase();
+      books = books.filter(b => b.author.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') === authorSlug);
+    }
     if (type) {
       books = books.filter(b => b.type === type);
     }
@@ -28,7 +37,10 @@ export async function GET(request: Request) {
       books = books.filter(b => (b.title + ' ' + b.author + ' ' + b.cat + ' ' + b.sub).toLowerCase().includes(query));
     }
 
-    return NextResponse.json({ success: true, count: books.length, books });
+    // Apply limit (0 = no limit, for admin use only)
+    const result = limit > 0 ? books.slice(0, limit) : books;
+
+    return NextResponse.json({ success: true, count: books.length, books: result });
   } catch (error) {
     console.error('API GET /api/books error:', error);
     const fallback = getAllBooks();

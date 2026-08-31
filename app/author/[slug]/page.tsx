@@ -6,6 +6,11 @@ import { getSupabaseBooks } from '@/lib/supabaseDb';
 import { BreadcrumbJsonLd, PersonJsonLd } from '@/components/JsonLd';
 import AuthorClient from './AuthorClient';
 
+// Cache author profile pages at the CDN edge for 24 hours (ISR).
+// Author pages won't change frequently — revalidation background
+// refresh ensures new books by that author appear within 24h.
+export const revalidate = 86400;
+
 interface Props {
   params: Promise<{ slug: string }> | { slug: string };
 }
