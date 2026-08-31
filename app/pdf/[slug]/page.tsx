@@ -8,7 +8,7 @@ import DynamicBookFallback from './DynamicBookFallback';
 import { getBaseUrl } from '@/lib/url';
 
 // Cache each book page at the CDN edge for 24 hours (ISR).
-// Stale pages are revalidated in the background — visitors always
+// Stale pages are revalidated in the background â€” visitors always
 // get a fast cached response without waiting for Supabase.
 export const revalidate = 86400;
 
@@ -32,12 +32,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!book) {
     const formattedTitle = resolvedParams.slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
     return {
-      title: `${formattedTitle} — Download Free PDF | Bookshelf`,
+      title: `${formattedTitle} â€” Download Free PDF | Bookshelf`,
       description: `Download ${formattedTitle} PDF book with high-speed Google Drive download.`,
     };
   }
 
-  const title = `${book.title} by ${book.author} — Download Free PDF (${book.pages} Pages)`;
+  const title = `${book.title} by ${book.author} â€” Download Free PDF (${book.pages} Pages)`;
   const description = `Download "${book.title}" PDF book by ${book.author}. ${book.blurb || book.sub} 100% free direct Google Drive download. DRM-free for personal use.`;
   const canonicalUrl = `${getBaseUrl()}/pdf/${book.slug}`;
 
@@ -57,7 +57,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       canonical: canonicalUrl,
     },
     openGraph: {
-      title: `${book.title} by ${book.author} — Free PDF Download`,
+      title: `${book.title} by ${book.author} â€” Free PDF Download`,
       description,
       url: canonicalUrl,
       type: 'book',

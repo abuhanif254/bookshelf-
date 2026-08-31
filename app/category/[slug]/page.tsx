@@ -196,13 +196,13 @@ export default async function CategoryPage({ params }: Props) {
       <div className="wrap" style={{ padding: '20px 20px 60px' }}>
         {/* Breadcrumb */}
         <div className="crumb">
-          <Link href="/">Home</Link> › <Link href="/library">Categories</Link> › <span>{catInfo.h1}</span>
+          <Link href="/">Home</Link> â€º <Link href="/library">Categories</Link> â€º <span>{catInfo.h1}</span>
         </div>
 
         {/* Hero Banner */}
         <div style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', color: '#fff', padding: '36px 30px', borderRadius: 12, margin: '14px 0 28px' }}>
           <span style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--amber)' }}>
-            Category Hub · {matchingBooks.length} Verified PDFs
+            Category Hub Â· {matchingBooks.length} Verified PDFs
           </span>
           <h1 style={{ color: '#fff', fontSize: 'clamp(26px, 3.5vw, 38px)', fontWeight: 900, letterSpacing: '-0.02em', margin: '8px 0 10px' }}>
             {catInfo.h1}

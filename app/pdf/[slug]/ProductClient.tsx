@@ -54,7 +54,7 @@ export default function ProductClient({ p, faqs }: { p: Product; faqs?: FAQItem[
       .catch(() => {});
   }, [p.id]);
 
-  // Fetch only same-category books (for "Related") and same-author books —
+  // Fetch only same-category books (for "Related") and same-author books â€”
   // NOT the full library. This keeps the payload tiny at any catalog size.
   React.useEffect(() => {
     const catParam = encodeURIComponent(p.cat);
@@ -84,7 +84,7 @@ export default function ProductClient({ p, faqs }: { p: Product; faqs?: FAQItem[
   const handleReviewSubmitted = (newReview: BookReview) => {
     setReviewsList(prev => [newReview, ...prev]);
     setTotalReviewsCount(prev => prev + 1);
-    toast('Review Submitted! ⭐', 'Your review is now live.');
+    toast('Review Submitted! â­', 'Your review is now live.');
   };
 
   const handleVoteHelpful = async (reviewId: string) => {
@@ -110,9 +110,9 @@ export default function ProductClient({ p, faqs }: { p: Product; faqs?: FAQItem[
   const hist = [72, 17, 6, 3, 2];
   const names: [string, string][] = [['Sofia M.', '#e8590c'], ['James T.', '#0b7285'], ['Aisha B.', '#5f3dc4']];
   const revs = [
-    { t: 'Worth 10× the price', b: "I finished it in one evening and applied the framework the next morning. The printable extras alone justify it. This is the kind of PDF you actually keep.", d: 'July 22, 2026' },
+    { t: 'Worth 10Ã— the price', b: "I finished it in one evening and applied the framework the next morning. The printable extras alone justify it. This is the kind of PDF you actually keep.", d: 'July 22, 2026' },
     { t: 'Practical, zero fluff', b: "Every chapter ends with something to do, not something to ponder. I've bought three copies for my team and we run the playbook weekly.", d: 'July 9, 2026' },
-    { t: 'Great — with one caveat', b: "Excellent structure and beautiful layout on both tablet and print. Wish there were more advanced examples in chapter 8, but the author replies to emails, which is rare.", d: 'June 28, 2026' },
+    { t: 'Great â€” with one caveat', b: "Excellent structure and beautiful layout on both tablet and print. Wish there were more advanced examples in chapter 8, but the author replies to emails, which is rare.", d: 'June 28, 2026' },
   ];
 
   const authorSlug = normalizeSlug(p.author);
@@ -149,7 +149,7 @@ export default function ProductClient({ p, faqs }: { p: Product; faqs?: FAQItem[
     if (btn.dataset.wish) {
       const id = +btn.dataset.wish;
       dispatch({ type: 'TOGGLE_WISHLIST', id });
-      toast(state.wishlist.has(id) ? 'Removed from Wishlist' : 'Added to Wishlist ♡');
+      toast(state.wishlist.has(id) ? 'Removed from Wishlist' : 'Added to Wishlist â™¡');
     }
   };
 
@@ -170,7 +170,7 @@ export default function ProductClient({ p, faqs }: { p: Product; faqs?: FAQItem[
       <div className="wrap" onClick={handleAction}>
         {/* Breadcrumbs */}
         <div className="crumb">
-          <Link href="/">Home</Link> › <Link href={`/category/${catSlug}`}>{p.cat}</Link> › <span style={{ color: '#0f1111' }}>{p.title}</span>
+          <Link href="/">Home</Link> â€º <Link href={`/category/${catSlug}`}>{p.cat}</Link> â€º <span style={{ color: '#0f1111' }}>{p.title}</span>
         </div>
 
         <div className="pd">
@@ -178,7 +178,7 @@ export default function ProductClient({ p, faqs }: { p: Product; faqs?: FAQItem[
           <div className="pd-cover">
             <div className="coverwrap" onClick={() => openReader(p)} style={{ cursor: 'pointer' }}>
               <div dangerouslySetInnerHTML={{ __html: coverHTML(p, 'lg') }} />
-              <div className="look">🔍 Look inside<span style={{ fontWeight: 400, fontSize: 12.5 }}>Sample chapter PDF</span></div>
+              <div className="look">ðŸ” Look inside<span style={{ fontWeight: 400, fontSize: 12.5 }}>Sample chapter PDF</span></div>
             </div>
             <div className="thumbs">
               {['p.1', 'p.14', 'p.37', 'TOC'].map(lbl => (
@@ -192,7 +192,7 @@ export default function ProductClient({ p, faqs }: { p: Product; faqs?: FAQItem[
             {p.badge && <span className={`flag ${flagCls(p.badge)}`} style={{ position: 'static', display: 'inline-block', marginBottom: 10 }}>{p.badge}</span>}
             <h1>{p.title}</h1>
             <div className="byline">
-              by <Link href={`/author/${authorSlug}`} style={{ fontWeight: 700, color: 'var(--link)' }}>{p.author}</Link> (Author) · <span style={{ color: 'var(--muted)' }}>{p.pages} pages · <Link href={`/category/${catSlug}`} style={{ color: 'var(--muted)' }}>{p.cat}</Link> · Updated July 2026</span>
+              by <Link href={`/author/${authorSlug}`} style={{ fontWeight: 700, color: 'var(--link)' }}>{p.author}</Link> (Author) Â· <span style={{ color: 'var(--muted)' }}>{p.pages} pages Â· <Link href={`/category/${catSlug}`} style={{ color: 'var(--muted)' }}>{p.cat}</Link> Â· Updated July 2026</span>
             </div>
             <div className="rate">
               <span className="big">{p.rating}</span>
@@ -204,13 +204,13 @@ export default function ProductClient({ p, faqs }: { p: Product; faqs?: FAQItem[
 
             <div className="fmt">
               <div className="f on"><b>PDF</b><span>{isFree ? 'Free' : p.type === 'paid' ? formatPrice(p.price) : 'From ' + formatPrice(p.price)}</span></div>
-              <div className="f" data-kindle="1"><b>Kindle</b><span>Send ↗</span></div>
+              <div className="f" data-kindle="1"><b>Kindle</b><span>Send â†—</span></div>
               <div className="f" data-toast="ePub edition coming soon"><b>ePub</b><span>Soon</span></div>
             </div>
 
             <div className="bigprice">
               {isFree ? (
-                <><span className="price free" style={{ fontSize: 28 }}>Free</span><span className="listp" style={{ fontSize: 15 }}>{formatPrice(p.list || 14.99)}</span><span className="save">100% off — Free PDF Fridays</span></>
+                <><span className="price free" style={{ fontSize: 28 }}>Free</span><span className="listp" style={{ fontSize: 15 }}>{formatPrice(p.list || 14.99)}</span><span className="save">100% off â€” Free PDF Fridays</span></>
               ) : isAff ? (
                 <><span className="price"><sup>$</sup>{p.price}<sup>00</sup></span><span className="partn">at <b>{p.partner}</b></span></>
               ) : (
@@ -226,7 +226,7 @@ export default function ProductClient({ p, faqs }: { p: Product; faqs?: FAQItem[
 
             {/* Interactive Study Hub Tabs */}
             <div className="tabs" style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4 }}>
-              {['Overview', '📝 Notes', '🤖 Ask AI', '🗺️ Mindmap', '📝 Quiz', "What's inside", 'Specs'].map((tab, i) => (
+              {['Overview', 'ðŸ“ Notes', 'ðŸ¤– Ask AI', 'ðŸ—ºï¸ Mindmap', 'ðŸ“ Quiz', "What's inside", 'Specs'].map((tab, i) => (
                 <button key={i} className={activeTab === i ? 'on' : ''} onClick={() => setActiveTab(i)} style={{ whiteSpace: 'nowrap' }}>{tab}</button>
               ))}
             </div>
@@ -241,18 +241,18 @@ export default function ProductClient({ p, faqs }: { p: Product; faqs?: FAQItem[
               <>
                 <div className="bb-price">${p.price}.00</div>
                 <div className="note">Sold &amp; fulfilled by <b style={{ color: 'var(--link)' }}>{p.partner}</b> via the Bookshelf Partner Store.</div>
-                <button className="bb-btn bb-ext" data-ext={p.id}>Go to {p.partner} ↗</button>
-                <button className="bb-btn bb-cart" data-wish={p.id}>♡ Add to Wishlist</button>
-                <div className="disclose"><b>Affiliate disclosure:</b> Bookshelf may earn a commission when you purchase through partner links — at no extra cost to you.</div>
+                <button className="bb-btn bb-ext" data-ext={p.id}>Go to {p.partner} â†—</button>
+                <button className="bb-btn bb-cart" data-wish={p.id}>â™¡ Add to Wishlist</button>
+                <div className="disclose"><b>Affiliate disclosure:</b> Bookshelf may earn a commission when you purchase through partner links â€” at no extra cost to you.</div>
               </>
             ) : isFree ? (
               <>
                 <div className="bb-price" style={{ color: 'var(--green)' }}>Free</div>
-                <div className="inst">⚡ Instant download — no account needed</div>
+                <div className="inst">âš¡ Instant download â€” no account needed</div>
                 <div className="note">100% free, forever. Hosted on secure Google Drive streams.</div>
-                <button className="bb-btn bb-buy" data-free={p.id}>⤓ Download free PDF ({(p.pages * 0.09).toFixed(1)} MB)</button>
-                <button className="bb-btn" style={{ background: '#fff', border: '1.5px solid var(--line)' }} data-kindle="1">📱 Send to Kindle Paperwhite</button>
-                <button className="bb-btn bb-cart" data-wish={p.id}>♡ Add to Wishlist</button>
+                <button className="bb-btn bb-buy" data-free={p.id}>â¤“ Download free PDF ({(p.pages * 0.09).toFixed(1)} MB)</button>
+                <button className="bb-btn" style={{ background: '#fff', border: '1.5px solid var(--line)' }} data-kindle="1">ðŸ“± Send to Kindle Paperwhite</button>
+                <button className="bb-btn bb-cart" data-wish={p.id}>â™¡ Add to Wishlist</button>
                 <div className="bb-sec">
                   <svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6l7-3z"/></svg>
                   <span>Scanned &amp; virus-checked. DRM-free for personal use.</span>
@@ -261,17 +261,17 @@ export default function ProductClient({ p, faqs }: { p: Product; faqs?: FAQItem[
             ) : (
               <>
                 <div className="bb-price">${p.price.toFixed(2)}</div>
-                <div className="inst">⚡ Instant download after purchase</div>
+                <div className="inst">âš¡ Instant download after purchase</div>
                 <div className="note">Delivered by email + your Library. Free lifetime updates.</div>
                 <div className="qty">
-                  <button onClick={() => setQty(q => Math.max(1, q - 1))}>−</button>
+                  <button onClick={() => setQty(q => Math.max(1, q - 1))}>âˆ’</button>
                   <span>{qty}</span>
                   <button onClick={() => setQty(q => Math.min(9, q + 1))}>+</button>
                 </div>
                 <button className="bb-btn bb-cart" data-add={p.id}>Add to Cart</button>
-                <button className="bb-btn bb-buy" onClick={() => { addToCart(p.id, qty, true); toast('Redirecting to secure checkout…', 'Stripe · 256-bit encrypted', true); setTimeout(() => router.push('/cart'), 900); }}>Buy Now</button>
-                <button className="bb-btn" style={{ background: '#fff', border: '1.5px solid var(--line)' }} data-toast="Free sample chapter sent to your inbox 📬">📄 Read free sample chapter</button>
-                <button className="bb-wish" data-wish={p.id}>♡ Add to Wishlist</button>
+                <button className="bb-btn bb-buy" onClick={() => { addToCart(p.id, qty, true); toast('Redirecting to secure checkoutâ€¦', 'Stripe Â· 256-bit encrypted', true); setTimeout(() => router.push('/cart'), 900); }}>Buy Now</button>
+                <button className="bb-btn" style={{ background: '#fff', border: '1.5px solid var(--line)' }} data-toast="Free sample chapter sent to your inbox ðŸ“¬">ðŸ“„ Read free sample chapter</button>
+                <button className="bb-wish" data-wish={p.id}>â™¡ Add to Wishlist</button>
                 <div className="bb-sec">
                   <svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
                   <span><b>Secure transaction.</b> Sold by PDF-Bookshelf.com. 30-day money-back guarantee.</span>
@@ -291,7 +291,7 @@ export default function ProductClient({ p, faqs }: { p: Product; faqs?: FAQItem[
         {/* SEO Key Takeaways & Chapter Breakdown */}
         <div style={{ background: '#fff', borderRadius: 12, padding: 28, border: '1px solid #e2e8f0', margin: '24px 0' }}>
           <h2 style={{ fontSize: 20, fontWeight: 800, color: 'var(--ink)', marginBottom: 12 }}>
-            📖 Key Chapters &amp; Takeaways in &ldquo;{p.title}&rdquo;
+            ðŸ“– Key Chapters &amp; Takeaways in &ldquo;{p.title}&rdquo;
           </h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 14 }}>
             <div style={{ background: '#f8fafc', padding: 16, borderRadius: 8, border: '1px solid #e2e8f0' }}>
@@ -324,7 +324,7 @@ export default function ProductClient({ p, faqs }: { p: Product; faqs?: FAQItem[
                 </div>
               ))}
             </div>
-            <button className="write-rev" onClick={() => setShowReviewModal(true)}>✍️ Write a customer review</button>
+            <button className="write-rev" onClick={() => setShowReviewModal(true)}>âœï¸ Write a customer review</button>
           </div>
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
@@ -354,7 +354,7 @@ export default function ProductClient({ p, faqs }: { p: Product; faqs?: FAQItem[
                   </span>
                   <div className="who">
                     <b>{r.userName || 'Reader'}</b>
-                    {r.verified && <div className="vp">✓ Verified Reader</div>}
+                    {r.verified && <div className="vp">âœ“ Verified Reader</div>}
                   </div>
                 </div>
                 <span dangerouslySetInnerHTML={{ __html: stars(r.rating, 14) }} />
@@ -413,7 +413,7 @@ export default function ProductClient({ p, faqs }: { p: Product; faqs?: FAQItem[
                     >
                       <span>{faq.question}</span>
                       <span style={{ fontSize: 16, color: 'var(--muted)', transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
-                        ▾
+                        â–¾
                       </span>
                     </button>
                     {isOpen && (
@@ -434,14 +434,14 @@ export default function ProductClient({ p, faqs }: { p: Product; faqs?: FAQItem[
             <div className="sec-hd">
               <h2>More by {p.author}</h2>
               <a href={`/author/${authorSlug}`} style={{ fontSize: 13, color: 'var(--link)', fontWeight: 600 }}>
-                See all →
+                See all â†’
               </a>
             </div>
             <ScrollSection id="sc-author" html={authorBooksHTML} onAction={handleAction} />
           </div>
         )}
 
-        {/* Related — same category */}
+        {/* Related â€” same category */}
         <div className="sec" style={{ paddingBottom: 60 }}>
           <div className="sec-hd"><h2>Customers who viewed this also viewed</h2></div>
           <ScrollSection id="sc-rel" html={relatedHTML} onAction={handleAction} />

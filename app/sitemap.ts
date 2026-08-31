@@ -91,7 +91,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }));
 
-  // Book URLs — inline when small, reference chunked sub-sitemaps when large.
+  // Book URLs â€” inline when small, reference chunked sub-sitemaps when large.
   // Sub-sitemaps live at /api/sitemap-books/[index] (see that route file).
   const chunkCount = Math.max(1, Math.ceil(books.length / BOOKS_PER_CHUNK));
   const bookEntries: MetadataRoute.Sitemap =

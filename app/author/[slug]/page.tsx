@@ -7,7 +7,7 @@ import { BreadcrumbJsonLd, PersonJsonLd } from '@/components/JsonLd';
 import AuthorClient from './AuthorClient';
 
 // Cache author profile pages at the CDN edge for 24 hours (ISR).
-// Author pages won't change frequently — revalidation background
+// Author pages won't change frequently â€” revalidation background
 // refresh ensures new books by that author appear within 24h.
 export const revalidate = 86400;
 
@@ -39,7 +39,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const canonicalUrl = `https://www.pdf-bookshelf.com/author/${resolved.slug.toLowerCase()}`;
 
   return {
-    title: `PDF Books by ${authorName} — Free Download | Bookshelf`,
+    title: `PDF Books by ${authorName} â€” Free Download | Bookshelf`,
     description: `Browse and download all free PDF books, playbooks, and guides written by ${authorName}. Verified 1-click Google Drive downloads.`,
     keywords: [
       `${authorName} books pdf`,
@@ -104,7 +104,7 @@ export default async function AuthorPage({ params }: Props) {
       <div className="wrap" style={{ padding: '20px 20px 60px' }}>
         {/* Breadcrumb */}
         <div className="crumb">
-          <Link href="/">Home</Link> › <Link href="/library">Authors</Link> › <span>{authorName}</span>
+          <Link href="/">Home</Link> â€º <Link href="/library">Authors</Link> â€º <span>{authorName}</span>
         </div>
 
         {/* Author Header */}
@@ -117,7 +117,7 @@ export default async function AuthorPage({ params }: Props) {
               Verified Author &amp; Creator
             </span>
             <h1 style={{ fontSize: 26, fontWeight: 900, color: 'var(--ink)', margin: '4px 0 2px' }}>{authorName}</h1>
-            <p style={{ fontSize: 14, color: 'var(--muted)', margin: 0 }}>{authorBooks.length} Published PDF Titles on Bookshelf · 100% Free Downloads</p>
+            <p style={{ fontSize: 14, color: 'var(--muted)', margin: 0 }}>{authorBooks.length} Published PDF Titles on Bookshelf Â· 100% Free Downloads</p>
           </div>
         </div>
 
