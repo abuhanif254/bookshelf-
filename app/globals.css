@@ -79,8 +79,8 @@ h1,h2,h3,h4{font-family:var(--disp);color:#0f1111}
 /* ══════════ HERO CAROUSEL ══════════ */
 .hero{position:relative;height:460px;overflow:hidden;background:var(--ink)}
 .hero::after{content:'';position:absolute;left:0;right:0;bottom:0;height:150px;background:linear-gradient(transparent,var(--bg));pointer-events:none;z-index:2}
-.htrack{display:flex;height:100%;transition:transform .65s cubic-bezier(.4,0,.2,1)}
-.slide{min-width:100%;height:100%;position:relative;display:flex;align-items:center;overflow:hidden}
+.htrack{display:flex;height:100%;width:400%;transition:transform .65s cubic-bezier(.4,0,.2,1);will-change:transform}
+.slide{width:25%;flex-shrink:0;height:100%;position:relative;display:flex;align-items:center;overflow:hidden}
 .slide .wrap{display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:center;width:100%;position:relative;z-index:3}
 .slide .kicker{font-size:13px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;margin-bottom:14px;display:inline-flex;align-items:center;gap:8px}
 .slide .kicker::before{content:'';width:26px;height:2px;background:currentColor}
