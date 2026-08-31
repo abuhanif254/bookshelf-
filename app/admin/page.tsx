@@ -1049,9 +1049,29 @@ export default function AdminPage() {
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
             <p style={{ fontSize: 14, color: 'var(--muted)', margin: 0 }}>Manage categories, custom SEO titles, meta descriptions, and Googlebot breadcrumbs.</p>
-            <button onClick={openAddCategoryModal} style={{ background: 'var(--ink)', color: '#fff', fontSize: 13, fontWeight: 700, padding: '8px 16px', borderRadius: 6, border: 'none', cursor: 'pointer' }}>
-              ➕ Add New Category
-            </button>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                onClick={async () => {
+                  showToast('Seeding SEO for all categories… please wait');
+                  try {
+                    const r = await fetch('/api/admin/seed-categories', { method: 'POST' });
+                    const d = await r.json();
+                    if (d.success) {
+                      showToast(`✅ Seeded ${d.seeded} categories (${d.skipped ?? 0} already had SEO)`);
+                      fetch('/api/admin/categories').then(r2 => r2.json()).then(d2 => { if (d2.success) setCategories(d2.categories); });
+                    } else {
+                      showToast('❌ Seed failed: ' + (d.message || 'Check console'));
+                    }
+                  } catch { showToast('❌ Network error — could not reach seed API'); }
+                }}
+                style={{ background: '#16a34a', color: '#fff', fontSize: 13, fontWeight: 700, padding: '8px 16px', borderRadius: 6, border: 'none', cursor: 'pointer' }}
+              >
+                🌱 Seed SEO for All
+              </button>
+              <button onClick={openAddCategoryModal} style={{ background: 'var(--ink)', color: '#fff', fontSize: 13, fontWeight: 700, padding: '8px 16px', borderRadius: 6, border: 'none', cursor: 'pointer' }}>
+                ➕ Add New Category
+              </button>
+            </div>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16 }}>
