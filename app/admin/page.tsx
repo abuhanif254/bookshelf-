@@ -218,7 +218,7 @@ export default function AdminPage() {
   };
 
   const loadAllData = () => {
-    fetch('/api/books').then(r => r.json()).then(d => { if (d.success) setBooks(d.books); });
+    fetch('/api/books?limit=0').then(r => r.json()).then(d => { if (d.success) setBooks(d.books); });
     fetch('/api/admin/categories').then(r => r.json()).then(d => { if (d.success) setCategories(d.categories); });
     fetch('/api/publish').then(r => r.json()).then(d => { if (d.success) setSubmissions(d.submissions); });
     fetch('/api/subscribe').then(r => r.json()).then(d => { if (d.success) setSubscribers(d.subscribers); });
@@ -336,7 +336,7 @@ export default function AdminPage() {
       if (data.success) {
         showToast(editingBook ? 'Book updated! ✅' : 'Book added to catalog! 🎉');
         setShowBookModal(false);
-        fetch('/api/books').then(r => r.json()).then(d => setBooks(d.books));
+        fetch('/api/books?limit=0').then(r => r.json()).then(d => setBooks(d.books));
       }
     } catch {
       showToast('Error saving book');

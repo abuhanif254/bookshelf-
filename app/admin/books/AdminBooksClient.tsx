@@ -398,7 +398,8 @@ export default function AdminBooksClient() {
   const fetchBooks = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/books?_t=${Date.now()}`, { cache: 'no-store' });
+      // limit=0 bypasses the default 200-book cap — admin needs the full catalog
+      const res = await fetch(`/api/books?limit=0&_t=${Date.now()}`, { cache: 'no-store' });
       const data = await res.json();
 
       const catRes = await fetch(`/api/admin/categories?_t=${Date.now()}`, { cache: 'no-store' });

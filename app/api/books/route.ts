@@ -12,10 +12,11 @@ export async function GET(request: Request) {
     const q      = searchParams.get('q');
     const type   = searchParams.get('type');
     const author = searchParams.get('author');
-    // 'limit' defaults to 200 for client-side use.
-    // Pass limit=0 from the admin panel to get the full list.
+    // limit=0  → no limit (admin full catalog)
+    // limit=N  → return at most N books (capped at 10,000 to protect memory)
+    // default  → 200 (safe for homepage / book page related rows)
     const limitParam = searchParams.get('limit');
-    const limit = limitParam === '0' ? 0 : Math.min(parseInt(limitParam || '200', 10), 500);
+    const limit = limitParam === '0' ? 0 : Math.min(parseInt(limitParam || '200', 10), 10000);
 
     let books = await getSupabaseBooks();
     if (!books || books.length === 0) {

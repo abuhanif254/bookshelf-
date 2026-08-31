@@ -54,7 +54,7 @@ export default function LibraryClient() {
     const local = getClientBooks();
     if (local && local.length > 0) setAllBooks(local);
 
-    fetch('/api/books')
+    fetch('/api/books?limit=5000')
       .then(res => res.json())
       .then(data => {
         if (data.success && Array.isArray(data.books) && data.books.length > 0) {
