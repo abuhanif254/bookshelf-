@@ -79,9 +79,9 @@ export default function HeroCarousel({ stacks }: HeroCarouselProps) {
       onMouseEnter={() => { if (timerRef.current) clearInterval(timerRef.current); }}
       onMouseLeave={startAuto}
     >
-      <div className="htrack" style={{ transform: `translateX(-${idx * 25}%)` }}>
+      <div className="htrack">
         {slides.map((s, i) => (
-          <div key={i} className={`slide ${s.cls}`}>
+          <div key={i} className={`slide ${s.cls}${i === idx ? ' active' : ''}`}>
             <div className="wrap">
               <div>
                 <span className="kicker">{s.kicker}</span>
