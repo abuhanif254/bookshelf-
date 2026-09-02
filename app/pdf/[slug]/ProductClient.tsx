@@ -209,14 +209,14 @@ export default function ProductClient({ p, faqs }: { p: Product; faqs?: FAQItem[
             </div>
 
             <div className="fmt">
-              <div className="f on"><b>PDF</b><span>{isFree ? 'Free' : p.type === 'paid' ? formatPrice(p.price) : 'From ' + formatPrice(p.price)}</span></div>
-              <div className="f" data-kindle="1"><b>Kindle</b><span>Send â†—</span></div>
+              <div className="f on"><b>eBook</b><span>{isFree ? 'Free' : p.type === 'paid' ? formatPrice(p.price) : 'From ' + formatPrice(p.price)}</span></div>
+              <div className="f" data-kindle="1"><b>Kindle</b><span>Send ↗</span></div>
               <div className="f" data-toast="ePub edition coming soon"><b>ePub</b><span>Soon</span></div>
             </div>
 
             <div className="bigprice">
               {isFree ? (
-                <><span className="price free" style={{ fontSize: 28 }}>Free</span><span className="listp" style={{ fontSize: 15 }}>{formatPrice(p.list || 14.99)}</span><span className="save">100% off â€” Free PDF Fridays</span></>
+                <><span className="price free" style={{ fontSize: 28 }}>Free</span><span className="listp" style={{ fontSize: 15 }}>{formatPrice(p.list || 14.99)}</span><span className="save">100% off — Free eBook Fridays</span></>
               ) : isAff ? (
                 <><span className="price"><sup>$</sup>{p.price}<sup>00</sup></span><span className="partn">at <b>{p.partner}</b></span></>
               ) : (
@@ -232,7 +232,7 @@ export default function ProductClient({ p, faqs }: { p: Product; faqs?: FAQItem[
 
             {/* Interactive Study Hub Tabs */}
             <div className="tabs" style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4 }}>
-              {['Overview', 'ðŸ“ Notes', 'ðŸ¤– Ask AI', 'ðŸ—ºï¸ Mindmap', 'ðŸ“ Quiz', "What's inside", 'Specs'].map((tab, i) => (
+              {['Overview', '📍 Notes', '🤖 Ask AI', '🗺️ Mindmap', '📝 Quiz', "What's inside", 'Specs'].map((tab, i) => (
                 <button key={i} className={activeTab === i ? 'on' : ''} onClick={() => setActiveTab(i)} style={{ whiteSpace: 'nowrap' }}>{tab}</button>
               ))}
             </div>
@@ -247,18 +247,18 @@ export default function ProductClient({ p, faqs }: { p: Product; faqs?: FAQItem[
               <>
                 <div className="bb-price">${p.price}.00</div>
                 <div className="note">Sold &amp; fulfilled by <b style={{ color: 'var(--link)' }}>{p.partner}</b> via the Bookshelf Partner Store.</div>
-                <button className="bb-btn bb-ext" data-ext={p.id}>Go to {p.partner} â†—</button>
-                <button className="bb-btn bb-cart" data-wish={p.id}>â™¡ Add to Wishlist</button>
-                <div className="disclose"><b>Affiliate disclosure:</b> Bookshelf may earn a commission when you purchase through partner links â€” at no extra cost to you.</div>
+                <button className="bb-btn bb-ext" data-ext={p.id}>Go to {p.partner} ↗</button>
+                <button className="bb-btn bb-cart" data-wish={p.id}>♡ Add to Wishlist</button>
+                <div className="disclose"><b>Affiliate disclosure:</b> Bookshelf may earn a commission when you purchase through partner links — at no extra cost to you.</div>
               </>
             ) : isFree ? (
               <>
                 <div className="bb-price" style={{ color: 'var(--green)' }}>Free</div>
-                <div className="inst">âš¡ Instant download â€” no account needed</div>
+                <div className="inst">⚡ Instant download — no account needed</div>
                 <div className="note">100% free, forever. Hosted on secure Google Drive streams.</div>
-                <button className="bb-btn bb-buy" data-free={p.id}>â¤“ Download free PDF ({(p.pages * 0.09).toFixed(1)} MB)</button>
-                <button className="bb-btn" style={{ background: '#fff', border: '1.5px solid var(--line)' }} data-kindle="1">ðŸ“± Send to Kindle Paperwhite</button>
-                <button className="bb-btn bb-cart" data-wish={p.id}>â™¡ Add to Wishlist</button>
+                <button className="bb-btn bb-buy" data-free={p.id}>⤓ Download free eBook ({(p.pages * 0.09).toFixed(1)} MB)</button>
+                <button className="bb-btn" style={{ background: '#fff', border: '1.5px solid var(--line)' }} data-kindle="1">📱 Send to Kindle Paperwhite</button>
+                <button className="bb-btn bb-cart" data-wish={p.id}>♡ Add to Wishlist</button>
                 <div className="bb-sec">
                   <svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6l7-3z"/></svg>
                   <span>Scanned &amp; virus-checked. DRM-free for personal use.</span>

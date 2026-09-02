@@ -32,6 +32,7 @@ function getArg(flag, def) {
 }
 
 const PAGES     = parseInt(getArg('--pages', '30'), 10);
+const START_PAGE = parseInt(getArg('--start', '1'), 10);
 const OUT_FILE  = getArg('--out', 'gutenberg-books.csv');
 const TOPIC     = getArg('--topic', '');
 const LANG      = getArg('--lang', 'en');
@@ -118,6 +119,8 @@ function guessCategory(subjects) {
 function getPdfUrl(formats) {
   return (
     formats['application/pdf'] ||
+    formats['application/epub+zip'] ||
+    formats['application/x-mobipocket-ebook'] ||
     formats['text/html'] ||
     formats['text/plain; charset=utf-8'] ||
     formats['text/plain'] ||
@@ -143,8 +146,8 @@ function cleanText(str) {
 
 function makeBlurb(title, author, cat, pages) {
   return cleanText(
-    `A classic ${cat.toLowerCase()} work by ${author}, now available as a free public domain PDF. ` +
-    `Originally published in the 19th–early 20th century, this ${pages}-page edition has been carefully formatted for modern screen and print reading.`
+    `A classic ${cat.toLowerCase()} work by ${author}, now available as a free public domain ebook. ` +
+    `Originally published in the 19th–early 20th century, this edition has been carefully formatted for modern reading.`
   );
 }
 
@@ -172,23 +175,36 @@ function rowToCSV(obj) {
 async function main() {
   const rows = [];
   const seenSlugs = new Set();
-  let url = GUTENDEX + '?mime_type=application%2Fpdf&languages=' + LANG;
+  
+  // REMOVED ?mime_type=application%2Fpdf to fetch all 70k books!
+  let url = GUTENDEX + '?languages=' + LANG;
   if (TOPIC) url += '&topic=' + encodeURIComponent(TOPIC);
 
   console.log(`Fetching ${PAGES} pages from Gutendex (${LANG}${TOPIC ? ', topic: ' + TOPIC : ''})...`);
 
-  for (let page = 1; page <= PAGES; page++) {
+  for (let page = START_PAGE; page < START_PAGE + PAGES; page++) {
     const pageUrl = url + '&page=' + page;
-    process.stdout.write(`  Page ${page}/${PAGES}...`);
+    process.stdout.write(`  Page ${page} (Batch limit: ${START_PAGE + PAGES - 1})...`);
 
     let data;
-    try {
-      const res = await fetch(pageUrl);
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      data = await res.json();
-    } catch (err) {
-      console.error(' ERROR:', err.message);
-      await sleep(2000);
+    let success = false;
+    
+    // Auto-retry loop to handle Gutenberg's 503/522 server errors
+    for (let retries = 1; retries <= 5; retries++) {
+      try {
+        const res = await fetch(pageUrl);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        data = await res.json();
+        success = true;
+        break; // Success! Break out of retry loop.
+      } catch (err) {
+        process.stdout.write(` [Error: ${err.message}, retrying...]`);
+        await sleep(2000 * retries);
+      }
+    }
+    
+    if (!success) {
+      console.log(' ❌ Failed after 5 retries. Skipping page.');
       continue;
     }
 
@@ -202,7 +218,7 @@ async function main() {
 
       const pdfUrl   = getPdfUrl(book.formats);
       const coverUrl = getCoverUrl(book.formats);
-      if (!pdfUrl) continue; // skip if no PDF link
+      if (!pdfUrl) continue; // skip if no download link
 
       const cat    = guessCategory(book.subjects);
       const pages  = Math.floor(Math.random() * 250) + 80; // Gutenberg doesn't expose page count
@@ -211,6 +227,8 @@ async function main() {
       seenSlugs.add(slug);
 
       const bg = CAT_BG[cat] || CAT_BG['default'];
+      
+      const featArray = ['Instant eBook download', 'DRM-free for personal use', 'Clean layout for screen & print'];
 
       rows.push({
         title:       cleanText(book.title).substring(0, 120),
@@ -221,7 +239,7 @@ async function main() {
         price:       0,
         pages,
         blurb:       makeBlurb(book.title, authorName, cat, pages),
-        desc:        cleanText(`<p>${book.title} by ${authorName} is a classic work now available as a free public domain PDF download on Bookshelf. Part of Project Gutenberg's digital library of over 70,000 free ebooks.</p>`),
+        desc:        cleanText(`<p>${book.title} by ${authorName} is a classic work now available as a free public domain download on Bookshelf. Part of Project Gutenberg's digital library of over 70,000 free ebooks.</p>`),
         drive_url:   pdfUrl,
         cover_image: coverUrl,
         badge:       'Free',
