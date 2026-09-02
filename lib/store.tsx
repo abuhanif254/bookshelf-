@@ -133,6 +133,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'DOWNLOAD_FREE', id });
     toast('Download starting ⤓', `${p.title}.pdf — saved to My Library`);
 
+    // Increment download counter
+    fetch(`/api/books/${id}/download`, { method: 'POST' }).catch(() => {});
+
     const targetUrl = customUrl || (p.driveUrl ? p.driveUrl : `https://drive.google.com/uc?export=download&id=SAMPLE_${p.slug}`);
 
     // If Google Drive link, format correctly or open direct download

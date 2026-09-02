@@ -8,9 +8,25 @@ import DynamicBookFallback from './DynamicBookFallback';
 import { getBaseUrl } from '@/lib/url';
 
 // Cache each book page at the CDN edge for 24 hours (ISR).
-// Stale pages are revalidated in the background â€” visitors always
+// Stale pages are revalidated in the background — visitors always
 // get a fast cached response without waiting for Supabase.
 export const revalidate = 86400;
+
+// Pre-build the top 500 most downloaded books at deployment time.
+// This ensures your most important SEO pages are instantly available to Googlebot.
+export async function generateStaticParams() {
+  const supaBooks = await getSupabaseBooks();
+  const allBooks = supaBooks && supaBooks.length > 0 ? supaBooks : getAllBooks();
+  
+  // Sort by downloads (descending) and take top 500
+  const topBooks = allBooks
+    .sort((a, b) => (b.downloads || 0) - (a.downloads || 0))
+    .slice(0, 500);
+
+  return topBooks.map((book) => ({
+    slug: book.slug,
+  }));
+}
 
 interface Props {
   params: Promise<{ slug: string }> | { slug: string };

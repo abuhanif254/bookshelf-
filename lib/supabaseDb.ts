@@ -58,6 +58,7 @@ function mapProductToDbRow(p: Partial<Product>): any {
   if (p.ac !== undefined) row.ac = p.ac;
   if (p.pat !== undefined) row.pat = p.pat;
   if (p.blurb !== undefined) row.blurb = p.blurb;
+  if (p.downloads !== undefined) row.downloads = p.downloads;
   if (p.feat !== undefined) row.feat = p.feat;
   if (p.desc !== undefined) row.desc_html = p.desc;
   if (p.driveUrl !== undefined) row.drive_url = p.driveUrl;

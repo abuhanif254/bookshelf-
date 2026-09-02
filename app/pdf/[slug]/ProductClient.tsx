@@ -200,6 +200,12 @@ export default function ProductClient({ p, faqs }: { p: Product; faqs?: FAQItem[
               <a>{p.reviews.toLocaleString()} ratings</a>
               <span style={{ color: '#bbb' }}>|</span>
               <span style={{ color: 'var(--muted)' }}>{p.bought}</span>
+              {(p.downloads || 0) > 0 && (
+                <>
+                  <span style={{ color: '#bbb' }}>|</span>
+                  <span style={{ color: 'var(--muted)' }}>⬇️ {(p.downloads || 0).toLocaleString()} downloads</span>
+                </>
+              )}
             </div>
 
             <div className="fmt">

@@ -22,12 +22,12 @@ export interface Product {
   blurb: string;
   feat: string[];
   desc: string;
+  downloads?: number;
   partner?: string;
   partnerUrl?: string;
   driveUrl?: string;
   coverImage?: string;
   coverUrl?: string;
-  downloads?: number;
   createdAt?: string;
 }
 

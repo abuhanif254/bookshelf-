@@ -3,8 +3,8 @@ import { getSupabaseBooks } from '@/lib/supabaseDb';
 import { getAllBooks } from '@/lib/db';
 import { getBaseUrl } from '@/lib/url';
 
+// force-dynamic so the book list is always fresh from Supabase
 export const dynamic = 'force-dynamic';
-export const revalidate = 43200;
 
 const BOOKS_PER_CHUNK = 40000;
 
