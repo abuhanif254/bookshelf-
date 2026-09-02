@@ -220,6 +220,7 @@ export default function AdminBooksClient() {
       
       const headerMap: Record<string, string> = {
         'driveurl': 'driveUrl',
+        'drive_url': 'driveUrl',
         'drive url': 'driveUrl',
         'drive link': 'driveUrl',
         'drivelink': 'driveUrl',
@@ -227,6 +228,7 @@ export default function AdminBooksClient() {
         'downloadurl': 'driveUrl',
         
         'coverimage': 'coverImage',
+        'cover_image': 'coverImage',
         'cover image': 'coverImage',
         'image': 'coverImage',
         'image url': 'coverImage',
@@ -236,6 +238,7 @@ export default function AdminBooksClient() {
         'cover url': 'coverImage',
         
         'partnerurl': 'partnerUrl',
+        'partner_url': 'partnerUrl',
         'partner url': 'partnerUrl',
         'affiliate link': 'partnerUrl'
       };
