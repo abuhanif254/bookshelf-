@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getAllBooks } from '@/lib/db';
-import { getSupabaseBooks } from '@/lib/supabaseDb';
+import { getSupabaseBooksByLanguage } from '@/lib/supabaseDb';
 import { Product } from '@/lib/products';
 import { BreadcrumbJsonLd, CollectionPageJsonLd, FAQJsonLd, ItemListJsonLd } from '@/components/JsonLd';
 import { getBaseUrl } from '@/lib/url';
@@ -28,9 +28,10 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const resolved = typeof (params as Promise<{ lang: string }>)?.then === 'function'
     ? await (params as Promise<{ lang: string }>)
-    : (params as { lang: string });
+    : (params as { slug?: string; lang?: string });
 
-  const cfg = getLanguageConfig(resolved.lang);
+  const langKey = resolved.lang || (resolved as any).slug;
+  const cfg = getLanguageConfig(langKey);
 
   if (!cfg) {
     return {
@@ -39,7 +40,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
-  const canonicalUrl = `${getBaseUrl()}/books/${cfg.slug}`;
+  const baseUrl = getBaseUrl();
+  const canonicalUrl = `${baseUrl}/books/${cfg.slug}`;
 
   return {
     title: cfg.seoTitle,
@@ -54,13 +56,30 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     alternates: {
       canonical: canonicalUrl,
       languages: {
-        'en': `${getBaseUrl()}/books/english`,
-        'bn': `${getBaseUrl()}/books/bangla`,
-        'hi': `${getBaseUrl()}/books/hindi`,
-        'ur': `${getBaseUrl()}/books/urdu`,
-        'es': `${getBaseUrl()}/books/spanish`,
-        'zh': `${getBaseUrl()}/books/chinese`,
-        'x-default': `${getBaseUrl()}/books/english`,
+        'en': `${baseUrl}/books/english`,
+        'en-US': `${baseUrl}/books/english`,
+        'en-GB': `${baseUrl}/books/english`,
+        'en-CA': `${baseUrl}/books/english`,
+        'en-AU': `${baseUrl}/books/english`,
+        'bn': `${baseUrl}/books/bangla`,
+        'bn-BD': `${baseUrl}/books/bangla`,
+        'bn-IN': `${baseUrl}/books/bangla`,
+        'hi': `${baseUrl}/books/hindi`,
+        'hi-IN': `${baseUrl}/books/hindi`,
+        'ur': `${baseUrl}/books/urdu`,
+        'ur-PK': `${baseUrl}/books/urdu`,
+        'ur-IN': `${baseUrl}/books/urdu`,
+        'es': `${baseUrl}/books/spanish`,
+        'es-ES': `${baseUrl}/books/spanish`,
+        'es-MX': `${baseUrl}/books/spanish`,
+        'es-AR': `${baseUrl}/books/spanish`,
+        'es-CO': `${baseUrl}/books/spanish`,
+        'zh': `${baseUrl}/books/chinese`,
+        'zh-CN': `${baseUrl}/books/chinese`,
+        'zh-TW': `${baseUrl}/books/chinese`,
+        'zh-HK': `${baseUrl}/books/chinese`,
+        'zh-Hans': `${baseUrl}/books/chinese`,
+        'x-default': `${baseUrl}/books/english`,
       },
     },
     openGraph: {
@@ -89,33 +108,28 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function LanguagePage({ params }: Props) {
   const resolved = typeof (params as Promise<{ lang: string }>)?.then === 'function'
     ? await (params as Promise<{ lang: string }>)
-    : (params as { lang: string });
+    : (params as { slug?: string; lang?: string });
 
-  const cfg = getLanguageConfig(resolved.lang);
+  const langKey = resolved.lang || (resolved as any).slug;
+  const cfg = getLanguageConfig(langKey);
   if (!cfg) {
     notFound();
   }
 
-  const supaBooks = await getSupabaseBooks();
-  const allBooks = supaBooks && supaBooks.length > 0 ? supaBooks : getAllBooks();
+  const { books: supaLangBooks, total: supaTotal } = await getSupabaseBooksByLanguage(cfg.slug, 48);
+  const matchingBooks = supaLangBooks.length > 0
+    ? supaLangBooks
+    : getAllBooks().filter(b => {
+        const bookLang = normalizeLanguageCode(b.lang);
+        if (cfg.code === 'en') {
+          return !b.lang || bookLang === 'en';
+        }
+        return bookLang === cfg.code;
+      });
 
-  // Filter books matching this language
-  const matchingBooks = allBooks.filter(b => {
-    const bookLang = normalizeLanguageCode(b.lang);
-    if (cfg.code === 'en') {
-      return !b.lang || bookLang === 'en';
-    }
-    return bookLang === cfg.code;
-  });
-
-  const totalCount = matchingBooks.length;
+  const totalCount = supaTotal > 0 ? supaTotal : matchingBooks.length;
   const availableCats = Array.from(new Set(matchingBooks.map(b => b.cat).filter(Boolean)));
-
-  // Slice to top 48 books sorted by popularity and strip bloated descriptions to keep page payload < 50KB
-  const displayBooks = [...matchingBooks]
-    .sort((a, b) => (b.downloads || 0) - (a.downloads || 0))
-    .slice(0, 48)
-    .map(toListingBook);
+  const displayBooks = matchingBooks.slice(0, 48).map(toListingBook);
 
   const baseUrl = getBaseUrl();
   const breadcrumbs = [

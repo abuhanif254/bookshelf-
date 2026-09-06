@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next';
 import { supabase } from '@/lib/supabase';
 import { getAllBooks, getCategories } from '@/lib/db';
-import { getSupabaseCategories } from '@/lib/supabaseDb';
+import { getSupabaseCategories, getSupabaseTopAuthors } from '@/lib/supabaseDb';
 import { BUNDLES } from '@/lib/bundles';
 import { SUPPORTED_LANGUAGES } from '@/lib/languages';
 import { getBaseUrl } from '@/lib/url';
@@ -135,10 +135,20 @@ export default async function sitemap(props: {
       priority: 0.95,
     }));
 
+    // Authors (Top 100 author hubs)
+    const topAuthors = await getSupabaseTopAuthors(100);
+    const authorRoutes: MetadataRoute.Sitemap = topAuthors.map(author => ({
+      url: `${baseUrl}/author/${author.slug}`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.85,
+    }));
+
     return [
       ...staticRoutes,
       ...languageRoutes,
       ...categoryRoutes,
+      ...authorRoutes,
       ...bundleRoutes,
       ...bestRoutes,
       ...topicRoutes,

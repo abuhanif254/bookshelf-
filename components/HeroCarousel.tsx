@@ -4,13 +4,14 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { coverHTML } from '@/lib/helpers';
 import { getClientBooks } from '@/lib/customBooks';
-import { P } from '@/lib/products';
+import { Product, P } from '@/lib/products';
 
 interface HeroCarouselProps {
-  stacks: [number[], number[], number[], number[]];
+  stacks?: [number[], number[], number[], number[]];
+  initialBooks?: Product[];
 }
 
-export default function HeroCarousel({ stacks }: HeroCarouselProps) {
+export default function HeroCarousel({ stacks, initialBooks }: HeroCarouselProps) {
   const [idx, setIdx] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const total = 4;
@@ -27,6 +28,19 @@ export default function HeroCarousel({ stacks }: HeroCarouselProps) {
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, []);
 
+  const defaultStacks: [number[], number[], number[], number[]] = [
+    [1, 5, 12],
+    [7, 11, 18],
+    [3, 9, 13],
+    [20, 6, 12],
+  ];
+  const activeStacks = stacks || defaultStacks;
+
+  const getBook = (id: number) =>
+    (initialBooks && initialBooks.find(b => b.id === id)) ||
+    getClientBooks().find(b => b.id === id) ||
+    P.find(b => b.id === id);
+
   const slides = [
     {
       cls: 's1',
@@ -39,7 +53,7 @@ export default function HeroCarousel({ stacks }: HeroCarouselProps) {
           <Link href="/library?preset=best" className="btn-ghost">See best sellers</Link>
         </>
       ),
-      stack: stacks[0],
+      stack: activeStacks[0],
     },
     {
       cls: 's2',
@@ -47,7 +61,7 @@ export default function HeroCarousel({ stacks }: HeroCarouselProps) {
       h1: <>Free PDF Fridays.<br/>No card. No catch.</>,
       p: 'Twelve hand-picked titles go free every week — starter kits, cheat sheets and short reads worth paying for.',
       cta: <Link href="/library?preset=free" className="btn-hero">Browse free PDFs</Link>,
-      stack: stacks[1],
+      stack: activeStacks[1],
     },
     {
       cls: 's3',
@@ -55,7 +69,7 @@ export default function HeroCarousel({ stacks }: HeroCarouselProps) {
       h1: <>CreatorOS Press —<br/>the 2026 drop is here.</>,
       p: 'Our partner publishers ship the internet\'s most-wanted playbooks. This month: the Creator Economy Report, only at CreatorOS.',
       cta: <Link href="/library?preset=partner" className="btn-hero">Explore partners</Link>,
-      stack: stacks[2],
+      stack: activeStacks[2],
     },
     {
       cls: 's4',
@@ -68,7 +82,7 @@ export default function HeroCarousel({ stacks }: HeroCarouselProps) {
           <Link href="/pdf/ai-handbook-2026" className="btn-ghost">Free sample chapter</Link>
         </>
       ),
-      stack: stacks[3],
+      stack: activeStacks[3],
     },
   ];
 
@@ -91,7 +105,12 @@ export default function HeroCarousel({ stacks }: HeroCarouselProps) {
               </div>
               <div
                 className="stack"
-                dangerouslySetInnerHTML={{ __html: s.stack.map(id => coverHTML(getClientBooks().find(b => b.id === id)!, '', i === 0)).join('') }}
+                dangerouslySetInnerHTML={{
+                  __html: (s.stack || []).map(id => {
+                    const b = getBook(id);
+                    return b ? coverHTML(b, '', i === 0) : '';
+                  }).join('')
+                }}
               />
             </div>
           </div>

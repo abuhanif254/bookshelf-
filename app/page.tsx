@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { getAllBooks } from '@/lib/db';
-import { getSupabaseBooksPaginated, getSupabaseTopBooks } from '@/lib/supabaseDb';
+import { getSupabaseBooksPaginated, getSupabaseTopBooks, getSupabaseBooksCount } from '@/lib/supabaseDb';
 import { P, Product } from '@/lib/products';
 import { cardHTML, coverHTML } from '@/lib/helpers';
 import HeroCarousel from '@/components/HeroCarousel';
@@ -10,20 +10,32 @@ import { BUNDLES } from '@/lib/bundles';
 import { getBaseUrl } from '@/lib/url';
 import HomeClientWrapper from '@/components/HomeClientWrapper';
 
-// Cache homepage at CDN edge for 24 hours with background ISR
-export const revalidate = 86400;
+// Cache homepage at CDN edge for 60 seconds (fast revalidation)
+export const revalidate = 60;
+
+function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
+  let timer: NodeJS.Timeout;
+  return Promise.race([
+    promise.then(val => { clearTimeout(timer); return val; }).catch(() => fallback),
+    new Promise<T>(resolve => {
+      timer = setTimeout(() => resolve(fallback), ms);
+    }),
+  ]);
+}
 
 export default async function HomePage() {
   const baseUrl = getBaseUrl();
 
-  // Fetch top books efficiently from Supabase
+  // Fetch top books and live count safely with timeout protection
+  const [paginatedRes, totalCatalogCount] = await Promise.all([
+    withTimeout(getSupabaseBooksPaginated({ page: 1, limit: 48, sort: 'downloads' }), 4000, null),
+    withTimeout(getSupabaseBooksCount(), 3000, 8200),
+  ]);
+
   let allBooks: Product[] = [];
-  try {
-    const res = await getSupabaseBooksPaginated({ page: 1, limit: 48, sort: 'downloads' });
-    if (res && res.books.length > 0) {
-      allBooks = res.books;
-    }
-  } catch {}
+  if (paginatedRes && paginatedRes.books && paginatedRes.books.length > 0) {
+    allBooks = paginatedRes.books;
+  }
 
   if (allBooks.length === 0) {
     allBooks = getAllBooks();
@@ -34,7 +46,7 @@ export default async function HomePage() {
   const freeBooks = allBooks.filter(p => p.type === 'free');
   const bestSellers = [...allBooks].filter(p => p.type !== 'affiliate').sort((a, b) => (b.reviews || 0) - (a.reviews || 0)).slice(0, 8);
   const newReleases = [...allBooks].slice(0, 8);
-  const editorPicks = [4, 1, 10, 20, 15];
+  const editorPicks = allBooks.slice(0, 5).map(b => b.id);
 
   const getBook = (id: number) => allBooks.find(b => b.id === id) || P.find(b => b.id === id);
 
@@ -43,23 +55,60 @@ export default async function HomePage() {
   const bestHTML = bestSellers.map((p, i) => cardHTML(p, i + 1, false)).join('');
   const newHTML = newReleases.map(p => cardHTML(p, null, false)).join('');
 
-  const editorStackHTML = [4, 10, 1].map(id => getBook(id) ? coverHTML(getBook(id)!) : '').join('');
+  const editorStackHTML = allBooks.slice(0, 3).map(b => coverHTML(b)).join('');
   const edlistHTML = editorPicks.map((id, i) => {
     const p = getBook(id);
     if (!p) return '';
     return `<a href="/pdf/${p.slug}" class="row" data-open="${p.slug}" style="text-decoration:none; display:flex;"><span class="num">${String(i + 1).padStart(2, '0')}</span><div><div class="t">${p.title}</div><div class="a">${p.author} · ${p.cat}</div></div><span class="pr">${p.type === 'free' ? 'Free' : '$' + p.price.toFixed(2)}</span></a>`;
   }).join('');
 
-  const categories = [...new Set(allBooks.map(b => b.cat))];
-  const cat1 = categories[0] || 'Productivity';
-  const cat2 = categories[1] || 'Design';
-  const cat3 = categories[2] || 'Programming';
+  // Determine top categories with real book counts
+  const categoryCounts = allBooks.reduce<Record<string, number>>((acc, b) => {
+    if (b.cat) acc[b.cat] = (acc[b.cat] || 0) + 1;
+    return acc;
+  }, {});
+  const topCategories = Object.keys(categoryCounts).sort((a, b) => categoryCounts[b] - categoryCounts[a]);
+
+  const cat1 = topCategories[0] || 'Biography';
+  const cat2 = topCategories[1] || 'Art';
+  const cat3 = topCategories[2] || 'History';
+
+  const cat1Books = allBooks.filter(b => b.cat === cat1);
+  const cat2Books = allBooks.filter(b => b.cat === cat2);
+  const cat3Books = allBooks.filter(b => b.cat === cat3);
 
   const quadCards = [
-    { title: `Best Sellers in ${cat1}`, ids: allBooks.filter(b => b.cat === cat1).slice(0, 4).map(b => b.id), href: `/library?cat=${encodeURIComponent(cat1)}`, label: `See more in ${cat1} →` },
-    { title: 'Free this week', ids: (freeBooks.length > 0 ? freeBooks : allBooks).slice(0, 4).map(b => b.id), href: '/library?preset=free', label: 'Browse all free PDFs →' },
-    { title: `Most-wished-for ${cat2}`, ids: allBooks.filter(b => b.cat === cat2).slice(0, 4).map(b => b.id), href: `/library?cat=${encodeURIComponent(cat2)}`, label: `See more in ${cat2} →` },
-    { title: `Trending ${cat3}`, ids: allBooks.filter(b => b.cat === cat3).slice(0, 4).map(b => b.id), href: `/library?cat=${encodeURIComponent(cat3)}`, label: `Explore ${cat3} →` },
+    {
+      title: `Best Sellers in ${cat1}`,
+      ids: (cat1Books.length >= 4 ? cat1Books : allBooks).slice(0, 4).map(b => b.id),
+      href: `/library?cat=${encodeURIComponent(cat1)}`,
+      label: `See more in ${cat1} →`,
+    },
+    {
+      title: 'Free this week',
+      ids: (freeBooks.length >= 4 ? freeBooks : allBooks).slice(0, 4).map(b => b.id),
+      href: '/library?preset=free',
+      label: 'Browse all free PDFs →',
+    },
+    {
+      title: `Most-wished-for in ${cat2}`,
+      ids: (cat2Books.length >= 4 ? cat2Books : allBooks.slice(4, 8)).slice(0, 4).map(b => b.id),
+      href: `/library?cat=${encodeURIComponent(cat2)}`,
+      label: `See more in ${cat2} →`,
+    },
+    {
+      title: `Trending in ${cat3}`,
+      ids: (cat3Books.length >= 4 ? cat3Books : allBooks.slice(8, 12)).slice(0, 4).map(b => b.id),
+      href: `/library?cat=${encodeURIComponent(cat3)}`,
+      label: `Explore ${cat3} →`,
+    },
+  ];
+
+  const heroStacks: [number[], number[], number[], number[]] = [
+    allBooks.slice(0, 3).map(b => b.id),
+    allBooks.slice(3, 6).map(b => b.id),
+    allBooks.slice(6, 9).map(b => b.id),
+    allBooks.slice(9, 12).map(b => b.id),
   ];
 
   const faqs = [
@@ -119,7 +168,7 @@ export default async function HomePage() {
         }))}
       />
 
-      <HeroCarousel stacks={[[1, 5, 12], [7, 11, 18], [3, 9, 13], [20, 6, 12]]} />
+      <HeroCarousel stacks={heroStacks} initialBooks={allBooks} />
 
       <HomeClientWrapper faqs={faqs}>
         <div className="wrap">
@@ -139,7 +188,7 @@ export default async function HomePage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{ fontSize: 20 }}>🌐</span>
               <div>
-                <strong style={{ fontSize: 14, color: '#0f172a', display: 'block' }}>Global PDF Libraries (300,000+ Books)</strong>
+                <strong style={{ fontSize: 14, color: '#0f172a', display: 'block' }}>Global PDF Libraries ({totalCatalogCount.toLocaleString()}+ Books)</strong>
                 <span style={{ fontSize: 12, color: '#64748b' }}>Read in your native language with instant free downloads</span>
               </div>
             </div>
@@ -262,7 +311,7 @@ export default async function HomePage() {
             <div className="sec-hd">
               <h2>The Free PDF Library</h2>
               <span className="sub">100% free, forever</span>
-              <Link href="/library?preset=free">See all 40+ free titles →</Link>
+              <Link href="/library?preset=free">See all {totalCatalogCount.toLocaleString()}+ free titles →</Link>
             </div>
             <ScrollSection id="sc-free" html={freeHTML} />
           </section>

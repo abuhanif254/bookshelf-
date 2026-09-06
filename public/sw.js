@@ -1,10 +1,9 @@
 // Bookshelf Offline Service Worker
-const CACHE_NAME = 'bookshelf-v1';
+const CACHE_NAME = 'bookshelf-v2';
 const OFFLINE_URL = '/account/library';
 
-// Static assets to cache immediately upon install
+// Static assets to cache immediately upon install (exclude dynamic root)
 const PRECACHE_ASSETS = [
-  '/',
   '/account/library',
   '/manifest.webmanifest',
   '/favicon.ico',

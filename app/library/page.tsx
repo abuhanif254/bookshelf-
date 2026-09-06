@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { Metadata } from 'next';
-import { getAllBooks } from '@/lib/db';
+import { getSupabaseBooksCount } from '@/lib/supabaseDb';
 import { BreadcrumbJsonLd, CollectionPageJsonLd } from '@/components/JsonLd';
 import { getBaseUrl } from '@/lib/url';
 import LibraryClient from './LibraryClient';
@@ -44,8 +44,8 @@ export const metadata: Metadata = {
   },
 };
 
-export default function LibraryPage() {
-  const books = getAllBooks();
+export default async function LibraryPage() {
+  const totalCount = await getSupabaseBooksCount();
   const breadcrumbs = [
     { name: 'Home', url: baseUrl },
     { name: 'Full Library Catalog', url: `${baseUrl}/library` },
@@ -58,7 +58,7 @@ export default function LibraryPage() {
         name="Bookshelf Complete PDF Book Catalog"
         description="Comprehensive collection of verified DRM-free PDF books, cheat sheets, and playbooks."
         url={`${baseUrl}/library`}
-        count={books.length}
+        count={totalCount}
       />
       <Suspense fallback={<div className="wrap" style={{ padding: '60px 0' }}>Loading library…</div>}>
         <LibraryClient />

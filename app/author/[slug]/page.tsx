@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getAllBooks } from '@/lib/db';
-import { getSupabaseBooks, getSupabaseAuthorBooks } from '@/lib/supabaseDb';
+import { getSupabaseTopAuthors, getSupabaseAuthorBooks } from '@/lib/supabaseDb';
 import { BreadcrumbJsonLd, PersonJsonLd, ItemListJsonLd } from '@/components/JsonLd';
 import { getBaseUrl } from '@/lib/url';
 import { toListingBook } from '@/lib/helpers';
@@ -19,25 +19,31 @@ function normalizeSlug(str: string): string {
   return str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
 }
 
-export async function generateStaticParams() {
-  const supaBooks = await getSupabaseBooks();
-  const allBooks = supaBooks && supaBooks.length > 0 ? supaBooks : getAllBooks();
-  const authorCounts = new Map<string, number>();
+function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
+  let timer: NodeJS.Timeout;
+  return Promise.race([
+    promise.then(val => { clearTimeout(timer); return val; }).catch(() => fallback),
+    new Promise<T>(resolve => {
+      timer = setTimeout(() => resolve(fallback), ms);
+    }),
+  ]);
+}
 
-  for (const book of allBooks) {
+export async function generateStaticParams() {
+  const topAuthors = await withTimeout(getSupabaseTopAuthors(100), 4000, []);
+  if (topAuthors && topAuthors.length > 0) {
+    return topAuthors.map(a => ({ slug: a.slug }));
+  }
+
+  const authorCounts = new Map<string, number>();
+  for (const book of getAllBooks()) {
     if (book.author) {
       const slug = normalizeSlug(book.author);
-      if (slug) {
-        authorCounts.set(slug, (authorCounts.get(slug) || 0) + 1);
-      }
+      if (slug) authorCounts.set(slug, (authorCounts.get(slug) || 0) + 1);
     }
   }
 
-  // Pre-render top 100 most prolific authors at build time; others served via ISR
-  return Array.from(authorCounts.entries())
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 100)
-    .map(([slug]) => ({ slug }));
+  return Array.from(authorCounts.keys()).slice(0, 100).map(slug => ({ slug }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -45,7 +51,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     ? await (params as Promise<{ slug: string }>)
     : (params as { slug: string });
 
-  const supaAuthor = await getSupabaseAuthorBooks(resolved.slug, undefined, 50);
+  const supaAuthor = await withTimeout(getSupabaseAuthorBooks(resolved.slug, undefined, 50), 3000, []);
   const authorBooks = supaAuthor.length > 0
     ? supaAuthor
     : getAllBooks().filter(b => normalizeSlug(b.author) === resolved.slug.toLowerCase());
@@ -101,7 +107,7 @@ export default async function AuthorPage({ params }: Props) {
     : (params as { slug: string });
 
   const slug = resolved.slug.toLowerCase();
-  const supaAuthor = await getSupabaseAuthorBooks(slug, undefined, 100);
+  const supaAuthor = await withTimeout(getSupabaseAuthorBooks(slug, undefined, 100), 3500, []);
   const authorBooks = supaAuthor.length > 0
     ? supaAuthor
     : getAllBooks().filter(b => normalizeSlug(b.author) === slug);

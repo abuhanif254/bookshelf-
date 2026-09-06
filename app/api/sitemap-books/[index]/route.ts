@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getSupabaseBooks } from '@/lib/supabaseDb';
+import { supabase } from '@/lib/supabase';
 import { getAllBooks } from '@/lib/db';
 import { getBaseUrl } from '@/lib/url';
 
@@ -24,11 +24,28 @@ export async function GET(_req: Request, { params }: RouteContext) {
   }
 
   const baseUrl = getBaseUrl();
-  const supaBooks = await getSupabaseBooks();
-  const allBooks = supaBooks && supaBooks.length > 0 ? supaBooks : getAllBooks();
-
   const start = chunkIndex * BOOKS_PER_CHUNK;
-  const chunk = allBooks.slice(start, start + BOOKS_PER_CHUNK);
+  const end = start + BOOKS_PER_CHUNK - 1;
+
+  let chunk: { slug: string; created_at?: string }[] = [];
+  try {
+    const { data, error } = await supabase
+      .from('books')
+      .select('slug, created_at')
+      .order('id', { ascending: true })
+      .range(start, end);
+
+    if (!error && data && data.length > 0) {
+      chunk = data;
+    }
+  } catch {}
+
+  if (chunk.length === 0 && chunkIndex === 0) {
+    chunk = getAllBooks().slice(start, start + BOOKS_PER_CHUNK).map(b => ({
+      slug: b.slug,
+      created_at: b.createdAt,
+    }));
+  }
 
   if (chunk.length === 0) {
     return new NextResponse('Chunk out of range', { status: 404 });

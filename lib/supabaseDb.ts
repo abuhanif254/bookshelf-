@@ -302,6 +302,52 @@ export async function getSupabaseAuthorBooks(author: string, excludeId?: number,
   }
 }
 
+export async function getSupabaseTopAuthors(limit: number = 100): Promise<{ name: string; slug: string; count: number }[]> {
+  try {
+    const { data, error } = await supabase
+      .from('books')
+      .select('author')
+      .order('id', { ascending: false })
+      .limit(3000);
+
+    if (error || !data) return [];
+
+    const counts = new Map<string, { name: string; slug: string; count: number }>();
+    for (const row of data) {
+      if (row.author) {
+        const name = row.author.trim();
+        const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+        if (slug) {
+          const existing = counts.get(slug);
+          if (existing) {
+            existing.count++;
+          } else {
+            counts.set(slug, { name, slug, count: 1 });
+          }
+        }
+      }
+    }
+
+    return Array.from(counts.values())
+      .sort((a, b) => b.count - a.count)
+      .slice(0, limit);
+  } catch (err) {
+    console.error('getSupabaseTopAuthors exception:', err);
+    return [];
+  }
+}
+
+export async function getSupabaseBooksCount(): Promise<number> {
+  try {
+    const { count, error } = await supabase
+      .from('books')
+      .select('*', { count: 'exact', head: true });
+    return (!error && count) ? count : 15000;
+  } catch {
+    return 15000;
+  }
+}
+
 export async function getSupabaseBooksByLanguage(lang: string, limit: number = 48): Promise<{ books: Product[]; total: number }> {
   try {
     const norm = (lang === 'bangla' ? 'bn' : lang === 'hindi' ? 'hi' : lang === 'urdu' ? 'ur' : lang === 'spanish' ? 'es' : lang === 'chinese' ? 'zh' : lang === 'english' ? 'en' : lang).toLowerCase();

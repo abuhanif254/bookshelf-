@@ -247,13 +247,27 @@ async function run() {
 
   for (let i = 0; i < booksToInsert.length; i += BATCH_SIZE) {
     const chunk = booksToInsert.slice(i, i + BATCH_SIZE);
-    const { error } = await supabase.from('books').upsert(chunk, { onConflict: 'slug' });
-    if (error) {
-      console.error(`❌ Batch ${Math.floor(i / BATCH_SIZE) + 1} failed:`, error.message);
-    } else {
-      insertedTotal += chunk.length;
-      process.stdout.write(`\r🚀 Upserted ${insertedTotal} / ${booksToInsert.length} books into Supabase...`);
+    let success = false;
+    let attempts = 0;
+
+    while (!success && attempts < 3) {
+      attempts++;
+      try {
+        const { error } = await supabase.from('books').upsert(chunk, { onConflict: 'slug' });
+        if (!error) {
+          success = true;
+          insertedTotal += chunk.length;
+          process.stdout.write(`\r🚀 Upserted ${insertedTotal} / ${booksToInsert.length} books into Supabase...`);
+        } else {
+          console.warn(`\n⚠️  Batch ${Math.floor(i / BATCH_SIZE) + 1} attempt ${attempts} failed: ${error.message}. Retrying...`);
+          await new Promise(r => setTimeout(r, 1200));
+        }
+      } catch (err) {
+        console.warn(`\n⚠️  Batch ${Math.floor(i / BATCH_SIZE) + 1} network error: ${err.message}. Retrying in 1.5s...`);
+        await new Promise(r => setTimeout(r, 1500));
+      }
     }
+    await new Promise(r => setTimeout(r, 250));
   }
 
   console.log(`\n\n🎉 Seeding complete! Successfully added ${insertedTotal} books to the catalog.`);

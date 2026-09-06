@@ -11,6 +11,9 @@ interface SocialShareBarProps {
 
 export default function SocialShareBar({ book, className = '' }: SocialShareBarProps) {
   const [copied, setCopied] = useState(false);
+  const [showCitation, setShowCitation] = useState(false);
+  const [citationFormat, setCitationFormat] = useState<'apa' | 'mla' | 'bibtex'>('apa');
+  const [citationCopied, setCitationCopied] = useState(false);
 
   // Formulate absolute URL and share text
   const baseUrl = getBaseUrl();
@@ -19,6 +22,36 @@ export default function SocialShareBar({ book, className = '' }: SocialShareBarP
     : `${baseUrl}/pdf/${book.slug}`;
 
   const shareText = `📚 Read and download "${book.title}" by ${book.author} for free in PDF on Bookshelf:`;
+
+  // Academic Citation generators
+  const currentYear = new Date().getFullYear();
+  const apaCitation = `${book.author}. (${currentYear}). ${book.title}. Bookshelf Open Digital Library. Retrieved from ${pageUrl}`;
+  const mlaCitation = `${book.author}. ${book.title}. Bookshelf Open Digital Library, ${currentYear}, ${pageUrl}.`;
+  const bibtexCitation = `@book{${book.slug.replace(/[^a-zA-Z0-9]/g, '_')},
+  author    = {${book.author}},
+  title     = {${book.title}},
+  year      = {${currentYear}},
+  publisher = {Bookshelf Open Digital Library},
+  url       = {${pageUrl}}
+}`;
+
+  const getActiveCitationText = () => {
+    if (citationFormat === 'mla') return mlaCitation;
+    if (citationFormat === 'bibtex') return bibtexCitation;
+    return apaCitation;
+  };
+
+  const handleCopyCitation = async () => {
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard) {
+        await navigator.clipboard.writeText(getActiveCitationText());
+        setCitationCopied(true);
+        setTimeout(() => setCitationCopied(false), 2500);
+      }
+    } catch {
+      prompt('Copy citation:', getActiveCitationText());
+    }
+  };
 
   const handleCopyLink = async () => {
     try {
@@ -73,19 +106,40 @@ export default function SocialShareBar({ book, className = '' }: SocialShareBarP
             Share with classmates &amp; study groups
           </span>
         </div>
-        <span
-          style={{
-            fontSize: 11,
-            fontWeight: 700,
-            color: '#059669',
-            background: '#ecfdf5',
-            padding: '2px 8px',
-            borderRadius: 6,
-            border: '1px solid #a7f3d0',
-          }}
-        >
-          100% Free Sharing
-        </span>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          <button
+            onClick={() => setShowCitation(!showCitation)}
+            style={{
+              fontSize: 11,
+              fontWeight: 700,
+              color: '#2563eb',
+              background: '#eff6ff',
+              padding: '4px 10px',
+              borderRadius: 6,
+              border: '1px solid #bfdbfe',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4,
+            }}
+          >
+            <span>📜</span>
+            <span>{showCitation ? 'Hide Citation' : 'Cite (APA/MLA)'}</span>
+          </button>
+          <span
+            style={{
+              fontSize: 11,
+              fontWeight: 700,
+              color: '#059669',
+              background: '#ecfdf5',
+              padding: '4px 8px',
+              borderRadius: 6,
+              border: '1px solid #a7f3d0',
+            }}
+          >
+            100% Free Sharing
+          </span>
+        </div>
       </div>
 
       <div
@@ -227,6 +281,87 @@ export default function SocialShareBar({ book, className = '' }: SocialShareBarP
           <span>{copied ? 'Copied!' : 'Copy Link'}</span>
         </button>
       </div>
+
+      {/* Expandable Citation Drawer */}
+      {showCitation && (
+        <div
+          style={{
+            marginTop: 14,
+            padding: 14,
+            background: '#ffffff',
+            borderRadius: 8,
+            border: '1px solid #e2e8f0',
+            boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.02)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, flexWrap: 'wrap', gap: 6 }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: '#475569' }}>
+              Academic &amp; Research Citation Format:
+            </span>
+            <div style={{ display: 'flex', gap: 4 }}>
+              {(['apa', 'mla', 'bibtex'] as const).map(fmt => (
+                <button
+                  key={fmt}
+                  onClick={() => setCitationFormat(fmt)}
+                  style={{
+                    padding: '2px 8px',
+                    borderRadius: 4,
+                    fontSize: 11,
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    cursor: 'pointer',
+                    border: '1px solid',
+                    borderColor: citationFormat === fmt ? '#3b82f6' : '#cbd5e1',
+                    background: citationFormat === fmt ? '#eff6ff' : '#ffffff',
+                    color: citationFormat === fmt ? '#1d4ed8' : '#64748b',
+                  }}
+                >
+                  {fmt}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div
+            style={{
+              padding: '8px 12px',
+              background: '#f8fafc',
+              borderRadius: 6,
+              border: '1px solid #e2e8f0',
+              fontSize: 12,
+              fontFamily: citationFormat === 'bibtex' ? 'monospace' : 'serif',
+              whiteSpace: citationFormat === 'bibtex' ? 'pre-wrap' : 'normal',
+              color: '#1e293b',
+              lineHeight: 1.5,
+              marginBottom: 8,
+            }}
+          >
+            {getActiveCitationText()}
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <button
+              onClick={handleCopyCitation}
+              style={{
+                fontSize: 11.5,
+                fontWeight: 700,
+                color: citationCopied ? '#ffffff' : '#1e293b',
+                background: citationCopied ? '#059669' : '#f1f5f9',
+                border: '1px solid #cbd5e1',
+                padding: '4px 12px',
+                borderRadius: 6,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 4,
+              }}
+            >
+              <span>{citationCopied ? '✓' : '📋'}</span>
+              <span>{citationCopied ? 'Citation Copied!' : 'Copy Formatted Citation'}</span>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

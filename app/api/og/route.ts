@@ -82,6 +82,19 @@ export async function GET(request: Request) {
     ac = '#fb7185';
   }
 
+  // 5. Head-to-Head Book Comparison Mode
+  const isComparison = type === 'compare' || customTitle.includes(' vs ');
+  if (isComparison) {
+    kicker = '⚔️ HEAD-TO-HEAD BOOK SHOWDOWN';
+    title = customTitle;
+    subtitle = 'Direct Side-by-Side Analysis · 100% Free Downloads';
+    category = 'Comparative Study';
+    tag1 = 'Dual Book Guide';
+    tag2 = 'Free Google Drive PDF';
+    bg = '#1e1b4b';
+    ac = '#f59e0b';
+  }
+
   const safeTitle = escapeXml(title);
   const safeSubtitle = escapeXml(subtitle);
   const safeCategory = escapeXml(category);
@@ -110,19 +123,19 @@ export async function GET(request: Request) {
     <!-- Left Content Box -->
     <g transform="translate(100, 95)">
       <!-- Brand Pill -->
-      <rect width="260" height="38" rx="19" fill="rgba(245, 158, 11, 0.15)" stroke="${ac}" stroke-width="1.5"/>
-      <text x="130" y="24" fill="${ac}" font-size="13" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="bold" text-anchor="middle" letter-spacing="1.5">${safeKicker}</text>
+      <rect width="290" height="38" rx="19" fill="rgba(245, 158, 11, 0.15)" stroke="${ac}" stroke-width="1.5"/>
+      <text x="145" y="24" fill="${ac}" font-size="12" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="bold" text-anchor="middle" letter-spacing="1.2">${safeKicker}</text>
 
       <!-- Category -->
       <text x="0" y="85" fill="#94a3b8" font-size="18" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="bold" letter-spacing="2">${safeCategory.toUpperCase()}</text>
 
       <!-- Title -->
-      <text x="0" y="150" fill="#ffffff" font-size="48" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900">
-        ${safeTitle.length > 32 ? safeTitle.slice(0, 30) + '…' : safeTitle}
+      <text x="0" y="150" fill="#ffffff" font-size="${isComparison ? '40' : '48'}" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900">
+        ${safeTitle.length > 36 ? safeTitle.slice(0, 34) + '…' : safeTitle}
       </text>
 
       <!-- Subtitle / Author -->
-      <text x="0" y="210" fill="#cbd5e1" font-size="26" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="500">${safeSubtitle.slice(0, 48)}</text>
+      <text x="0" y="210" fill="#cbd5e1" font-size="24" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="500">${safeSubtitle.slice(0, 52)}</text>
 
       <!-- Stars Rating & Quality Seal -->
       <text x="0" y="270" fill="#f59e0b" font-size="22" font-family="sans-serif">★★★★★ <tspan fill="#94a3b8" font-size="16"> 4.9 / 5.0 (Bookshelf Verified Library)</tspan></text>
@@ -132,20 +145,42 @@ export async function GET(request: Request) {
         <rect width="180" height="42" rx="8" fill="#1e293b" stroke="#334155"/>
         <text x="90" y="26" fill="#f8fafc" font-size="14" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="bold" text-anchor="middle">📄 ${safeTag1}</text>
 
-        <rect x="195" width="200" height="42" rx="8" fill="#065f46" stroke="#059669"/>
-        <text x="295" y="26" fill="#ffffff" font-size="14" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="bold" text-anchor="middle">${safeTag2}</text>
+        <rect x="195" width="220" height="42" rx="8" fill="#065f46" stroke="#059669"/>
+        <text x="305" y="26" fill="#ffffff" font-size="14" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="bold" text-anchor="middle">⚡ ${safeTag2}</text>
       </g>
     </g>
 
-    <!-- Right: Book 3D Mockup / Seal -->
+    <!-- Right: Book 3D Mockup / Dual Showdown Graphics -->
+    ${isComparison ? `
+    <g transform="translate(760, 100)">
+      <!-- Left Card -->
+      <g transform="translate(0, 40) rotate(-6)">
+        <rect width="170" height="260" rx="12" fill="#0f172a" stroke="#f59e0b" stroke-width="2.5"/>
+        <text x="24" y="60" fill="#94a3b8" font-size="12" font-family="sans-serif" font-weight="bold">EDITION A</text>
+        <text x="24" y="120" fill="#ffffff" font-size="18" font-family="sans-serif" font-weight="900">Book A</text>
+        <text x="24" y="230" fill="#34d399" font-size="13" font-family="sans-serif" font-weight="bold">Free PDF ⤓</text>
+      </g>
+      <!-- Right Card -->
+      <g transform="translate(130, 80) rotate(8)">
+        <rect width="170" height="260" rx="12" fill="#1e293b" stroke="#38bdf8" stroke-width="2.5"/>
+        <text x="24" y="60" fill="#94a3b8" font-size="12" font-family="sans-serif" font-weight="bold">EDITION B</text>
+        <text x="24" y="120" fill="#ffffff" font-size="18" font-family="sans-serif" font-weight="900">Book B</text>
+        <text x="24" y="230" fill="#38bdf8" font-size="13" font-family="sans-serif" font-weight="bold">Free PDF ⤓</text>
+      </g>
+      <!-- Center VS Badge -->
+      <circle cx="150" cy="180" r="36" fill="#f59e0b" stroke="#ffffff" stroke-width="4"/>
+      <text x="150" y="188" fill="#0f172a" font-size="20" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900" text-anchor="middle">VS</text>
+    </g>
+    ` : `
     <g transform="translate(820, 105)">
-      <rect width="280" height="420" rx="16" fill="url(#bookGrad)" stroke="rgba(255,255,255,0.2)" stroke-width="2" filter="drop-shadow(0 25px 35px rgba(0,0,0,0.6))"/>
+      <rect width="280" height="420" rx="16" fill="url(#bookGrad)" stroke="rgba(255,255,255,0.2)" stroke-width="2"/>
       <circle cx="230" cy="50" r="18" fill="${ac}"/>
       <text x="35" y="160" fill="#ffffff" font-size="24" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900">${safeTitle.slice(0, 18)}</text>
       <text x="35" y="200" fill="#94a3b8" font-size="15" font-family="-apple-system, BlinkMacSystemFont, sans-serif">${safeSubtitle.slice(0, 22)}</text>
       <rect x="35" y="340" width="120" height="30" rx="6" fill="${ac}"/>
       <text x="95" y="360" fill="#0f172a" font-size="12" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900" text-anchor="middle">PDF-BOOKSHELF</text>
     </g>
+    `}
   </svg>
   `;
 
