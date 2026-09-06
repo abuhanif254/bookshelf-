@@ -30,15 +30,12 @@ export default function DynamicBookFallback({ slug }: { slug: string }) {
       return;
     }
 
-    // Try fetching from API
-    fetch('/api/books')
+    // Try fetching targeted book from API
+    fetch(`/api/books?slug=${encodeURIComponent(slug)}&limit=1`)
       .then(res => res.json())
       .then(data => {
-        if (data.success && Array.isArray(data.books)) {
-          const apiFound = data.books.find((b: Product) => b.slug === slug || normalizeSlug(b.title) === slug);
-          if (apiFound) {
-            setBook(apiFound);
-          }
+        if (data.success && Array.isArray(data.books) && data.books.length > 0) {
+          setBook(data.books[0]);
         }
       })
       .catch(() => {})

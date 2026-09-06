@@ -1,11 +1,11 @@
 /**
- * Google Drive URL Parser & Direct Download Stream Generator
+ * URL Parser & Direct Stream / Embed Generator for PDF & eBook Readers
  * 
- * Supports all standard Google Drive sharing formats:
- * - https://drive.google.com/file/d/FILE_ID/view?usp=sharing
- * - https://drive.google.com/open?id=FILE_ID
- * - https://drive.google.com/uc?id=FILE_ID
- * - Raw FILE_ID strings
+ * Supports:
+ * - Google Drive: View, embed, and direct downloads
+ * - Project Gutenberg: Online HTML web-reader and epub downloads
+ * - Internet Archive: Online BookReader embed and direct downloads
+ * - Direct PDF URLs: Direct links hosted on Cloudflare R2, CDN, or custom storage
  */
 
 export function extractDriveId(urlOrId: string): string | null {
@@ -44,7 +44,6 @@ export function getDirectDownloadUrl(driveUrlOrId: string): string {
   if (fileId) {
     return `https://drive.google.com/uc?export=download&id=${fileId}`;
   }
-  // If it's another direct URL (e.g. Cloudflare R2, Dropbox direct, CDN), return as-is
   return driveUrlOrId.trim();
 }
 
@@ -65,3 +64,40 @@ export function getDriveEmbedUrl(driveUrlOrId: string): string {
   return driveUrlOrId.trim();
 }
 
+/**
+ * Universal In-Browser Reader Embed URL
+ * Supports Google Drive, Internet Archive, Project Gutenberg, and raw PDF streams
+ */
+export function getReaderEmbedUrl(urlOrId: string): string {
+  if (!urlOrId) return '';
+  const trimmed = urlOrId.trim();
+
+  // 1. Google Drive
+  const driveId = extractDriveId(trimmed);
+  if (driveId) {
+    return `https://drive.google.com/file/d/${driveId}/preview`;
+  }
+
+  // 2. Project Gutenberg (e.g. https://www.gutenberg.org/ebooks/2641.epub3.images)
+  const gutenbergMatch = trimmed.match(/gutenberg\.org\/ebooks\/(\d+)/i);
+  if (gutenbergMatch && gutenbergMatch[1]) {
+    return `https://www.gutenberg.org/ebooks/${gutenbergMatch[1]}.html.images`;
+  }
+
+  // 3. Internet Archive (e.g. https://archive.org/details/identifier or /download/identifier/...)
+  const archiveMatch = trimmed.match(/archive\.org\/(?:details|download)\/([a-zA-Z0-9_\.\-]+)/i);
+  if (archiveMatch && archiveMatch[1]) {
+    return `https://archive.org/embed/${archiveMatch[1]}`;
+  }
+
+  // 4. Direct PDF stream
+  if (trimmed.endsWith('.pdf')) {
+    return trimmed;
+  }
+
+  return '';
+}
+
+export function hasReaderStream(urlOrId: string): boolean {
+  return Boolean(getReaderEmbedUrl(urlOrId));
+}

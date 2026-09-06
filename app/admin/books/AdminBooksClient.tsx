@@ -275,25 +275,36 @@ export default function AdminBooksClient() {
         return;
       }
 
-      showToast(`⏳ Uploading ${newBooks.length} books in bulk...`);
+      const chunkSize = 250;
+      const totalChunks = Math.ceil(newBooks.length / chunkSize);
+      let totalInserted = 0;
       setSaving(true);
       
       try {
-        const res = await fetch('/api/books/bulk', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ books: newBooks })
-        });
-        const data = await res.json();
-        
-        if (data.success) {
-          showToast(`✅ Successfully bulk uploaded ${data.count} books!`);
-          fetchBooks();
-        } else {
-          showToast(`❌ Bulk upload failed: ${data.message}`);
+        for (let c = 0; c < totalChunks; c++) {
+          const chunk = newBooks.slice(c * chunkSize, (c + 1) * chunkSize);
+          const percent = Math.round(((c + 1) / totalChunks) * 100);
+          showToast(`⏳ Uploading batch ${c + 1}/${totalChunks} (${percent}%) — ${totalInserted}/${newBooks.length} books...`);
+          
+          const res = await fetch('/api/books/bulk', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ books: chunk })
+          });
+          const data = await res.json();
+          
+          if (data.success) {
+            totalInserted += (data.count || chunk.length);
+          } else {
+            console.error(`Batch ${c + 1} error:`, data.message);
+            showToast(`⚠️ Batch ${c + 1} issue: ${data.message || 'Partial insert'}`);
+          }
         }
+
+        showToast(`✅ Successfully bulk uploaded ${totalInserted} books!`);
+        fetchBooks();
       } catch (err) {
-         showToast('❌ Network error during bulk upload');
+        showToast('❌ Network error during bulk upload');
       } finally {
         setSaving(false);
         if (fileInputRef.current) fileInputRef.current.value = '';

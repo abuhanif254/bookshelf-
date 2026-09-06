@@ -17,7 +17,14 @@ export async function POST(request: Request) {
     const uniqueCategories = new Set<string>();
 
     const booksToInsert: Omit<Product, 'id'>[] = body.books.map((b: any) => {
-      const title = b.title || 'Untitled Book';
+      const rawTitle = b.title || 'Untitled Book';
+      const title = rawTitle
+        .replace(/\s*:\s*\$b\s*/gi, ': ')
+        .replace(/\s*\$b\s*/gi, ' ')
+        .replace(/\s*:\s*;\s*/g, ': ')
+        .replace(/\s*\/\s*$/, '')
+        .trim();
+
       const slug = title
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
@@ -26,16 +33,22 @@ export async function POST(request: Request) {
       const catName = b.cat || 'General';
       uniqueCategories.add(catName);
 
-      let finalCoverImage = b.coverImage || b.coverimage || b.image || b.imageurl || '';
+      let finalCoverImage = b.coverImage || b.coverimage || b.cover_image || b.image || b.imageurl || '';
       const driveMatch = finalCoverImage.match(/\/d\/([a-zA-Z0-9_-]+)/) || finalCoverImage.match(/[?&]id=([a-zA-Z0-9_-]+)/);
       if (driveMatch && driveMatch[1]) {
         finalCoverImage = `https://drive.google.com/uc?export=view&id=${driveMatch[1]}`;
       }
 
+      const authorBio = b.authorBio || b.author_bio || '';
+      let descHtml = b.desc || `<p>${title} by ${b.author || 'Unknown'}. Download your free PDF copy instantly.</p>`;
+      if (authorBio && !descHtml.includes('About the Author')) {
+        descHtml += `<div class="author-bio" style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;"><h3>About the Author</h3><p>${authorBio}</p></div>`;
+      }
+
       return {
         slug,
         title,
-        sub: b.sub || 'Practical digital handbook',
+        sub: b.sub || `A free public domain ${catName.toLowerCase()} book`,
         author: b.author || 'Unknown',
         cat: catName,
         type: b.type || 'free',
@@ -52,8 +65,8 @@ export async function POST(request: Request) {
         pat: b.pat || 'p-rings',
         blurb: b.blurb || title,
         feat: Array.isArray(b.feat) && b.feat.length > 0 ? b.feat : ['Instant PDF download', 'DRM-free for personal use', 'Clean layout for screen & print'],
-        desc: b.desc || `<p>${title} by ${b.author || 'Unknown'}. Download your free PDF copy instantly.</p>`,
-        driveUrl: b.driveUrl || b.driveurl || '',
+        desc: descHtml,
+        driveUrl: b.driveUrl || b.driveurl || b.drive_url || '',
         coverImage: finalCoverImage,
         partner: b.partner || '',
         partnerUrl: b.partnerUrl || b.partnerurl || '',

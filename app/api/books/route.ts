@@ -15,11 +15,15 @@ export async function GET(request: Request) {
     const type = searchParams.get('type');
     const author = searchParams.get('author');
     const lang = searchParams.get('lang');
+    const slug = searchParams.get('slug');
     const limitParam = searchParams.get('limit');
     const limit = limitParam === '0' ? 0 : Math.min(parseInt(limitParam || '24', 10), 1000);
 
     let query = supabase.from('books').select('*');
 
+    if (slug) {
+      query = query.eq('slug', slug);
+    }
     if (cat && cat !== 'All') {
       query = query.ilike('cat', cat);
     }
@@ -86,6 +90,7 @@ export async function GET(request: Request) {
 
     // Local DB fallback
     let fallback = getAllBooks();
+    if (slug) fallback = fallback.filter(b => b.slug === slug);
     if (cat && cat !== 'All') fallback = fallback.filter(b => b.cat.toLowerCase() === cat.toLowerCase());
     if (type && type !== 'all') fallback = fallback.filter(b => b.type === type);
     if (q) {
