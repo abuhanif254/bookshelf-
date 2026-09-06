@@ -1,8 +1,14 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getBookBySlug, getAllBooks } from '@/lib/db';
-import { getSupabaseBooks } from '@/lib/supabaseDb';
+import {
+  getSupabaseBookBySlug,
+  getSupabaseTopBooks,
+  getSupabaseRelatedBooks,
+  getSupabaseAuthorBooks,
+} from '@/lib/supabaseDb';
 import { BookJsonLd, BreadcrumbJsonLd, FAQJsonLd } from '@/components/JsonLd';
+import { toListingBook } from '@/lib/helpers';
 import {
   getLanguageConfig,
   normalizeLanguageCode,
@@ -20,17 +26,11 @@ export const revalidate = 86400;
 // Pre-build the top 500 most downloaded books at deployment time.
 // This ensures your most important SEO pages are instantly available to Googlebot.
 export async function generateStaticParams() {
-  const supaBooks = await getSupabaseBooks();
-  const allBooks = supaBooks && supaBooks.length > 0 ? supaBooks : getAllBooks();
-  
-  // Sort by downloads (descending) and take top 500
-  const topBooks = allBooks
-    .sort((a, b) => (b.downloads || 0) - (a.downloads || 0))
-    .slice(0, 500);
-
-  return topBooks.map((book) => ({
-    slug: book.slug,
-  }));
+  const topBooks = await getSupabaseTopBooks(500);
+  if (topBooks && topBooks.length > 0) {
+    return topBooks.map(b => ({ slug: b.slug }));
+  }
+  return getAllBooks().slice(0, 500).map(b => ({ slug: b.slug }));
 }
 
 interface Props {
@@ -46,9 +46,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     ? await (params as Promise<{ slug: string }>)
     : (params as { slug: string });
 
-  const supaBooks = await getSupabaseBooks();
-  const allBooks = supaBooks && supaBooks.length > 0 ? supaBooks : getAllBooks();
-  const book = allBooks.find(b => b.slug === resolvedParams.slug || normalizeSlug(b.title) === resolvedParams.slug) || getBookBySlug(resolvedParams.slug);
+  const book = await getSupabaseBookBySlug(resolvedParams.slug) || getBookBySlug(resolvedParams.slug);
 
   if (!book) {
     const formattedTitle = resolvedParams.slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
@@ -115,9 +113,7 @@ export default async function ProductPage({ params }: Props) {
     ? await (params as Promise<{ slug: string }>)
     : (params as { slug: string });
 
-  const supaBooks = await getSupabaseBooks();
-  const allBooks = supaBooks && supaBooks.length > 0 ? supaBooks : getAllBooks();
-  const book = allBooks.find(b => b.slug === resolvedParams.slug || normalizeSlug(b.title) === resolvedParams.slug) || getBookBySlug(resolvedParams.slug);
+  const book = await getSupabaseBookBySlug(resolvedParams.slug) || getBookBySlug(resolvedParams.slug);
 
   if (!book) {
     return <DynamicBookFallback slug={resolvedParams.slug} />;
@@ -132,13 +128,18 @@ export default async function ProductPage({ params }: Props) {
   const isRtl = langCfg?.isRtl || bookLang === 'ur';
 
   // Server-rendered related books (same category) and author books for crawlable deep links
-  const relatedBooks = allBooks
-    .filter(b => b.id !== book.id && (b.cat?.toLowerCase() === book.cat?.toLowerCase()))
-    .slice(0, 6);
+  const [supaRelated, supaAuthor] = await Promise.all([
+    getSupabaseRelatedBooks(book.cat, book.id, 6),
+    getSupabaseAuthorBooks(book.author, book.id, 6),
+  ]);
 
-  const authorBooks = allBooks
-    .filter(b => b.id !== book.id && normalizeSlug(b.author) === authorSlug)
-    .slice(0, 6);
+  const relatedBooks = supaRelated.length > 0
+    ? supaRelated.map(toListingBook)
+    : getAllBooks().filter(b => b.id !== book.id && b.cat?.toLowerCase() === book.cat?.toLowerCase()).slice(0, 6).map(toListingBook);
+
+  const authorBooks = supaAuthor.length > 0
+    ? supaAuthor.map(toListingBook)
+    : getAllBooks().filter(b => b.id !== book.id && normalizeSlug(b.author) === authorSlug).slice(0, 6).map(toListingBook);
 
   const breadcrumbs = [
     { name: 'Home', url: baseUrl },

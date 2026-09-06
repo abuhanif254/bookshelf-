@@ -94,7 +94,7 @@ interface StoreContextValue {
   cartQty: () => number;
   addToCart: (id: number, qty?: number, silent?: boolean) => void;
   downloadFree: (id: number) => void;
-  triggerDirectDownload: (id: number, customUrl?: string) => void;
+  triggerDirectDownload: (id: number, customUrl?: string, bookTitle?: string) => void;
   openPartner: (id: number) => void;
   toast: (title: string, sub?: string, warn?: boolean) => void;
 }
@@ -119,27 +119,25 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     if (!silent) toast('Added to Cart', `${p.title} · ${p.type === 'free' ? 'Free' : '$' + p.price.toFixed(2)}`);
   }, [toast]);
 
-  // When clicking free download, open the ad-gated unlock modal
+  // When clicking free download, open the ad-gated unlock modal (works for seed and Supabase books)
   const downloadFree = useCallback((id: number) => {
-    const p = getClientBooks().find(b => b.id === id);
-    if (!p) return;
     dispatch({ type: 'SET_AD_UNLOCK', id });
   }, []);
 
   // Called after ad is watched or direct unlock
-  const triggerDirectDownload = useCallback((id: number, customUrl?: string) => {
+  const triggerDirectDownload = useCallback((id: number, customUrl?: string, bookTitle?: string) => {
     const p = getClientBooks().find(b => b.id === id);
-    if (!p) return;
+    const title = bookTitle || p?.title || 'Book';
     dispatch({ type: 'DOWNLOAD_FREE', id });
-    toast('Download starting ⤓', `${p.title}.pdf — saved to My Library`);
+    toast('Download starting ⤓', `${title}.pdf — saved to My Library`);
 
     // Increment download counter
     fetch(`/api/books/${id}/download`, { method: 'POST' }).catch(() => {});
 
-    const targetUrl = customUrl || (p.driveUrl ? p.driveUrl : `https://drive.google.com/uc?export=download&id=SAMPLE_${p.slug}`);
+    const targetUrl = customUrl || (p?.driveUrl ? p.driveUrl : `https://drive.google.com/uc?export=download&id=SAMPLE_${p?.slug || id}`);
 
     // If Google Drive link, format correctly or open direct download
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && targetUrl) {
       const link = document.createElement('a');
       link.href = targetUrl;
       link.target = '_blank';

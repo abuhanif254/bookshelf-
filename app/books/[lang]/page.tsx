@@ -1,4 +1,4 @@
-﻿import { Metadata } from 'next';
+import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getAllBooks } from '@/lib/db';
@@ -152,7 +152,12 @@ export default async function LanguagePage({ params }: Props) {
       />
       <FAQJsonLd faqs={languageFaqs} />
 
-      <div className="wrap" style={{ padding: '20px 20px 60px' }}>
+      <div
+        className={`wrap script-${cfg.code}`}
+        dir={cfg.isRtl ? 'rtl' : 'ltr'}
+        lang={cfg.code}
+        style={{ padding: '20px 20px 60px' }}
+      >
         {/* Breadcrumbs */}
         <div className="crumb">
           <Link href="/">Home</Link> &rsaquo; <Link href="/library">Languages</Link> &rsaquo; <span>{cfg.name} ({cfg.nativeName})</span>

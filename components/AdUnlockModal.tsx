@@ -24,7 +24,34 @@ const AdInjector = React.memo(({ adCode }: { adCode: string }) => {
 export default function AdUnlockModal() {
   const { state, dispatch, triggerDirectDownload, toast } = useStore();
   const bookId = state.adUnlockBookId;
-  const book = bookId ? getClientBooks().find(b => b.id === bookId) : null;
+  const [activeBook, setActiveBook] = useState<any | null>(null);
+  const [isLoadingBook, setIsLoadingBook] = useState(false);
+
+  // Sync activeBook with bookId
+  useEffect(() => {
+    if (!bookId) {
+      setActiveBook(null);
+      setIsLoadingBook(false);
+      return;
+    }
+
+    const local = getClientBooks().find(b => b.id === bookId);
+    if (local) {
+      setActiveBook(local);
+      setIsLoadingBook(false);
+    } else {
+      setIsLoadingBook(true);
+      fetch(`/api/books/${bookId}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.book) {
+            setActiveBook(data.book);
+          }
+        })
+        .catch(() => {})
+        .finally(() => setIsLoadingBook(false));
+    }
+  }, [bookId]);
 
   const [settings, setSettings] = useState<{
     adNetwork: string;
@@ -119,26 +146,27 @@ export default function AdUnlockModal() {
     };
   }, [isWatching, timeLeft, toast]);
 
-  if (!book) return null;
+  if (!bookId) return null;
 
   const handleStartWatch = () => {
     setIsWatching(true);
   };
 
   const handleExecuteDownload = async () => {
+    if (!activeBook) return;
     setDownloading(true);
     try {
       const res = await fetch('/api/download', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bookId: book.id }),
+        body: JSON.stringify({ bookId: activeBook.id }),
       });
       const data = await res.json();
-      const directUrl = data.success ? data.downloadUrl : getDirectDownloadUrl(book.driveUrl || '');
-      triggerDirectDownload(book.id, directUrl);
+      const directUrl = data.success ? data.downloadUrl : getDirectDownloadUrl(activeBook.driveUrl || '');
+      triggerDirectDownload(activeBook.id, directUrl, activeBook.title);
       dispatch({ type: 'SET_AD_UNLOCK', id: null });
     } catch {
-      triggerDirectDownload(book.id, getDirectDownloadUrl(book.driveUrl || ''));
+      triggerDirectDownload(activeBook.id, getDirectDownloadUrl(activeBook?.driveUrl || ''), activeBook.title);
       dispatch({ type: 'SET_AD_UNLOCK', id: null });
     }
   };
@@ -182,16 +210,31 @@ export default function AdUnlockModal() {
           <button className="x" onClick={handleClose} aria-label="Close modal">✕</button>
 
           {/* Header */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16, borderBottom: '1px solid #f1f5f9', paddingBottom: 16 }}>
-            <div style={{ width: 56, flexShrink: 0 }} dangerouslySetInnerHTML={{ __html: coverHTML(book, 'sm') }} />
-            <div>
-              <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--green)', background: '#ecfdf5', padding: '3px 8px', borderRadius: 6 }}>
-                ⚡ 100% Free Download
-              </span>
-              <h3 style={{ fontSize: 18, fontWeight: 800, margin: '4px 0 2px', color: 'var(--ink)' }}>{book.title}</h3>
-              <p style={{ fontSize: 13, color: 'var(--muted)', margin: 0 }}>by {book.author} · {book.pages} pages · {(book.pages * 0.09).toFixed(1)} MB PDF</p>
+          {activeBook ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, borderBottom: '1px solid #f1f5f9', paddingBottom: 16 }}>
+              <div style={{ width: 56, flexShrink: 0 }} dangerouslySetInnerHTML={{ __html: coverHTML(activeBook, 'sm') }} />
+              <div>
+                <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--green)', background: '#ecfdf5', padding: '3px 8px', borderRadius: 6 }}>
+                  ⚡ 100% Free Download
+                </span>
+                <h3 style={{ fontSize: 18, fontWeight: 800, margin: '4px 0 2px', color: 'var(--ink)' }}>{activeBook.title}</h3>
+                <p style={{ fontSize: 13, color: 'var(--muted)', margin: 0 }}>by {activeBook.author} · {activeBook.pages || 100} pages · {((activeBook.pages || 100) * 0.09).toFixed(1)} MB PDF</p>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, borderBottom: '1px solid #f1f5f9', paddingBottom: 16 }}>
+              <div style={{ width: 56, height: 75, background: '#f1f5f9', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ fontSize: 20 }}>📖</span>
+              </div>
+              <div>
+                <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--blue)', background: '#eff6ff', padding: '3px 8px', borderRadius: 6 }}>
+                  ⚡ Verifying Book
+                </span>
+                <h3 style={{ fontSize: 18, fontWeight: 800, margin: '4px 0 2px', color: 'var(--ink)' }}>Loading Book Details…</h3>
+                <p style={{ fontSize: 13, color: 'var(--muted)', margin: 0 }}>Preparing secure PDF stream</p>
+              </div>
+            </div>
+          )}
 
           {/* Warning / Support Notice */}
           <div style={{ margin: '16px 0', padding: '12px 14px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>

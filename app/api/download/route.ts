@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getBookById, incrementStat, updateBook } from '@/lib/db';
+import { getSupabaseBookById, incrementSupabaseDownloads } from '@/lib/supabaseDb';
 import { getDirectDownloadUrl } from '@/lib/drive';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 
@@ -20,7 +21,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'Invalid book ID' }, { status: 400 });
     }
 
-    const book = getBookById(id);
+    // Attempt retrieval from Supabase first, then local DB fallback
+    let book = await getSupabaseBookById(id);
+    if (!book) {
+      book = getBookById(id) || null;
+    }
     if (!book) {
       return NextResponse.json({ success: false, message: 'Book not found' }, { status: 404 });
     }
@@ -28,14 +33,18 @@ export async function POST(request: Request) {
     // Increment downloads count for this book and global counter
     incrementStat('totalDownloads');
     incrementStat('adUnlocks');
-    updateBook(id, { downloads: (book.downloads || 0) + 1 });
+    await incrementSupabaseDownloads(id);
+    try {
+      updateBook(id, { downloads: (book.downloads || 0) + 1 });
+    } catch {}
 
     // Determine target download link
     const downloadUrl = book.driveUrl
       ? getDirectDownloadUrl(book.driveUrl)
       : `https://drive.google.com/uc?export=download&id=SAMPLE_${book.slug}`;
 
-    const safeFileName = `${book.title.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 80)}.pdf`;
+    // Clean filename while preserving Bengali, Arabic/Urdu, Devanagari, CJK, and standard characters
+    const safeFileName = `${book.title.replace(/[^\w\s\u0600-\u06FF\u0980-\u09FF\u0900-\u097F\u4e00-\u9fa5-]/g, '_').trim().slice(0, 80)}.pdf`;
 
     return NextResponse.json({
       success: true,

@@ -115,18 +115,34 @@ export async function getSupabaseBooks(): Promise<Product[] | null> {
   }
 }
 
-export async function getSupabaseBooksPaginated(options: { page: number, limit: number, search?: string, cat?: string, type?: string, sort?: string }) {
+export async function getSupabaseBooksPaginated(options: {
+  page: number;
+  limit: number;
+  search?: string;
+  cat?: string;
+  type?: string;
+  sort?: string;
+  lang?: string;
+}) {
   try {
     let query = supabase.from('books').select('*', { count: 'exact' });
 
     if (options.search) {
       query = query.or(`title.ilike.%${options.search}%,author.ilike.%${options.search}%,cat.ilike.%${options.search}%`);
     }
-    if (options.cat) {
-      query = query.eq('cat', options.cat);
+    if (options.cat && options.cat !== 'All') {
+      query = query.ilike('cat', options.cat);
     }
-    if (options.type) {
+    if (options.type && options.type !== 'all') {
       query = query.eq('type', options.type);
+    }
+    if (options.lang && options.lang !== 'all') {
+      const norm = options.lang.toLowerCase();
+      if (norm === 'en') {
+        query = query.or('lang.eq.en,lang.is.null');
+      } else {
+        query = query.eq('lang', norm);
+      }
     }
 
     if (options.sort === 'title') {
@@ -135,6 +151,8 @@ export async function getSupabaseBooksPaginated(options: { page: number, limit: 
       query = query.order('rating', { ascending: false });
     } else if (options.sort === 'pages') {
       query = query.order('pages', { ascending: false });
+    } else if (options.sort === 'downloads' || options.sort === 'featured' || options.sort === 'reviews') {
+      query = query.order('downloads', { ascending: false });
     } else {
       query = query.order('id', { ascending: false });
     }
@@ -161,6 +179,142 @@ export async function getSupabaseBooksPaginated(options: { page: number, limit: 
     return null;
   }
 }
+
+export async function getSupabaseBookBySlug(slug: string): Promise<Product | null> {
+  try {
+    const { data, error } = await supabase
+      .from('books')
+      .select('*')
+      .eq('slug', slug)
+      .limit(1)
+      .maybeSingle();
+
+    if (error || !data) return null;
+    return mapDbRowToProduct(data);
+  } catch (err) {
+    console.error('getSupabaseBookBySlug exception:', err);
+    return null;
+  }
+}
+
+export async function getSupabaseBookById(id: number): Promise<Product | null> {
+  try {
+    const { data, error } = await supabase
+      .from('books')
+      .select('*')
+      .eq('id', id)
+      .limit(1)
+      .maybeSingle();
+
+    if (error || !data) return null;
+    return mapDbRowToProduct(data);
+  } catch (err) {
+    console.error('getSupabaseBookById exception:', err);
+    return null;
+  }
+}
+
+export async function getSupabaseRelatedBooks(cat: string, excludeId?: number, limit: number = 6): Promise<Product[]> {
+  try {
+    let query = supabase
+      .from('books')
+      .select('*')
+      .ilike('cat', cat)
+      .order('downloads', { ascending: false })
+      .limit(limit);
+
+    if (excludeId) {
+      query = query.neq('id', excludeId);
+    }
+
+    const { data, error } = await query;
+    if (error || !data) return [];
+    return data.map(mapDbRowToProduct);
+  } catch (err) {
+    console.error('getSupabaseRelatedBooks exception:', err);
+    return [];
+  }
+}
+
+export async function getSupabaseAuthorBooks(author: string, excludeId?: number, limit: number = 6): Promise<Product[]> {
+  try {
+    let query = supabase
+      .from('books')
+      .select('*')
+      .ilike('author', author)
+      .order('downloads', { ascending: false })
+      .limit(limit);
+
+    if (excludeId) {
+      query = query.neq('id', excludeId);
+    }
+
+    const { data, error } = await query;
+    if (error || !data) return [];
+    return data.map(mapDbRowToProduct);
+  } catch (err) {
+    console.error('getSupabaseAuthorBooks exception:', err);
+    return [];
+  }
+}
+
+export async function getSupabaseBooksByLanguage(lang: string, limit: number = 48): Promise<{ books: Product[]; total: number }> {
+  try {
+    const norm = (lang === 'bangla' ? 'bn' : lang === 'hindi' ? 'hi' : lang === 'urdu' ? 'ur' : lang === 'spanish' ? 'es' : lang === 'chinese' ? 'zh' : lang === 'english' ? 'en' : lang).toLowerCase();
+
+    let query = supabase.from('books').select('*', { count: 'exact' });
+    if (norm === 'en') {
+      query = query.or('lang.eq.en,lang.is.null');
+    } else {
+      query = query.eq('lang', norm);
+    }
+
+    const { data, count, error } = await query
+      .order('downloads', { ascending: false })
+      .limit(limit);
+
+    if (error || !data) return { books: [], total: 0 };
+    return {
+      books: data.map(mapDbRowToProduct),
+      total: count || data.length,
+    };
+  } catch (err) {
+    console.error('getSupabaseBooksByLanguage exception:', err);
+    return { books: [], total: 0 };
+  }
+}
+
+export async function getSupabaseTopBooks(limit: number = 500): Promise<{ slug: string; downloads?: number }[]> {
+  try {
+    const { data, error } = await supabase
+      .from('books')
+      .select('slug, downloads')
+      .order('downloads', { ascending: false })
+      .limit(limit);
+
+    if (error || !data) return [];
+    return data;
+  } catch {
+    return [];
+  }
+}
+
+export async function getSupabaseRecentBooks(limit: number = 50): Promise<Product[]> {
+  try {
+    const { data, error } = await supabase
+      .from('books')
+      .select('*')
+      .order('id', { ascending: false })
+      .limit(limit);
+
+    if (error || !data) return [];
+    return data.map(mapDbRowToProduct);
+  } catch (err) {
+    console.error('getSupabaseRecentBooks error:', err);
+    return [];
+  }
+}
+
 
 export async function addSupabaseBook(bookData: Omit<Product, 'id'>): Promise<Product | null> {
   try {
@@ -246,6 +400,19 @@ export async function deleteSupabaseBook(id: number): Promise<boolean> {
     return !error;
   } catch {
     return false;
+  }
+}
+
+export async function incrementSupabaseDownloads(id: number): Promise<void> {
+  try {
+    const { error } = await supabase.rpc('increment_book_downloads', { book_id: String(id) });
+    if (error) {
+      const { data } = await supabase.from('books').select('downloads').eq('id', id).single();
+      const current = data?.downloads || 0;
+      await supabase.from('books').update({ downloads: current + 1 }).eq('id', id);
+    }
+  } catch (err) {
+    console.error('Failed to increment downloads:', err);
   }
 }
 

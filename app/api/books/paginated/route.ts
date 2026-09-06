@@ -12,8 +12,9 @@ export async function GET(request: Request) {
     const cat = searchParams.get('cat') || '';
     const type = searchParams.get('type') || '';
     const sort = searchParams.get('sort') || 'newest';
+    const lang = searchParams.get('lang') || '';
 
-    const result = await getSupabaseBooksPaginated({ page, limit, search, cat, type, sort });
+    const result = await getSupabaseBooksPaginated({ page, limit, search, cat, type, sort, lang });
     
     if (!result) {
       return NextResponse.json({ success: false, message: 'Failed to fetch books' }, { status: 500 });

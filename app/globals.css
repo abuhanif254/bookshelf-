@@ -11,7 +11,8 @@
   --link:#2563eb; --link-h:#1d4ed8; --price:#dc2626; --star:#f59e0b;
   --bg:#f1f5f9; --card:#fff; --line:#e2e8f0; --muted:#64748b; --green:#059669;
   --red:#e11d48; --flag:#d97706;
-  --disp:var(--font-archivo), 'Archivo', sans-serif; --body:var(--font-source-sans), 'Source Sans 3', sans-serif;
+  --font-fallback:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans Bengali","Hind Siliguri","Noto Sans Devanagari","Noto Nastaliq Urdu","Jameel Noori Nastaleeq","Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
+  --disp:var(--font-archivo), 'Archivo', var(--font-fallback); --body:var(--font-source-sans), 'Source Sans 3', var(--font-fallback);
   --shadow:0 8px 24px rgba(15,23,42,.10);
 }
 *{margin:0;padding:0;box-sizing:border-box}
@@ -479,3 +480,39 @@ h1,h2,h3,h4{font-family:var(--disp);color:#0f1111}
 
 .cat-scroll::-webkit-scrollbar { width: 4px; }
 .cat-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+/* ══════════ MULTI-SCRIPT TYPOGRAPHY & RTL SUPPORT (300k SCALE) ══════════ */
+:lang(bn), .script-bn {
+  font-family: var(--font-source-sans), 'Noto Sans Bengali', 'Hind Siliguri', 'SolaimanLipi', 'Shonar Bangla', sans-serif;
+}
+:lang(hi), .script-hi {
+  font-family: var(--font-source-sans), 'Noto Sans Devanagari', 'Kohinoor Devanagari', 'Mangal', sans-serif;
+}
+:lang(ur), .script-ur {
+  font-family: 'Noto Nastaliq Urdu', 'Jameel Noori Nastaleeq', 'Urdu Typesetting', 'Segoe UI', Tahoma, sans-serif;
+  line-height: 1.85;
+}
+:lang(zh), .script-zh {
+  font-family: var(--font-source-sans), 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', 'SimSun', sans-serif;
+}
+
+/* RTL Layout Direction mirroring */
+[dir="rtl"] {
+  direction: rtl;
+  text-align: right;
+}
+[dir="rtl"] .cartbtn .n {
+  left: auto;
+  right: 22px;
+}
+[dir="rtl"] .hd-sub .right {
+  margin-left: 0;
+  margin-right: auto;
+}
+[dir="rtl"] .sug .cat {
+  margin-left: 0;
+  margin-right: auto;
+}
+[dir="rtl"] .crumb a + span::before {
+  content: '‹ ';
+}

@@ -20,6 +20,7 @@ import AmbientSoundPlayer from '@/components/AmbientSoundPlayer';
 import { useCurrency } from '@/lib/currency';
 import WriteReviewModal from '@/components/WriteReviewModal';
 import { BookReview } from '@/lib/db';
+import BookEeatMetadata from '@/components/BookEeatMetadata';
 
 function normalizeSlug(str: string): string {
   return str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
@@ -372,6 +373,9 @@ export default function ProductClient({
         {/* Ambient Soundscape & Pace Calculator */}
         <AmbientSoundPlayer />
         <ReadingPaceCalculator book={p} />
+
+        {/* E-E-A-T Academic Citations & Document Telemetry */}
+        <BookEeatMetadata book={p} />
 
         {/* SEO Key Takeaways & Chapter Breakdown */}
         <div style={{ background: '#fff', borderRadius: 12, padding: 28, border: '1px solid #e2e8f0', margin: '24px 0' }}>

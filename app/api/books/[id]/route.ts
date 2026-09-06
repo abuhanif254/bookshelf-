@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getBookById, updateBook, deleteBook } from '@/lib/db';
-import { updateSupabaseBook, deleteSupabaseBook } from '@/lib/supabaseDb';
+import { getSupabaseBookById, updateSupabaseBook, deleteSupabaseBook } from '@/lib/supabaseDb';
 import { isRequestAuthorized } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
@@ -15,7 +15,10 @@ export async function GET(request: Request, { params }: Params) {
       ? await (params as Promise<{ id: string }>)
       : (params as { id: string });
     const id = parseInt(resolved.id, 10);
-    const book = getBookById(id);
+    let book = await getSupabaseBookById(id);
+    if (!book) {
+      book = getBookById(id) || null;
+    }
 
     if (!book) {
       return NextResponse.json({ success: false, message: 'Book not found' }, { status: 404 });

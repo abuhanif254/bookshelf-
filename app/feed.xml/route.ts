@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
 import { getAllBooks } from '@/lib/db';
-import { getSupabaseBooks } from '@/lib/supabaseDb';
+import { getSupabaseRecentBooks } from '@/lib/supabaseDb';
 import { escapeHtml } from '@/lib/security';
 import { getBaseUrl } from '@/lib/url';
 
 export async function GET() {
   const baseUrl = getBaseUrl();
-  const supaBooks = await getSupabaseBooks();
-  const books = supaBooks && supaBooks.length > 0 ? supaBooks : getAllBooks();
+  const supaBooks = await getSupabaseRecentBooks(50);
+  const books = supaBooks && supaBooks.length > 0 ? supaBooks : getAllBooks().slice(0, 50);
 
   const itemsXml = books
     .map(book => {
