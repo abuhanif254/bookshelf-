@@ -236,12 +236,14 @@ export async function getSupabaseRelatedBooks(cat: string, excludeId?: number, l
   }
 }
 
-export async function getSupabaseAuthorBooks(author: string, excludeId?: number, limit: number = 6): Promise<Product[]> {
+export async function getSupabaseAuthorBooks(author: string, excludeId?: number, limit: number = 60): Promise<Product[]> {
   try {
+    // Support either clean author name "Rabindranath Tagore" or slug "rabindranath-tagore"
+    const pattern = author.replace(/-/g, '%');
     let query = supabase
       .from('books')
       .select('*')
-      .ilike('author', author)
+      .ilike('author', pattern)
       .order('downloads', { ascending: false })
       .limit(limit);
 

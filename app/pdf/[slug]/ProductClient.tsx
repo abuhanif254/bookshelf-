@@ -22,6 +22,7 @@ import WriteReviewModal from '@/components/WriteReviewModal';
 import { BookReview } from '@/lib/db';
 import BookEeatMetadata from '@/components/BookEeatMetadata';
 import BookTableOfContents from '@/components/BookTableOfContents';
+import SocialShareBar from '@/components/SocialShareBar';
 
 function normalizeSlug(str: string): string {
   return str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
@@ -368,6 +369,7 @@ export default function ProductClient({
                 </div>
               </>
             )}
+            <SocialShareBar book={p} />
           </div>
         </div>
 

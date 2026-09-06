@@ -55,3 +55,13 @@ export function getDrivePreviewUrl(driveUrlOrId: string): string {
   }
   return driveUrlOrId.trim();
 }
+
+export function getDriveEmbedUrl(driveUrlOrId: string): string {
+  if (!driveUrlOrId) return '';
+  const fileId = extractDriveId(driveUrlOrId);
+  if (fileId) {
+    return `https://drive.google.com/file/d/${fileId}/preview`;
+  }
+  return driveUrlOrId.trim();
+}
+
