@@ -126,6 +126,15 @@ export default async function AuthorPage({ params }: Props) {
   const avgRating = (authorBooks.reduce((sum, b) => sum + (b.rating || 4.8), 0) / authorBooks.length).toFixed(1);
   const wikiSearchUrl = `https://en.wikipedia.org/wiki/Special:Search?search=${encodeURIComponent(authorName)}`;
 
+  let authorBio = '';
+  for (const b of authorBooks) {
+    const match = (b.desc || '').match(/<div class="author-bio"[^>]*>([\s\S]*?)<\/div>/i);
+    if (match && match[1]) {
+      authorBio = match[1].replace(/<h3>.*?<\/h3>/gi, '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+      if (authorBio) break;
+    }
+  }
+
   const breadcrumbs = [
     { name: 'Home', url: baseUrl },
     { name: 'Authors', url: `${baseUrl}/library` },
@@ -247,6 +256,17 @@ export default async function AuthorPage({ params }: Props) {
               </div>
             </div>
           </div>
+
+          {authorBio && (
+            <div style={{ marginTop: 20, padding: 20, background: '#ffffff', borderRadius: 10, border: '1px solid #e2e8f0', boxShadow: '0 1px 4px rgba(15,23,42,0.03)' }}>
+              <div style={{ fontSize: 11.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--muted)', marginBottom: 6 }}>
+                Author Biography &amp; Background
+              </div>
+              <p style={{ fontSize: 14.5, color: '#334155', lineHeight: 1.65, margin: 0 }}>
+                {authorBio}
+              </p>
+            </div>
+          )}
 
           {/* Biographical Context & E-E-A-T Entity Links */}
           <div style={{ marginTop: 22, paddingTop: 18, borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 14 }}>
