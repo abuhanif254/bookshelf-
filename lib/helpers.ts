@@ -40,9 +40,19 @@ export const getFallbackDesign = (title: string = '') => {
   };
 };
 
+export const cleanTitle = (t: string): string => {
+  if (!t) return '';
+  return t
+    .replace(/\s*:\s*\$b\s*/gi, ': ')
+    .replace(/\s*\$b\s*/gi, ' ')
+    .replace(/\s*:\s*;\s*/g, ': ')
+    .replace(/\s*\/\s*$/, '')
+    .trim();
+};
+
 export const coverHTML = (p: Product, size: string = '', priority: boolean = false): string => {
   const img = (p.coverImage || p.coverUrl || '').trim();
-  const safeTitle = escapeHtml(p.title);
+  const safeTitle = escapeHtml(cleanTitle(p.title));
   const safeAuthor = escapeHtml(p.author);
   const safeCat = escapeHtml(p.cat);
   const safeSub = escapeHtml(p.sub);
@@ -113,7 +123,7 @@ export const actionBtn = (p: Product, cls: string = 'pbtn'): string => {
 export const cardHTML = (p: Product, rank: number | null = null, deal: boolean = false, wishlistIds: Set<number> = new Set()): string => {
   const safeId = Number(p.id) || 0;
   const safeSlug = escapeHtml(p.slug);
-  const safeTitle = escapeHtml(p.title);
+  const safeTitle = escapeHtml(cleanTitle(p.title));
   const safeAuthor = escapeHtml(p.author);
   const safeBought = escapeHtml(p.bought || 'Instant download');
   const safeReviews = (Number(p.reviews) || 120).toLocaleString();

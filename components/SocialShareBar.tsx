@@ -97,6 +97,8 @@ export default function SocialShareBar({ book, className = '' }: SocialShareBarP
         padding: '16px 20px',
         margin: '20px 0',
         boxShadow: '0 2px 8px rgba(15, 23, 42, 0.04)',
+        width: '100%',
+        boxSizing: 'border-box',
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, flexWrap: 'wrap', gap: 8 }}>

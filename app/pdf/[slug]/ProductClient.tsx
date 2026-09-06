@@ -28,6 +28,16 @@ function normalizeSlug(str: string): string {
   return str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
 }
 
+function cleanBookTitle(title: string): string {
+  if (!title) return '';
+  return title
+    .replace(/\s*:\s*\$b\s*/gi, ': ')
+    .replace(/\s*\$b\s*/gi, ' ')
+    .replace(/\s*:\s*;\s*/g, ': ')
+    .replace(/\s*\/\s*$/, '')
+    .trim();
+}
+
 export default function ProductClient({
   p,
   faqs,
@@ -141,6 +151,7 @@ export default function ProductClient({
 
   const authorSlug = normalizeSlug(p.author);
   const catSlug = normalizeSlug(p.cat);
+  const displayTitle = cleanBookTitle(p.title);
 
   const tabContents = [
     <div key="desc" dangerouslySetInnerHTML={{ __html: p.desc }} />,
@@ -201,7 +212,7 @@ export default function ProductClient({
       <div className="wrap" onClick={handleAction} dir={isRtl ? 'rtl' : 'ltr'}>
         {/* Breadcrumbs */}
         <div className="crumb">
-          <Link href="/">Home</Link> › {langSlug && langName && <><Link href={`/books/${langSlug}`}>{langName}</Link> › </>}<Link href={`/category/${catSlug}`}>{p.cat}</Link> › <span style={{ color: '#0f1111' }}>{p.title}</span>
+          <Link href="/">Home</Link> › {langSlug && langName && <><Link href={`/books/${langSlug}`}>{langName}</Link> › </>}<Link href={`/category/${catSlug}`}>{p.cat}</Link> › <span style={{ color: '#0f1111' }}>{displayTitle}</span>
         </div>
 
         <div className="pd">
@@ -219,9 +230,9 @@ export default function ProductClient({
           </div>
 
           {/* Details */}
-          <div>
+          <div className="pd-main">
             {p.badge && <span className={`flag ${flagCls(p.badge)}`} style={{ position: 'static', display: 'inline-block', marginBottom: 10 }}>{p.badge}</span>}
-            <h1>{p.title}</h1>
+            <h1>{displayTitle}</h1>
             <div className="byline">
               by <Link href={`/author/${authorSlug}`} style={{ fontWeight: 700, color: 'var(--link)' }}>{p.author}</Link> (Author) · <span style={{ color: 'var(--muted)' }}>{p.pages} pages · <Link href={`/category/${catSlug}`} style={{ color: 'var(--muted)' }}>{p.cat}</Link> · Updated July 2026</span>
             </div>
@@ -403,9 +414,25 @@ export default function ProductClient({
                 Get 5 handpicked books free every Friday + Claim 2026 Master PDF Starter Kit
               </div>
             </div>
-            <SocialShareBar book={p} />
+            <button
+              className="bb-wish"
+              style={{ textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, borderTop: '1px solid #eef0f0', marginTop: 10, cursor: 'pointer' }}
+              onClick={() => {
+                if (typeof navigator !== 'undefined' && (navigator as any).share) {
+                  (navigator as any).share({ title: displayTitle, url: window.location.href }).catch(() => {});
+                } else if (typeof navigator !== 'undefined' && navigator.clipboard) {
+                  navigator.clipboard.writeText(window.location.href);
+                  toast('Link copied to clipboard! 📋', 'Share with friends & study groups');
+                }
+              }}
+            >
+              📢 Share this free book
+            </button>
           </div>
         </div>
+
+        {/* Community Social Sharing & Academic Citation Engine */}
+        <SocialShareBar book={{ ...p, title: displayTitle }} />
 
         {/* Ambient Soundscape & Pace Calculator */}
         <AmbientSoundPlayer />
@@ -420,7 +447,7 @@ export default function ProductClient({
         {/* SEO Key Takeaways & Chapter Breakdown */}
         <div style={{ background: '#fff', borderRadius: 12, padding: 28, border: '1px solid #e2e8f0', margin: '24px 0' }}>
           <h2 style={{ fontSize: 20, fontWeight: 800, color: 'var(--ink)', marginBottom: 12 }}>
-            📖 Key Chapters &amp; Takeaways in &ldquo;{p.title}&rdquo;
+            📖 Key Chapters &amp; Takeaways in &ldquo;{displayTitle}&rdquo;
           </h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 14 }}>
             <div style={{ background: '#f8fafc', padding: 16, borderRadius: 8, border: '1px solid #e2e8f0' }}>
@@ -504,7 +531,7 @@ export default function ProductClient({
         {faqs && faqs.length > 0 && (
           <div style={{ background: '#fff', borderRadius: 12, padding: 28, border: '1px solid #e2e8f0', marginBottom: 28 }}>
             <h2 style={{ fontSize: 20, fontWeight: 800, color: 'var(--ink)', marginBottom: 6 }}>
-              Frequently Asked Questions about {p.title}
+              Frequently Asked Questions about {displayTitle}
             </h2>
             <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 16 }}>
               Direct answers regarding PDF file format, device compatibility, and download links.
