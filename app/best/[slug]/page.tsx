@@ -24,7 +24,7 @@ interface ListicleData {
   verdict: string;
 }
 
-const LISTICLES: Record<string, ListicleData> = {
+export const LISTICLES: Record<string, ListicleData> = {
   'free-programming-books-2026': {
     title: '7 Best Free Programming & Coding Books (2026 Edition)',
     metaTitle: '7 Best Free Programming & Software Engineering Books (2026) | Bookshelf',

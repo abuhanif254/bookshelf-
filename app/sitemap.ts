@@ -5,6 +5,8 @@ import { getSupabaseCategories } from '@/lib/supabaseDb';
 import { BUNDLES } from '@/lib/bundles';
 import { SUPPORTED_LANGUAGES } from '@/lib/languages';
 import { getBaseUrl } from '@/lib/url';
+import { LISTICLES } from './best/[slug]/page';
+import { COMPARISON_PAIRS } from './compare/[slug]/page';
 
 // Google hard limit: 50,000 URLs per sitemap file.
 // We chunk into 40,000 to safely guarantee Google compliance even with extra hubs.
@@ -98,15 +100,8 @@ export default async function sitemap(props: {
       priority: 0.9,
     }));
 
-    // Best-of listicles
-    const bestOfSlugs = [
-      'free-programming-books-2026',
-      'top-productivity-books-for-founders',
-      'best-personal-finance-books',
-      'ui-ux-design-systems-guides',
-      'best-business-startup-playbooks',
-    ];
-    const bestRoutes: MetadataRoute.Sitemap = bestOfSlugs.map(slug => ({
+    // Best-of listicles (All 10 roundups)
+    const bestRoutes: MetadataRoute.Sitemap = Object.keys(LISTICLES).map(slug => ({
       url: `${baseUrl}/best/${slug}`,
       lastModified: new Date(),
       changeFrequency: 'weekly' as const,
@@ -124,12 +119,8 @@ export default async function sitemap(props: {
       priority: 0.85,
     }));
 
-    // Comparisons
-    const compareRoutes: MetadataRoute.Sitemap = [
-      'deep-focus-vs-morning-reset',
-      'indie-founder-playbook-vs-zero-to-launch',
-      'javascript-patterns-2e-vs-design-systems-handbook',
-    ].map(pair => ({
+    // Comparisons (All 16 high-intent showdowns)
+    const compareRoutes: MetadataRoute.Sitemap = COMPARISON_PAIRS.map(pair => ({
       url: `${baseUrl}/compare/${pair}`,
       lastModified: new Date(),
       changeFrequency: 'weekly' as const,

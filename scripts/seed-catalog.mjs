@@ -100,6 +100,41 @@ const AUTHORS_AND_TITLES = {
       { author: 'Studio Norr', titles: ['Design Systems Handbook: Tokens & Architecture', 'Typography for Screens: Responsive Scales', 'Figma to Code: Design Engineering Playbook', 'Accessible UI Patterns for Web Applications'] },
     ],
   },
+  en_classics: {
+    lang: 'en',
+    cat: 'Literature',
+    data: [
+      { author: 'William Shakespeare', titles: ['Hamlet (Annotated Edition)', 'Macbeth', 'Romeo and Juliet', 'The Tempest', 'Othello', 'King Lear', 'A Midsummer Night\'s Dream'] },
+      { author: 'Jane Austen', titles: ['Pride and Prejudice', 'Sense and Sensibility', 'Emma', 'Persuasion', 'Mansfield Park', 'Northanger Abbey'] },
+      { author: 'Charles Dickens', titles: ['Great Expectations', 'A Tale of Two Cities', 'Oliver Twist', 'David Copperfield', 'Hard Times', 'Bleak House'] },
+      { author: 'Leo Tolstoy', titles: ['War and Peace', 'Anna Karenina', 'The Death of Ivan Ilyich', 'Resurrection', 'The Kingdom of God Is Within You'] },
+      { author: 'Fyodor Dostoevsky', titles: ['Crime and Punishment', 'The Brothers Karamazov', 'Notes from Underground', 'The Idiot', 'Demons'] },
+      { author: 'Arthur Conan Doyle', titles: ['A Study in Scarlet', 'The Sign of the Four', 'The Hound of the Baskervilles', 'The Valley of Fear', 'The Adventures of Sherlock Holmes'] },
+    ],
+  },
+  en_philosophy: {
+    lang: 'en',
+    cat: 'Self-Help',
+    data: [
+      { author: 'Marcus Aurelius', titles: ['Meditations (Modern Translation)', 'The Emperor\'s Handbook', 'Stoic Wisdom for Daily Resilience'] },
+      { author: 'Seneca', titles: ['Letters from a Stoic', 'On the Shortness of Life', 'On Tranquility of Mind', 'On Anger'] },
+      { author: 'Epictetus', titles: ['Discourses and Selected Writings', 'The Enchiridion (Manual for Living)', 'The Art of Living'] },
+      { author: 'Sun Tzu', titles: ['The Art of War (Complete Unabridged)', 'Strategies for Competitive Supremacy', 'The Classical Commentary'] },
+      { author: 'Plato', titles: ['The Republic (Annotated)', 'The Apology of Socrates', 'Symposium', 'Phaedo'] },
+      { author: 'Aristotle', titles: ['Nicomachean Ethics', 'Politics', 'Poetics', 'The Organon'] },
+    ],
+  },
+  en_science: {
+    lang: 'en',
+    cat: 'Technology',
+    data: [
+      { author: 'Isaac Newton', titles: ['Philosophiae Naturalis Principia Mathematica', 'Opticks', 'The System of the World'] },
+      { author: 'Albert Einstein', titles: ['Relativity: The Special and General Theory', 'The Meaning of Relativity', 'Sidelights on Relativity'] },
+      { author: 'Charles Darwin', titles: ['On the Origin of Species', 'The Voyage of the Beagle', 'The Descent of Man'] },
+      { author: 'Alan Turing', titles: ['Computing Machinery and Intelligence', 'On Computable Numbers', 'Collected Works on Morphogenesis'] },
+      { author: 'Marie Curie', titles: ['Radioactive Substances', 'Treatise on Radioactivity', 'Autobiographical Notes'] },
+    ],
+  },
 };
 
 function generateSlug(title, idSuffix) {

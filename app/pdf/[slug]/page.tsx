@@ -23,14 +23,24 @@ import { getBaseUrl } from '@/lib/url';
 // get a fast cached response without waiting for Supabase.
 export const revalidate = 86400;
 
-// Pre-build the top 500 most downloaded books at deployment time.
-// This ensures your most important SEO pages are instantly available to Googlebot.
+function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
+  let timer: NodeJS.Timeout;
+  return Promise.race([
+    promise.then(val => { clearTimeout(timer); return val; }).catch(() => fallback),
+    new Promise<T>(resolve => {
+      timer = setTimeout(() => resolve(fallback), ms);
+    }),
+  ]);
+}
+
+// Pre-build the top 300 most downloaded books at deployment time.
+// All other books are generated on-demand and cached at the edge for 24h.
 export async function generateStaticParams() {
-  const topBooks = await getSupabaseTopBooks(500);
+  const topBooks = await withTimeout(getSupabaseTopBooks(300), 5000, []);
   if (topBooks && topBooks.length > 0) {
     return topBooks.map(b => ({ slug: b.slug }));
   }
-  return getAllBooks().slice(0, 500).map(b => ({ slug: b.slug }));
+  return getAllBooks().slice(0, 300).map(b => ({ slug: b.slug }));
 }
 
 interface Props {
@@ -46,7 +56,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     ? await (params as Promise<{ slug: string }>)
     : (params as { slug: string });
 
-  const book = await getSupabaseBookBySlug(resolvedParams.slug) || getBookBySlug(resolvedParams.slug);
+  const book = (await withTimeout(getSupabaseBookBySlug(resolvedParams.slug), 4000, null)) || getBookBySlug(resolvedParams.slug);
 
   if (!book) {
     const formattedTitle = resolvedParams.slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
@@ -113,7 +123,7 @@ export default async function ProductPage({ params }: Props) {
     ? await (params as Promise<{ slug: string }>)
     : (params as { slug: string });
 
-  const book = await getSupabaseBookBySlug(resolvedParams.slug) || getBookBySlug(resolvedParams.slug);
+  const book = (await withTimeout(getSupabaseBookBySlug(resolvedParams.slug), 4000, null)) || getBookBySlug(resolvedParams.slug);
 
   if (!book) {
     return <DynamicBookFallback slug={resolvedParams.slug} />;
@@ -129,8 +139,8 @@ export default async function ProductPage({ params }: Props) {
 
   // Server-rendered related books (same category) and author books for crawlable deep links
   const [supaRelated, supaAuthor] = await Promise.all([
-    getSupabaseRelatedBooks(book.cat, book.id, 6),
-    getSupabaseAuthorBooks(book.author, book.id, 6),
+    withTimeout(getSupabaseRelatedBooks(book.cat, book.id, 6), 3000, []),
+    withTimeout(getSupabaseAuthorBooks(book.author, book.id, 6), 3000, []),
   ]);
 
   const relatedBooks = supaRelated.length > 0
