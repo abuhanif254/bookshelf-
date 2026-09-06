@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Product } from '@/lib/products';
 import { cardHTML } from '@/lib/helpers';
 import { useStore } from '@/lib/store';
@@ -9,12 +10,20 @@ import { FAQItem } from '@/components/JsonLd';
 import { LanguageConfig } from '@/lib/languages';
 
 interface LanguageClientProps {
-  books: Product[];
+  initialBooks: Product[];
+  totalCount: number;
+  allCategories?: string[];
   language: LanguageConfig;
   faqs: FAQItem[];
 }
 
-export default function LanguageClient({ books, language, faqs }: LanguageClientProps) {
+export default function LanguageClient({
+  initialBooks,
+  totalCount,
+  allCategories = [],
+  language,
+  faqs,
+}: LanguageClientProps) {
   const { state, dispatch, addToCart, downloadFree, openPartner, toast } = useStore();
   const router = useRouter();
   const [search, setSearch] = useState('');
@@ -24,16 +33,16 @@ export default function LanguageClient({ books, language, faqs }: LanguageClient
 
   // Extract unique categories available in this language collection
   const categories = useMemo(() => {
-    const cats = new Set<string>();
-    books.forEach(b => {
+    const cats = new Set<string>(allCategories.filter(Boolean));
+    initialBooks.forEach(b => {
       if (b.cat) cats.add(b.cat);
     });
     return ['All', ...Array.from(cats)];
-  }, [books]);
+  }, [initialBooks, allCategories]);
 
   // Filter and sort books
   const filteredBooks = useMemo(() => {
-    let list = [...books];
+    let list = [...initialBooks];
 
     if (selectedCat !== 'All') {
       list = list.filter(b => b.cat === selectedCat);
@@ -56,7 +65,7 @@ export default function LanguageClient({ books, language, faqs }: LanguageClient
     });
 
     return list;
-  }, [books, selectedCat, search, sortBy]);
+  }, [initialBooks, selectedCat, search, sortBy]);
 
   const handleAction = (e: React.MouseEvent<HTMLElement>) => {
     const btn = (e.target as HTMLElement).closest('[data-add],[data-free],[data-ext],[data-qv],[data-open],[data-wish]') as HTMLElement | null;
@@ -178,8 +187,18 @@ export default function LanguageClient({ books, language, faqs }: LanguageClient
       )}
 
       {/* Showing Count */}
-      <div style={{ fontSize: 13, color: '#64748b', marginBottom: 16 }}>
-        Showing <b>{filteredBooks.length}</b> {language.name} PDF books
+      <div style={{ fontSize: 13, color: '#64748b', marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+        <span>
+          Showing <b>{filteredBooks.length}</b> {totalCount > initialBooks.length ? `of ${totalCount.toLocaleString()}` : ''} {language.name} PDF books
+        </span>
+        {totalCount > initialBooks.length && (
+          <Link
+            href={`/library?q=${encodeURIComponent(language.name)}`}
+            style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--link)', textDecoration: 'none' }}
+          >
+            Search all {totalCount.toLocaleString()} {language.name} books in Catalog →
+          </Link>
+        )}
       </div>
 
       {/* Book Grid */}
@@ -194,9 +213,24 @@ export default function LanguageClient({ books, language, faqs }: LanguageClient
         }}>
           <span style={{ fontSize: 36 }}>📚</span>
           <h3 style={{ fontSize: 18, fontWeight: 700, margin: '12px 0 6px' }}>No books found</h3>
-          <p style={{ fontSize: 14, color: '#64748b', margin: 0 }}>
+          <p style={{ fontSize: 14, color: '#64748b', margin: '0 0 16px' }}>
             Try adjusting your search query or switching to another category.
           </p>
+          <Link
+            href={`/library?q=${encodeURIComponent(search || language.name)}`}
+            style={{
+              display: 'inline-block',
+              padding: '8px 18px',
+              borderRadius: 8,
+              background: '#0f172a',
+              color: '#fff',
+              fontSize: 13,
+              fontWeight: 700,
+              textDecoration: 'none',
+            }}
+          >
+            Search Complete Catalog →
+          </Link>
         </div>
       ) : (
         <div className="grid" style={{ marginBottom: 48 }}>

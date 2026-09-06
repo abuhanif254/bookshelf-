@@ -5,6 +5,7 @@ import { getAllBooks } from '@/lib/db';
 import { getSupabaseBooks } from '@/lib/supabaseDb';
 import { BreadcrumbJsonLd, CollectionPageJsonLd, FAQJsonLd, ItemListJsonLd } from '@/components/JsonLd';
 import { getBaseUrl } from '@/lib/url';
+import { toListingBook } from '@/lib/helpers';
 import TopicClient from './TopicClient';
 
 interface Props {
@@ -128,11 +129,20 @@ export default async function TopicPage({ params }: Props) {
   const supaBooks = await getSupabaseBooks();
   const allBooks = supaBooks && supaBooks.length > 0 ? supaBooks : getAllBooks();
   const matched = allBooks.filter(b => {
-    const hay = (b.title + ' ' + b.sub + ' ' + b.cat + ' ' + b.blurb + ' ' + b.feat.join(' ')).toLowerCase();
-    return info.keywords.some(kw => hay.includes(kw));
+    const hay = (b.title + ' ' + b.sub + ' ' + b.cat).toLowerCase();
+    return info.keywords.some(kw => {
+      if (kw.length <= 3) {
+        const regex = new RegExp(`\\b${kw}\\b`, 'i');
+        return regex.test(hay);
+      }
+      return hay.includes(kw.toLowerCase());
+    });
   });
 
-  const displayBooks = matched.length > 0 ? matched : allBooks.slice(0, 4);
+  const totalTopicCount = matched.length > 0 ? matched.length : 4;
+  const displayBooks = (matched.length > 0 ? matched : allBooks.slice(0, 4))
+    .slice(0, 48)
+    .map(toListingBook);
 
   const breadcrumbs = [
     { name: 'Home', url: baseUrl },
@@ -154,7 +164,7 @@ export default async function TopicPage({ params }: Props) {
         name={info.h1}
         description={info.desc}
         url={`${baseUrl}/topic/${tag}`}
-        count={displayBooks.length}
+        count={totalTopicCount}
       />
       <ItemListJsonLd
         title={info.h1}
@@ -177,7 +187,7 @@ export default async function TopicPage({ params }: Props) {
         {/* Hero Banner */}
         <div style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', color: '#fff', padding: '36px 30px', borderRadius: 12, margin: '14px 0 28px' }}>
           <span style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--amber)' }}>
-            Topic Silo · {displayBooks.length} Handbooks
+            Topic Silo · {totalTopicCount} Handbooks
           </span>
           <h1 style={{ color: '#fff', fontSize: 'clamp(24px, 3.5vw, 36px)', fontWeight: 900, letterSpacing: '-0.02em', margin: '6px 0 10px' }}>
             {info.h1}

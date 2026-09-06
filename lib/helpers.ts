@@ -136,3 +136,34 @@ export const cardHTML = (p: Product, rank: number | null = null, deal: boolean =
     ${actionBtn(p)}
   </article>`;
 };
+
+export const toListingBook = (p: Product): Product => ({
+  id: p.id,
+  slug: p.slug,
+  title: p.title,
+  sub: p.sub || '',
+  author: p.author,
+  cat: p.cat,
+  type: p.type,
+  price: p.price,
+  list: p.list,
+  rating: p.rating,
+  reviews: p.reviews,
+  pages: p.pages,
+  badge: p.badge,
+  bought: p.bought,
+  bg: p.bg,
+  fg: p.fg,
+  ac: p.ac,
+  pat: p.pat,
+  coverImage: p.coverImage,
+  coverUrl: p.coverUrl,
+  partner: p.partner,
+  downloads: p.downloads,
+  lang: p.lang,
+  feat: [],
+  desc: '',
+  blurb: '',
+  driveUrl: '',
+});
+

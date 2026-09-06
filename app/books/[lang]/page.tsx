@@ -6,6 +6,7 @@ import { getSupabaseBooks } from '@/lib/supabaseDb';
 import { Product } from '@/lib/products';
 import { BreadcrumbJsonLd, CollectionPageJsonLd, FAQJsonLd, ItemListJsonLd } from '@/components/JsonLd';
 import { getBaseUrl } from '@/lib/url';
+import { toListingBook } from '@/lib/helpers';
 import {
   SUPPORTED_LANGUAGES,
   getLanguageConfig,
@@ -98,6 +99,15 @@ export default async function LanguagePage({ params }: Props) {
     return bookLang === cfg.code;
   });
 
+  const totalCount = matchingBooks.length;
+  const availableCats = Array.from(new Set(matchingBooks.map(b => b.cat).filter(Boolean)));
+
+  // Slice to top 48 books sorted by popularity and strip bloated descriptions to keep page payload < 50KB
+  const displayBooks = [...matchingBooks]
+    .sort((a, b) => (b.downloads || 0) - (a.downloads || 0))
+    .slice(0, 48)
+    .map(toListingBook);
+
   const baseUrl = getBaseUrl();
   const breadcrumbs = [
     { name: 'Home', url: baseUrl },
@@ -128,13 +138,13 @@ export default async function LanguagePage({ params }: Props) {
         name={cfg.h1}
         description={cfg.seoDesc}
         url={`${baseUrl}/books/${cfg.slug}`}
-        count={matchingBooks.length}
+        count={totalCount}
       />
       <ItemListJsonLd
         title={cfg.h1}
         description={cfg.seoDesc}
         url={`${baseUrl}/books/${cfg.slug}`}
-        items={matchingBooks.slice(0, 20).map((b, i) => ({
+        items={displayBooks.slice(0, 20).map((b, i) => ({
           name: b.title,
           url: `${baseUrl}/pdf/${b.slug}`,
           position: i + 1,
@@ -164,7 +174,7 @@ export default async function LanguagePage({ params }: Props) {
               letterSpacing: '0.15em',
               color: 'var(--amber)',
             }}>
-              Multilingual Hub · {matchingBooks.length} Verified PDFs
+              Multilingual Hub · {totalCount.toLocaleString()} Verified PDFs
             </span>
             <span style={{
               background: 'rgba(255,255,255,0.15)',
@@ -228,7 +238,9 @@ export default async function LanguagePage({ params }: Props) {
 
         {/* Client Interactive Grid with Search, Filters, and Localized FAQs */}
         <LanguageClient
-          books={matchingBooks}
+          initialBooks={displayBooks}
+          totalCount={totalCount}
+          allCategories={availableCats}
           language={cfg}
           faqs={languageFaqs}
         />

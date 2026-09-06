@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { getAllBooks, getCategories } from '@/lib/db';
 import { getSupabaseBooks, getSupabaseCategories } from '@/lib/supabaseDb';
 import { Product } from '@/lib/products';
-import { cardHTML } from '@/lib/helpers';
+import { cardHTML, toListingBook } from '@/lib/helpers';
 import { BreadcrumbJsonLd, CollectionPageJsonLd, FAQJsonLd, ItemListJsonLd } from '@/components/JsonLd';
 import { getBaseUrl } from '@/lib/url';
 import CategoryClient from './CategoryClient';
@@ -274,7 +274,7 @@ export default async function CategoryPage({ params }: Props) {
         </div>
 
         {/* Client Interactive Grid */}
-        <CategoryClient books={matchingBooks} categoryName={catInfo.h1} faqs={categoryFaqs} />
+        <CategoryClient books={matchingBooks.slice(0, 60).map(toListingBook)} categoryName={catInfo.h1} faqs={categoryFaqs} />
       </div>
     </>
   );

@@ -5,6 +5,7 @@ import { getAllBooks } from '@/lib/db';
 import { getSupabaseBooks } from '@/lib/supabaseDb';
 import { BreadcrumbJsonLd, PersonJsonLd, ItemListJsonLd } from '@/components/JsonLd';
 import { getBaseUrl } from '@/lib/url';
+import { toListingBook } from '@/lib/helpers';
 import AuthorClient from './AuthorClient';
 
 // Cache author profile pages at the CDN edge for 24 hours (ISR).
@@ -154,7 +155,7 @@ export default async function AuthorPage({ params }: Props) {
           </div>
         </div>
 
-        <AuthorClient books={authorBooks} authorName={authorName} />
+        <AuthorClient books={authorBooks.slice(0, 60).map(toListingBook)} authorName={authorName} />
       </div>
     </>
   );
