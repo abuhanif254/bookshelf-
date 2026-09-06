@@ -1,10 +1,46 @@
 'use client';
 
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useCurrency, CURRENCIES, CurrencyCode } from '@/lib/currency';
 
 export default function Footer() {
   const { currency, setCurrency } = useCurrency();
+  const [email, setEmail] = useState('');
+  const [lang, setLang] = useState('en');
+  const [loading, setLoading] = useState(false);
+  const [msg, setMsg] = useState('');
+  const [subscribed, setSubscribed] = useState(false);
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !email.includes('@')) {
+      setMsg('Please enter a valid email.');
+      return;
+    }
+    setLoading(true);
+    setMsg('');
+    try {
+      const res = await fetch('/api/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, language: lang }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setSubscribed(true);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('bookshelf_subscribed', 'true');
+        }
+      } else {
+        setMsg(data.message || 'Subscription failed. Try again.');
+      }
+    } catch {
+      setMsg('Failed to subscribe. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <>
@@ -12,6 +48,96 @@ export default function Footer() {
         Back to top
       </button>
       <footer className="ft">
+        {/* Free PDF Fridays VIP Newsletter Section */}
+        <div style={{ maxWidth: 1080, margin: '0 auto', padding: '36px 20px 32px', borderBottom: '1px solid #334155' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 24 }}>
+            <div style={{ maxWidth: 500 }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11.5, fontWeight: 800, color: '#34d399', background: 'rgba(52, 211, 153, 0.12)', padding: '3px 10px', borderRadius: 999, marginBottom: 8, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                ⚡ Free PDF Fridays VIP Club
+              </div>
+              <h3 style={{ fontSize: 20, fontWeight: 800, color: '#ffffff', margin: '0 0 6px' }}>
+                5 Free Hand-Picked PDFs Every Friday Morning
+              </h3>
+              <p style={{ fontSize: 13.5, color: '#94a3b8', margin: 0, lineHeight: 1.5 }}>
+                Join 48,000+ founders, engineers &amp; researchers. Get exclusive DRM-free book drops, cheat sheets, and weekly reading lists. 100% free, forever.
+              </p>
+            </div>
+
+            <div style={{ flex: '1 1 360px', maxWidth: 480 }}>
+              {subscribed ? (
+                <div style={{ background: 'rgba(16, 185, 129, 0.15)', border: '1px solid #10b981', borderRadius: 10, padding: '14px 18px', color: '#a7f3d0', fontSize: 14 }}>
+                  🎉 <b>You&apos;re subscribed to Free PDF Fridays!</b> Check your inbox this Friday for your first drop.
+                </div>
+              ) : (
+                <form onSubmit={handleSubscribe} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={e => setEmail(e.target.value)}
+                      placeholder="Enter your email address…"
+                      required
+                      style={{
+                        flex: 1,
+                        background: '#0f172a',
+                        border: '1px solid #475569',
+                        borderRadius: 8,
+                        padding: '10px 14px',
+                        color: '#ffffff',
+                        fontSize: 13.5,
+                        outline: 'none',
+                      }}
+                    />
+                    <select
+                      value={lang}
+                      onChange={e => setLang(e.target.value)}
+                      style={{
+                        background: '#0f172a',
+                        border: '1px solid #475569',
+                        borderRadius: 8,
+                        padding: '10px 8px',
+                        color: '#cbd5e1',
+                        fontSize: 12.5,
+                        outline: 'none',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <option value="en">🌐 English</option>
+                      <option value="bn">🇧🇩 বাংলা</option>
+                      <option value="hi">🇮🇳 हिन्दी</option>
+                      <option value="ur">🇵🇰 اردو</option>
+                      <option value="es">🇪🇸 Español</option>
+                      <option value="zh">🇨🇳 中文</option>
+                    </select>
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      style={{
+                        background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+                        color: '#ffffff',
+                        border: 'none',
+                        borderRadius: 8,
+                        padding: '10px 18px',
+                        fontSize: 13.5,
+                        fontWeight: 700,
+                        cursor: loading ? 'wait' : 'pointer',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {loading ? 'Joining…' : 'Subscribe Free'}
+                    </button>
+                  </div>
+                  {msg && <span style={{ fontSize: 12, color: msg.includes('fail') || msg.includes('valid') ? '#f87171' : '#34d399' }}>{msg}</span>}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11.5, color: '#64748b' }}>
+                    <span>🎁 Includes 2026 Master PDF Starter Kit</span>
+                    <span>No spam · 1-click unsubscribe</span>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
+
         <div className="cols">
           <div>
             <h4>Explore Bookshelf</h4>

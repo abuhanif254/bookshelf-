@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getAllBooks } from '@/lib/db';
-import { getSupabaseBooks } from '@/lib/supabaseDb';
+import { getSupabaseCategoryBooks, getSupabaseBooksByLanguage, getSupabaseTopicBooks } from '@/lib/supabaseDb';
 import { Product } from '@/lib/products';
 import { BreadcrumbJsonLd, FAQJsonLd, ItemListJsonLd } from '@/components/JsonLd';
 import { getBaseUrl } from '@/lib/url';
@@ -19,6 +19,7 @@ interface ListicleData {
   h1: string;
   intro: string;
   categories: string[];
+  lang?: string;
   bookIds?: number[];
   verdict: string;
 }
@@ -68,6 +69,45 @@ const LISTICLES: Record<string, ListicleData> = {
     intro: 'Learn how solo founders build profitable software, newsletters, and digital products from scratch without venture capital.',
     categories: ['Business', 'Marketing'],
     verdict: '"The Indie Founder Playbook" offers the highest density of actionable launch templates.',
+  },
+  'best-ai-machine-learning-books': {
+    title: 'Best Free AI & Machine Learning PDF Handbooks (2026)',
+    metaTitle: 'Best Free AI, Deep Learning & LLM PDF Books (2026) | Bookshelf',
+    metaDesc: 'Download top-rated free AI prompts, machine learning workflows, neural network architectures, and Python data science PDF books.',
+    h1: 'Best Free AI, LLM & Machine Learning PDF Handbooks (2026)',
+    intro: 'Master artificial intelligence, prompt engineering, and modern neural network engineering with our curated selection of open-access AI playbooks and code templates.',
+    categories: ['Technology', 'Programming'],
+    verdict: '"100 Battle-Tested AI Prompts" and "Applied Machine Learning" are essential primers for builders in 2026.',
+  },
+  'best-bangla-books-novels': {
+    title: 'সেরা ১০টি ফ্রি বাংলা বই ও উপন্যাস (Best Bangla PDF Books)',
+    metaTitle: 'সেরা ১০টি ফ্রি বাংলা বই ও উপন্যাস PDF ডাউনলোড | Bookshelf',
+    metaDesc: 'রবীন্দ্রনাথ ঠাকুর, কাজী নজরুল ইসলাম, ও শরৎচন্দ্রের অমর সাহিত্য সহ সেরা ১০টি বাংলা বই ও উপন্যাস সম্পূর্ণ বিনামূল্যে ডাউনলোড করুন।',
+    h1: 'সেরা ১০টি ফ্রি বাংলা বই ও উপন্যাস PDF ডাউনলোড',
+    intro: 'বাংলা সাহিত্যের শ্রেষ্ঠ ক্লাসিক উপন্যাস, কাব্যগ্রন্থ ও বিখ্যাত সাহিত্যের নির্বাচিত সংকলন। স্পষ্ট বাংলা ফন্টে মোবাইল ও কম্পিউটারে পড়ার জন্য সম্পূর্ণ ফ্রি গুগল ড্রাইভ সরাসরি ডাউনলোড।',
+    categories: ['Literature'],
+    lang: 'bn',
+    verdict: 'বাংলা সাহিত্যের গভীরতা ও অনুভূতির সেরা অভিজ্ঞতা পেতে রবীন্দ্রনাথের "গোরা" ও শরৎচন্দ্রের "দেবদাস" দিয়ে পাঠ শুরু করুন।',
+  },
+  'best-hindi-books-kahaniya': {
+    title: 'सर्वश्रेष्ठ हिन्दी पुस्तकें एवं कहानियां (Best Hindi PDF Books)',
+    metaTitle: 'सर्वश्रेष्ठ हिन्दी पुस्तकें एवं कहानियां PDF डाउनलोड | Bookshelf',
+    metaDesc: 'मुंशी प्रेमचंद, हरिवंश राय बच्चन और आधुनिक लेखकों की शीर्ष हिन्दी कहानियां व पुस्तकें मुफ्त पीडीएफ में डाउनलोड करें।',
+    h1: 'सर्वश्रेष्ठ हिन्दी पुस्तकें, कहानियां एवं उपन्यास PDF',
+    intro: 'भारतीय साहित्य के कालजयी रचनाकारों की प्रसिद्ध कहानियां, काव्य संग्रह और ज्ञानवर्धक पुस्तकें। उच्च-गुणवत्ता वाली पीडीएफ में सीधे गूगल ड्राइव से मुफ्त डाउनलोड करें।',
+    categories: ['Literature'],
+    lang: 'hi',
+    verdict: 'हिन्दी कथा साहित्य को गहराई से समझने के लिए मुंशी प्रेमचंद का महाकाव्यात्मक उपन्यास "गोदान" अवश्य पढ़ें।',
+  },
+  'best-urdu-novels-shayari': {
+    title: 'بہترین اردو کتب، ناول اور شاعری (Best Urdu PDF Books)',
+    metaTitle: 'بہترین شاہکار اردو کتب، ناول اور شاعری پی ڈی ایف ڈاؤن لوڈ | Bookshelf',
+    metaDesc: 'علامہ اقبال، مرزا غالب، اور سعادت حسن منٹو کی شاہکار اردو کتب اور شاعری کی مفت پی ڈی ایف ڈاؤن لوڈ کریں۔',
+    h1: 'بہترین شاہکار اردو کتب، ناول اور شاعری پی ڈی ایف',
+    intro: 'اردو ادب کی لازوال کتب، دیوانِ غالب، اقبال کی انقلابی شاعری اور منٹو کے شاہکار افسانے۔ تمام پی ڈی ایف کتب موبائل اور ٹیبلٹ کے لیے بالکل مفت۔',
+    categories: ['Literature'],
+    lang: 'ur',
+    verdict: 'اردو شاعری کے لازوال ذوق کے لیے علامہ اقبال کی "بانگ درا" اور مرزا غالب کا "دیوان غالب" اولین انتخاب ہیں۔',
   },
 };
 
@@ -142,9 +182,28 @@ export default async function BestOfPage({ params }: Props) {
   }
 
   const baseUrl = getBaseUrl();
-  const supaBooks = await getSupabaseBooks();
-  const allBooks = supaBooks && supaBooks.length > 0 ? supaBooks : getAllBooks();
-  const filteredBooks = allBooks.filter(b => listicle.categories.some(cat => cat.toLowerCase() === b.cat.toLowerCase())).slice(0, 7);
+
+  // Targeted indexed book query instead of full-table scan
+  let filteredBooks: Product[] = [];
+  if (listicle.lang) {
+    const { books } = await getSupabaseBooksByLanguage(listicle.lang, 8);
+    filteredBooks = books;
+  } else {
+    for (const cat of listicle.categories) {
+      const { books } = await getSupabaseCategoryBooks(cat, 6);
+      filteredBooks.push(...books);
+      if (filteredBooks.length >= 8) break;
+    }
+  }
+
+  // Fallback to local seed books if needed
+  if (filteredBooks.length === 0) {
+    filteredBooks = getAllBooks()
+      .filter(b => listicle.categories.some(cat => cat.toLowerCase() === b.cat.toLowerCase()))
+      .slice(0, 7);
+  } else {
+    filteredBooks = filteredBooks.slice(0, 8);
+  }
 
   const breadcrumbs = [
     { name: 'Home', url: baseUrl },
@@ -165,7 +224,7 @@ export default async function BestOfPage({ params }: Props) {
     },
     {
       question: `How are books selected for this curated roundup?`,
-      answer: `Books are selected based on verified reader ratings (4.5+ stars), actionable depth, DRM-free licensing, and formatting quality for tablets and e-readers.`,
+      answer: `Books are selected based on verified reader ratings (4.6+ stars), actionable depth, DRM-free licensing, and formatting quality for tablets and e-readers.`,
     },
   ];
 
@@ -183,26 +242,26 @@ export default async function BestOfPage({ params }: Props) {
       <div className="wrap" style={{ padding: '20px 20px 60px' }}>
         {/* Breadcrumb */}
         <div className="crumb">
-          <Link href="/">Home</Link> › <Link href="/library">Best Of 2026</Link> › <span>{listicle.title}</span>
+          <Link href="/">Home</Link> › <Link href="/library">Curated Roundups</Link> › <span>{listicle.title}</span>
         </div>
 
-        {/* Hero */}
-        <div style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', color: '#fff', padding: '36px 30px', borderRadius: 12, margin: '14px 0 28px' }}>
+        {/* Hero Banner */}
+        <div style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', color: '#fff', padding: '36px 30px', borderRadius: 14, margin: '14px 0 28px', boxShadow: '0 4px 16px rgba(15, 23, 42, 0.1)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-            <span style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--amber)', background: 'rgba(245, 158, 11, 0.15)', padding: '3px 10px', borderRadius: 20 }}>
-              🏆 Curated Editorial Roundup (2026)
+            <span style={{ fontSize: 11.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--amber)', background: 'rgba(245, 158, 11, 0.15)', padding: '3px 8px', borderRadius: 4, border: '1px solid rgba(245, 158, 11, 0.3)' }}>
+              ★ Curated Best Of 2026
             </span>
-            <span style={{ fontSize: 13, color: '#94a3b8' }}>· Updated Weekly</span>
+            <span style={{ fontSize: 12, color: '#94a3b8' }}>· Updated August 2026 · {filteredBooks.length} Selected Titles</span>
           </div>
-          <h1 style={{ color: '#fff', fontSize: 'clamp(24px, 3.5vw, 36px)', fontWeight: 900, letterSpacing: '-0.02em', margin: '4px 0 12px' }}>
+          <h1 style={{ color: '#fff', fontSize: 'clamp(26px, 3.5vw, 36px)', fontWeight: 900, letterSpacing: '-0.02em', margin: '6px 0 12px' }}>
             {listicle.h1}
           </h1>
-          <p style={{ fontSize: 16, color: '#cbd5e1', maxWidth: 680, lineHeight: 1.5, margin: 0 }}>
+          <p style={{ fontSize: 16, color: '#cbd5e1', maxWidth: 680, lineHeight: 1.6, margin: 0 }}>
             {listicle.intro}
           </p>
         </div>
 
-        {/* Client Interactive Listicle */}
+        {/* Client Interactive Component */}
         <BestClient books={filteredBooks} verdict={listicle.verdict} faqs={listicleFaqs} />
       </div>
     </>

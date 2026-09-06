@@ -257,6 +257,26 @@ export async function getSupabaseCategoryBooks(catOrSlug: string, limit: number 
   }
 }
 
+export async function getSupabaseTopicBooks(keywords: string[], limit: number = 30): Promise<Product[]> {
+  try {
+    if (!keywords || keywords.length === 0) return [];
+    const orFilter = keywords.map(kw => `title.ilike.%${kw}%,sub.ilike.%${kw}%,cat.ilike.%${kw}%`).join(',');
+    const { data, error } = await supabase
+      .from('books')
+      .select('*')
+      .or(orFilter)
+      .order('downloads', { ascending: false })
+      .limit(limit);
+
+    if (error || !data) return [];
+    return data.map(mapDbRowToProduct);
+  } catch (err) {
+    console.error('getSupabaseTopicBooks exception:', err);
+    return [];
+  }
+}
+
+
 
 export async function getSupabaseAuthorBooks(author: string, excludeId?: number, limit: number = 60): Promise<Product[]> {
   try {

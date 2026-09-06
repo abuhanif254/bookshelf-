@@ -165,9 +165,19 @@ export default function AdUnlockModal() {
       const directUrl = data.success ? data.downloadUrl : getDirectDownloadUrl(activeBook.driveUrl || '');
       triggerDirectDownload(activeBook.id, directUrl, activeBook.title);
       dispatch({ type: 'SET_AD_UNLOCK', id: null });
+      setTimeout(() => {
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('open-fridays-modal'));
+        }
+      }, 1400);
     } catch {
       triggerDirectDownload(activeBook.id, getDirectDownloadUrl(activeBook?.driveUrl || ''), activeBook.title);
       dispatch({ type: 'SET_AD_UNLOCK', id: null });
+      setTimeout(() => {
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('open-fridays-modal'));
+        }
+      }, 1400);
     }
   };
 

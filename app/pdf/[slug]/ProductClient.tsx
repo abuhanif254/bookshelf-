@@ -165,7 +165,14 @@ export default function ProductClient({
     if (btn.dataset.read) openReader(p);
     if (btn.dataset.kindle) setShowKindleModal(true);
     if (btn.dataset.add) addToCart(+btn.dataset.add, qty);
-    if (btn.dataset.free) downloadFree(+btn.dataset.free);
+    if (btn.dataset.free) {
+      downloadFree(+btn.dataset.free);
+      setTimeout(() => {
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('open-fridays-modal'));
+        }
+      }, 3500);
+    }
     if (btn.dataset.ext) openPartner(+btn.dataset.ext);
     if (btn.dataset.qv) dispatch({ type: 'SET_QUICK_VIEW', id: +btn.dataset.qv });
     if (btn.dataset.open) router.push(`/pdf/${btn.dataset.open}`);
@@ -369,6 +376,33 @@ export default function ProductClient({
                 </div>
               </>
             )}
+            <div
+              style={{
+                marginTop: 14,
+                marginBottom: 6,
+                padding: '10px 14px',
+                background: 'linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%)',
+                border: '1px solid #bbf7d0',
+                borderRadius: 10,
+                cursor: 'pointer',
+                textAlign: 'left',
+              }}
+              onClick={() => {
+                if (typeof window !== 'undefined') {
+                  window.dispatchEvent(new CustomEvent('open-fridays-modal', { detail: { force: true } }));
+                }
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: 11, fontWeight: 800, color: '#15803d', letterSpacing: '0.04em' }}>
+                  📬 FREE PDF FRIDAYS VIP
+                </span>
+                <span style={{ fontSize: 11, color: '#15803d', fontWeight: 700 }}>Claim Bonus ↗</span>
+              </div>
+              <div style={{ fontSize: 12, color: '#166534', marginTop: 3, lineHeight: 1.4 }}>
+                Get 5 handpicked books free every Friday + Claim 2026 Master PDF Starter Kit
+              </div>
+            </div>
             <SocialShareBar book={p} />
           </div>
         </div>

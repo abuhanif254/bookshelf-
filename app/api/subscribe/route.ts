@@ -16,14 +16,16 @@ export async function POST(request: Request) {
       }, { status: 429 });
     }
 
-    const { email } = await request.json();
+    const body = await request.json();
+    const { email, language } = body || {};
     if (!email || typeof email !== 'string' || !isValidEmail(email)) {
       return NextResponse.json({ success: false, message: 'A valid email address is required' }, { status: 400 });
     }
 
     const cleanEmail = email.trim().toLowerCase();
+    const cleanLang = typeof language === 'string' && language.trim() ? language.trim().toLowerCase().slice(0, 10) : 'en';
     await addSupabaseSubscriber(cleanEmail);
-    const result = addSubscriber(cleanEmail);
+    const result = addSubscriber(cleanEmail, cleanLang);
     return NextResponse.json(result);
   } catch (error) {
     return NextResponse.json({ success: false, message: 'Failed to subscribe' }, { status: 500 });

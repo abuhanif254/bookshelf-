@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getAllBooks } from '@/lib/db';
-import { getSupabaseBooks } from '@/lib/supabaseDb';
+import { getSupabaseTopicBooks } from '@/lib/supabaseDb';
 import { BreadcrumbJsonLd, CollectionPageJsonLd, FAQJsonLd, ItemListJsonLd } from '@/components/JsonLd';
 import { getBaseUrl } from '@/lib/url';
 import { toListingBook } from '@/lib/helpers';
@@ -126,21 +126,16 @@ export default async function TopicPage({ params }: Props) {
   }
 
   const baseUrl = getBaseUrl();
-  const supaBooks = await getSupabaseBooks();
-  const allBooks = supaBooks && supaBooks.length > 0 ? supaBooks : getAllBooks();
-  const matched = allBooks.filter(b => {
-    const hay = (b.title + ' ' + b.sub + ' ' + b.cat).toLowerCase();
-    return info.keywords.some(kw => {
-      if (kw.length <= 3) {
-        const regex = new RegExp(`\\b${kw}\\b`, 'i');
-        return regex.test(hay);
-      }
-      return hay.includes(kw.toLowerCase());
-    });
-  });
+  const supaTopic = await getSupabaseTopicBooks(info.keywords, 30);
+  const matched = supaTopic.length > 0
+    ? supaTopic
+    : getAllBooks().filter(b => {
+        const hay = (b.title + ' ' + b.sub + ' ' + b.cat).toLowerCase();
+        return info.keywords.some(kw => hay.includes(kw.toLowerCase()));
+      });
 
   const totalTopicCount = matched.length > 0 ? matched.length : 4;
-  const displayBooks = (matched.length > 0 ? matched : allBooks.slice(0, 4))
+  const displayBooks = (matched.length > 0 ? matched : getAllBooks().slice(0, 4))
     .slice(0, 48)
     .map(toListingBook);
 
@@ -170,7 +165,7 @@ export default async function TopicPage({ params }: Props) {
         title={info.h1}
         description={info.desc}
         url={`${baseUrl}/topic/${tag}`}
-        items={displayBooks.slice(0, 20).map((b, i) => ({
+        items={displayBooks.slice(0, 20).map((b: any, i: number) => ({
           name: b.title,
           url: `${baseUrl}/pdf/${b.slug}`,
           position: i + 1,

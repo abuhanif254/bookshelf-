@@ -14,6 +14,7 @@ import { PdfReaderProvider } from '@/components/PdfReaderWrapper';
 import { WebSiteJsonLd, OrganizationJsonLd } from '@/components/JsonLd';
 import { CurrencyProvider } from '@/lib/currency';
 import InstallPwaPrompt from '@/components/InstallPwaPrompt';
+import FreePdfFridaysModal from '@/components/FreePdfFridaysModal';
 
 import { getBaseUrl } from '@/lib/url';
 
@@ -133,6 +134,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <AdUnlockWrapper />
               <SpotlightSearch />
               <InstallPwaPrompt />
+              <FreePdfFridaysModal />
             </PdfReaderProvider>
           </CurrencyProvider>
         </StoreProvider>

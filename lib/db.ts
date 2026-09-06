@@ -6,6 +6,7 @@ export interface Subscriber {
   id: string;
   email: string;
   subscribedAt: string;
+  language?: string;
 }
 
 export interface CreatorSubmission {
@@ -540,7 +541,7 @@ export function getSubscribers(): Subscriber[] {
   return getDatabase().subscribers || [];
 }
 
-export function addSubscriber(email: string): { success: boolean; message: string } {
+export function addSubscriber(email: string, language?: string): { success: boolean; message: string } {
   const db = getDatabase();
   const cleanEmail = email.trim().toLowerCase();
   if (!cleanEmail || !cleanEmail.includes('@')) {
@@ -557,6 +558,7 @@ export function addSubscriber(email: string): { success: boolean; message: strin
     id: 'sub-' + Date.now(),
     email: cleanEmail,
     subscribedAt: new Date().toISOString(),
+    language: language || 'en',
   });
   saveDatabase(db);
   return { success: true, message: 'Subscribed successfully! Check your inbox this Friday 📬' };
