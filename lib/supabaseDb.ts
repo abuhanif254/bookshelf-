@@ -236,6 +236,28 @@ export async function getSupabaseRelatedBooks(cat: string, excludeId?: number, l
   }
 }
 
+export async function getSupabaseCategoryBooks(catOrSlug: string, limit: number = 60, offset: number = 0): Promise<{ books: Product[]; total: number }> {
+  try {
+    const pattern = catOrSlug.replace(/-/g, '%');
+    const { data, count, error } = await supabase
+      .from('books')
+      .select('*', { count: 'exact' })
+      .ilike('cat', pattern)
+      .order('downloads', { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (error || !data) return { books: [], total: 0 };
+    return {
+      books: data.map(mapDbRowToProduct),
+      total: count || data.length,
+    };
+  } catch (err) {
+    console.error('getSupabaseCategoryBooks exception:', err);
+    return { books: [], total: 0 };
+  }
+}
+
+
 export async function getSupabaseAuthorBooks(author: string, excludeId?: number, limit: number = 60): Promise<Product[]> {
   try {
     // Support either clean author name "Rabindranath Tagore" or slug "rabindranath-tagore"

@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getAllBooks, getCategories } from '@/lib/db';
-import { getSupabaseBooks, getSupabaseCategories } from '@/lib/supabaseDb';
+import { getSupabaseCategoryBooks, getSupabaseCategories } from '@/lib/supabaseDb';
 import { Product } from '@/lib/products';
 import { cardHTML, toListingBook } from '@/lib/helpers';
 import { BreadcrumbJsonLd, CollectionPageJsonLd, FAQJsonLd, ItemListJsonLd } from '@/components/JsonLd';
@@ -10,8 +10,6 @@ import { getBaseUrl } from '@/lib/url';
 import CategoryClient from './CategoryClient';
 
 // Cache category hub pages at the CDN edge for 24 hours (ISR).
-// With 450+ categories, this prevents a Supabase full-table scan
-// on every visitor landing on any category page.
 export const revalidate = 86400;
 
 export async function generateStaticParams() {
@@ -20,7 +18,7 @@ export async function generateStaticParams() {
   const slugs = new Set<string>();
 
   // Core high-intent categories
-  ['productivity', 'programming', 'business', 'design', 'marketing', 'self-help', 'technology', 'finance'].forEach(s => slugs.add(s));
+  ['productivity', 'programming', 'business', 'design', 'marketing', 'self-help', 'technology', 'finance', 'health'].forEach(s => slugs.add(s));
 
   if (supaCats && supaCats.length > 0) {
     supaCats.forEach(c => { if (c.slug) slugs.add(c.slug.toLowerCase()); });
@@ -93,6 +91,39 @@ const CATEGORY_META: Record<string, { title: string; desc: string; h1: string; i
   },
 };
 
+// Programmatic Topical Silos / Sub-genres for Google topic authority
+const SUB_GENRES: Record<string, { label: string; query: string }[]> = {
+  programming: [
+    { label: 'Python for Developers', query: 'python' },
+    { label: 'JavaScript & React', query: 'javascript' },
+    { label: 'SQL & Database Design', query: 'sql' },
+    { label: 'Data Structures & Algorithms', query: 'algorithms' },
+    { label: 'Web Architecture', query: 'web' },
+  ],
+  productivity: [
+    { label: 'Deep Work & Concentration', query: 'focus' },
+    { label: 'Habit Formation', query: 'habits' },
+    { label: 'Time Management', query: 'time' },
+    { label: 'Morning Routines', query: 'morning' },
+  ],
+  business: [
+    { label: 'Solo Founders & Startups', query: 'startup' },
+    { label: 'SaaS Pricing & Sales', query: 'pricing' },
+    { label: 'Investing & Wealth', query: 'finance' },
+    { label: 'Product Strategy', query: 'product' },
+  ],
+  design: [
+    { label: 'UI/UX Design Systems', query: 'systems' },
+    { label: 'Typography for Screens', query: 'typography' },
+    { label: 'Figma Workflows', query: 'figma' },
+  ],
+  marketing: [
+    { label: 'Email Marketing Sequences', query: 'email' },
+    { label: 'Direct Response Copywriting', query: 'copywriting' },
+    { label: 'Content Strategy', query: 'content' },
+  ],
+};
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const resolved = typeof (params as Promise<{ slug: string }>)?.then === 'function'
     ? await (params as Promise<{ slug: string }>)
@@ -102,7 +133,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const meta = CATEGORY_META[slug];
 
   if (!meta) {
-    const formatted = slug.charAt(0).toUpperCase() + slug.slice(1);
+    const formatted = slug.charAt(0).toUpperCase() + slug.slice(1).replace(/-/g, ' ');
     return {
       title: `Free ${formatted} PDF Books | Bookshelf`,
       description: `Download verified free ${formatted} PDF books and guides with instant direct delivery.`,
@@ -153,13 +184,14 @@ export default async function CategoryPage({ params }: Props) {
     : (params as { slug: string });
 
   const slug = resolved.slug.toLowerCase();
-  const supaBooks = await getSupabaseBooks();
-  const allBooks = supaBooks && supaBooks.length > 0 ? supaBooks : getAllBooks();
 
-  // Match category by slug
-  const matchingBooks = allBooks.filter(
-    b => b.cat.toLowerCase().replace(/[^a-z0-9]+/g, '-') === slug || b.cat.toLowerCase() === slug
-  );
+  // Targeted indexed query instead of full-table scan
+  const { books: supaCategoryBooks, total: supaTotal } = await getSupabaseCategoryBooks(slug, 100);
+  const matchingBooks = supaCategoryBooks.length > 0
+    ? supaCategoryBooks
+    : getAllBooks().filter(
+        b => b.cat.toLowerCase().replace(/[^a-z0-9]+/g, '-') === slug || b.cat.toLowerCase() === slug
+      );
 
   const supaCats = await getSupabaseCategories();
   const foundCustomCat = supaCats?.find(c => c.slug === slug);
@@ -176,10 +208,11 @@ export default async function CategoryPage({ params }: Props) {
   } : {
     title: `Free ${slug.toUpperCase()} PDF Books`,
     desc: `Browse all free ${slug} PDF books and toolkits.`,
-    h1: `Free ${slug.charAt(0).toUpperCase() + slug.slice(1)} PDF Books`,
+    h1: `Free ${slug.charAt(0).toUpperCase() + slug.slice(1).replace(/-/g, ' ')} PDF Books`,
     intro: `Explore our collection of free ${slug} books with instant Google Drive downloads.`,
   });
 
+  const totalCount = supaTotal || matchingBooks.length;
   const baseUrl = getBaseUrl();
   const breadcrumbs = [
     { name: 'Home', url: baseUrl },
@@ -190,7 +223,7 @@ export default async function CategoryPage({ params }: Props) {
   const categoryFaqs = [
     {
       question: `Are all ${catInfo.h1} free to download on Bookshelf?`,
-      answer: `Yes! Bookshelf provides 100% free PDF downloads for titles in the ${slug} catalog. Downloads are hosted on secure Google Drive streams with no credit card required.`,
+      answer: `Yes! Bookshelf provides 100% free PDF downloads for titles in the ${slug} catalog. Downloads are hosted on secure Google Drive streams with no credit card or account needed.`,
     },
     {
       question: `Can I read these ${slug} PDFs on iPad, Kindle, or Android phones?`,
@@ -198,9 +231,11 @@ export default async function CategoryPage({ params }: Props) {
     },
     {
       question: `How often are new ${slug} titles added?`,
-      answer: `We update the library every week, including our popular Free PDF Fridays drops featuring new toolkits, cheat sheets, and books.`,
+      answer: `We update the library continuously with newly verified open-access books, community submissions, and public domain releases.`,
     },
   ];
+
+  const subGenres = SUB_GENRES[slug] || [];
 
   return (
     <>
@@ -209,13 +244,13 @@ export default async function CategoryPage({ params }: Props) {
         name={catInfo.h1}
         description={catInfo.desc}
         url={`${baseUrl}/category/${slug}`}
-        count={matchingBooks.length}
+        count={totalCount}
       />
       <ItemListJsonLd
         title={catInfo.h1}
         description={catInfo.desc}
         url={`${baseUrl}/category/${slug}`}
-        items={matchingBooks.slice(0, 20).map((b, i) => ({
+        items={matchingBooks.slice(0, 30).map((b, i) => ({
           name: b.title,
           url: `${baseUrl}/pdf/${b.slug}`,
           position: i + 1,
@@ -230,9 +265,9 @@ export default async function CategoryPage({ params }: Props) {
         </div>
 
         {/* Hero Banner */}
-        <div style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', color: '#fff', padding: '36px 30px', borderRadius: 12, margin: '14px 0 28px' }}>
+        <div style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', color: '#fff', padding: '36px 30px', borderRadius: 14, margin: '14px 0 24px', boxShadow: '0 4px 16px rgba(15, 23, 42, 0.1)' }}>
           <span style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--amber)' }}>
-            Category Hub · {matchingBooks.length} Verified PDFs
+            Category Hub · {totalCount} Verified PDFs
           </span>
           <h1 style={{ color: '#fff', fontSize: 'clamp(26px, 3.5vw, 38px)', fontWeight: 900, letterSpacing: '-0.02em', margin: '8px 0 10px' }}>
             {catInfo.h1}
@@ -241,8 +276,37 @@ export default async function CategoryPage({ params }: Props) {
             {catInfo.intro}
           </p>
 
+          {/* Sub-genre Topical Silo Navigation */}
+          {subGenres.length > 0 && (
+            <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.12)' }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
+                Explore Sub-Topics &amp; Niches:
+              </div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {subGenres.map(sub => (
+                  <Link
+                    key={sub.label}
+                    href={`/library?q=${encodeURIComponent(sub.query)}`}
+                    style={{
+                      fontSize: 12.5,
+                      fontWeight: 700,
+                      color: '#ffffff',
+                      background: 'rgba(255, 255, 255, 0.12)',
+                      padding: '5px 12px',
+                      borderRadius: 20,
+                      textDecoration: 'none',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                    }}
+                  >
+                    🔍 {sub.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Related Category Silo Links */}
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 18 }}>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 16 }}>
             {[
               { name: 'Productivity', slug: 'productivity' },
               { name: 'Programming', slug: 'programming' },
@@ -251,19 +315,20 @@ export default async function CategoryPage({ params }: Props) {
               { name: 'Marketing', slug: 'marketing' },
               { name: 'Self-Help', slug: 'self-help' },
               { name: 'Technology', slug: 'technology' },
+              { name: 'Finance', slug: 'finance' },
             ].filter(c => c.slug !== slug).map(cat => (
               <Link
                 key={cat.slug}
                 href={`/category/${cat.slug}`}
                 style={{
-                  fontSize: 12.5,
+                  fontSize: 12,
                   fontWeight: 600,
-                  color: '#e2e8f0',
-                  background: 'rgba(255,255,255,0.08)',
-                  padding: '4px 12px',
+                  color: '#94a3b8',
+                  background: 'rgba(255,255,255,0.06)',
+                  padding: '3px 10px',
                   borderRadius: 20,
                   textDecoration: 'none',
-                  border: '1px solid rgba(255,255,255,0.12)',
+                  border: '1px solid rgba(255,255,255,0.08)',
                   transition: 'background 0.15s',
                 }}
               >
@@ -274,7 +339,7 @@ export default async function CategoryPage({ params }: Props) {
         </div>
 
         {/* Client Interactive Grid */}
-        <CategoryClient books={matchingBooks.slice(0, 60).map(toListingBook)} categoryName={catInfo.h1} faqs={categoryFaqs} />
+        <CategoryClient books={matchingBooks.slice(0, 100).map(toListingBook)} categoryName={catInfo.h1} faqs={categoryFaqs} />
       </div>
     </>
   );

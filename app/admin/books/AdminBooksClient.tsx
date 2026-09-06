@@ -182,6 +182,11 @@ export default function AdminBooksClient() {
   const [activeSection, setActiveSection] = useState<'basic' | 'cover' | 'content' | 'pricing'>('basic');
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
+  // Search Engine Instant Submission State
+  const [isIndexing, setIsIndexing] = useState(false);
+  const [indexReport, setIndexReport] = useState<string | null>(null);
+  const [showIndexingPanel, setShowIndexingPanel] = useState(false);
+
   const handleBulkUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -578,6 +583,54 @@ export default function AdminBooksClient() {
     }
   };
 
+  // ── Search Engine Instant Submission (IndexNow & Sitemap Ping) ───────────────
+  const handleIndexNowBroadcast = async () => {
+    setIsIndexing(true);
+    setIndexReport(null);
+    try {
+      const urls = books.slice(0, 1000).map(b => `${window.location.origin}/pdf/${b.slug}`);
+      const res = await fetch('/api/indexnow', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ urls }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(`⚡ IndexNow Success: Broadcast ${data.submittedCount || urls.length} URLs to Bing!`);
+        setIndexReport(`✅ ${new Date().toLocaleTimeString()} — Successfully submitted ${data.submittedCount || urls.length} book URLs to IndexNow network (Bing, Yandex, Seznam).`);
+      } else {
+        showToast(`⚠️ IndexNow: ${data.message}`);
+        setIndexReport(`⚠️ ${data.message}`);
+      }
+    } catch (e: any) {
+      showToast('❌ Failed to broadcast to IndexNow');
+      setIndexReport(`❌ Network error submitting to IndexNow: ${e?.message}`);
+    } finally {
+      setIsIndexing(false);
+    }
+  };
+
+  const handlePingSitemaps = async () => {
+    setIsIndexing(true);
+    setIndexReport(null);
+    try {
+      const res = await fetch('/api/ping-sitemap', { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        showToast('🔔 Google & Bing Sitemaps pinged successfully!');
+        setIndexReport(`✅ ${new Date().toLocaleTimeString()} — Successfully pinged Google & Bing sitemaps.`);
+      } else {
+        showToast(`⚠️ Ping response: ${data.message}`);
+        setIndexReport(`⚠️ ${data.message}`);
+      }
+    } catch (e: any) {
+      showToast('❌ Failed to ping sitemaps');
+      setIndexReport(`❌ Network error pinging sitemaps: ${e?.message}`);
+    } finally {
+      setIsIndexing(false);
+    }
+  };
+
   // ── Field change ───────────────────────────────────────────────────────────────
   const set = (field: keyof FormData, value: string) => setForm(f => ({ ...f, [field]: value }));
 
@@ -854,6 +907,84 @@ export default function AdminBooksClient() {
           </button>
         </div>
       </div>
+
+      {/* ── Search Engine Instant Indexing Hub (IndexNow & Google Ping) ── */}
+      <div style={{ background: '#1e293b', color: '#f8fafc', padding: '10px 24px', borderBottom: '1px solid #334155', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 13, fontWeight: 800, color: '#f59e0b', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span>⚡ Search Engine Indexing:</span>
+          </span>
+          <button
+            onClick={handleIndexNowBroadcast}
+            disabled={isIndexing}
+            style={{
+              background: '#059669',
+              color: '#ffffff',
+              fontSize: 12,
+              fontWeight: 700,
+              padding: '6px 14px',
+              borderRadius: 6,
+              border: 'none',
+              cursor: isIndexing ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              opacity: isIndexing ? 0.7 : 1,
+            }}
+            title="Broadcast up to 1,000 book URLs directly to Bing & IndexNow search engines"
+          >
+            {isIndexing ? '⏳ Submitting…' : '⚡ Broadcast to IndexNow (Bing/Yandex)'}
+          </button>
+          <button
+            onClick={handlePingSitemaps}
+            disabled={isIndexing}
+            style={{
+              background: '#2563eb',
+              color: '#ffffff',
+              fontSize: 12,
+              fontWeight: 700,
+              padding: '6px 14px',
+              borderRadius: 6,
+              border: 'none',
+              cursor: isIndexing ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              opacity: isIndexing ? 0.7 : 1,
+            }}
+            title="Send automated sitemap refresh ping to Google and Bing"
+          >
+            {isIndexing ? '⏳ Pinging…' : '🔔 Ping Google & Bing Sitemaps'}
+          </button>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 12 }}>
+          <a
+            href="https://search.google.com/search-console"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: '#93c5fd', textDecoration: 'none', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}
+          >
+            Google Search Console ↗
+          </a>
+          <span style={{ color: '#475569' }}>·</span>
+          <a
+            href="https://www.bing.com/webmasters"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: '#93c5fd', textDecoration: 'none', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}
+          >
+            Bing Webmaster ↗
+          </a>
+        </div>
+      </div>
+
+      {indexReport && (
+        <div style={{ background: indexReport.startsWith('✅') ? '#ecfdf5' : '#fffbeb', borderBottom: '1px solid #cbd5e1', padding: '8px 24px', fontSize: 12.5, fontWeight: 600, color: indexReport.startsWith('✅') ? '#065f46' : '#92400e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>{indexReport}</span>
+          <button onClick={() => setIndexReport(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', fontWeight: 800 }}>✕</button>
+        </div>
+      )}
 
       {/* ── Toolbar: search + filters ── */}
       <div style={{ background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '12px 24px', display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
