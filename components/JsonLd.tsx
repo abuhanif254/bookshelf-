@@ -73,6 +73,26 @@ export function BookJsonLd({ book, url }: BookJsonLdProps) {
         url: baseUrl,
       },
     },
+    potentialAction: [
+      {
+        '@type': 'ReadAction',
+        target: {
+          '@type': 'EntryPoint',
+          urlTemplate: `${canonicalUrl}#read-online`,
+          actionPlatform: [
+            'http://schema.org/DesktopWebPlatform',
+            'http://schema.org/MobileWebPlatform',
+          ],
+        },
+      },
+      {
+        '@type': 'DownloadAction',
+        target: {
+          '@type': 'EntryPoint',
+          urlTemplate: canonicalUrl,
+        },
+      },
+    ],
   };
 
   return (

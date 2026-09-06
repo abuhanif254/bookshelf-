@@ -11,7 +11,8 @@ export default function Header() {
   const [query, setQuery] = useState('');
   const [sugOpen, setSugOpen] = useState(false);
   const [bump, setBump] = useState(false);
-  const [allBooks, setAllBooks] = useState<Product[]>(P);
+  const [suggestions, setSuggestions] = useState<Product[] | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
   const router = useRouter();
   const sugRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -19,16 +20,29 @@ export default function Header() {
 
   const qty = cartQty();
 
+  // Debounced server search for autocomplete dropdown
   useEffect(() => {
-    fetch('/api/books')
-      .then(res => res.json())
-      .then(data => {
-        if (data.success && Array.isArray(data.books) && data.books.length > 0) {
-          setAllBooks(data.books);
-        }
-      })
-      .catch(() => {});
-  }, []);
+    if (!query.trim() || query.trim().length < 2) {
+      setSuggestions(null);
+      setIsSearching(false);
+      return;
+    }
+
+    setIsSearching(true);
+    const timer = setTimeout(() => {
+      fetch(`/api/books?q=${encodeURIComponent(query.trim())}&limit=6`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && Array.isArray(data.books)) {
+            setSuggestions(data.books);
+          }
+        })
+        .catch(() => {})
+        .finally(() => setIsSearching(false));
+    }, 150);
+
+    return () => clearTimeout(timer);
+  }, [query]);
 
   useEffect(() => {
     if (qty !== prevQty.current) {
@@ -54,13 +68,8 @@ export default function Header() {
     router.push(`/library?q=${encodeURIComponent(q)}`);
   };
 
-  const suggestions = query.trim()
-    ? allBooks.filter(p =>
-        (p.title + ' ' + p.author + ' ' + p.cat).toLowerCase().includes(query.toLowerCase())
-      ).slice(0, 6)
-    : null;
-
   const trending = ['deep focus', 'python', 'free', 'ai handbook', 'design'];
+  const topCategories = ['Productivity', 'Programming', 'Business', 'Design', 'Finance'];
 
   return (
     <header className="hd">
@@ -93,7 +102,7 @@ export default function Header() {
               <option>Free</option>
               <option>Paid</option>
               <option>Partners</option>
-              {[...new Set(allBooks.map(b => b.cat))].slice(0, 5).map(c => <option key={c}>{c}</option>)}
+              {topCategories.map(c => <option key={c}>{c}</option>)}
             </select>
             <input
               ref={inputRef}

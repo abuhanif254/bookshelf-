@@ -8,18 +8,39 @@ import { coverHTML } from '@/lib/helpers';
 export default function SpotlightSearch() {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
-  const [books, setBooks] = useState<Product[]>([]);
+  const [results, setResults] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Load books
+  // Debounced search when Spotlight is open
   useEffect(() => {
-    fetch('/api/books')
-      .then(res => res.json())
-      .then(data => { if (data.success) setBooks(data.books); })
-      .catch(() => {});
-  }, []);
+    if (!isOpen) return;
+
+    if (!query.trim()) {
+      fetch('/api/books?limit=5')
+        .then(res => res.json())
+        .then(data => { if (data.success) setResults(data.books); })
+        .catch(() => {});
+      return;
+    }
+
+    setLoading(true);
+    const timer = setTimeout(() => {
+      fetch(`/api/books?q=${encodeURIComponent(query.trim())}&limit=6`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && Array.isArray(data.books)) {
+            setResults(data.books);
+          }
+        })
+        .catch(() => {})
+        .finally(() => setLoading(false));
+    }, 150);
+
+    return () => clearTimeout(timer);
+  }, [query, isOpen]);
 
   // Keyboard shortcut listener (Cmd+K / Ctrl+K / /)
   useEffect(() => {
@@ -44,9 +65,7 @@ export default function SpotlightSearch() {
     }
   }, [isOpen]);
 
-  const filtered = query.trim()
-    ? books.filter(b => (b.title + ' ' + b.author + ' ' + b.cat + ' ' + b.sub + ' ' + b.blurb).toLowerCase().includes(query.toLowerCase())).slice(0, 6)
-    : books.slice(0, 5);
+  const filtered = results;
 
   const handleSelectBook = (slug: string) => {
     setIsOpen(false);

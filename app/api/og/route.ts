@@ -1,25 +1,100 @@
-import { NextResponse } from 'next/server';
 import { getBookBySlug } from '@/lib/db';
+import { getSupabaseBookBySlug } from '@/lib/supabaseDb';
+
+export const dynamic = 'force-dynamic';
+
+function escapeXml(unsafe: string): string {
+  return (unsafe || '').replace(/[<>&'"]/g, (c) => {
+    switch (c) {
+      case '<': return '&lt;';
+      case '>': return '&gt;';
+      case '&': return '&amp;';
+      case '\'': return '&apos;';
+      case '"': return '&quot;';
+      default: return c;
+    }
+  });
+}
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
+  const type = searchParams.get('type') || 'book';
   const slug = searchParams.get('slug');
   const customTitle = searchParams.get('title') || 'Bookshelf — Free PDF Library';
+  const authorParam = searchParams.get('author');
+  const catParam = searchParams.get('cat');
+  const countParam = searchParams.get('count');
+  const langParam = searchParams.get('lang');
 
-  const book = slug ? getBookBySlug(slug) : null;
-  const title = book ? book.title : customTitle;
-  const author = book ? `by ${book.author}` : 'Download & Read Free PDF Books';
-  const category = book ? book.cat : 'Digital Library';
-  const pages = book ? `${book.pages} Pages PDF` : '100% Free';
-  const bg = book ? book.bg : '#0f172a';
-  const ac = book ? book.ac : '#f59e0b';
+  // 1. Book detail card mode
+  let book = null;
+  if (slug) {
+    try {
+      book = await getSupabaseBookBySlug(slug);
+    } catch {}
+    if (!book) {
+      book = getBookBySlug(slug) || null;
+    }
+  }
+
+  let kicker = '⚡ FREE PDF DROP';
+  let title = book ? book.title : customTitle;
+  let subtitle = book ? `by ${book.author}` : 'Download & Read Free PDF Books';
+  let category = book ? book.cat : (catParam || 'Digital Library');
+  let tag1 = book ? `${book.pages} Pages PDF` : '300,000+ Titles';
+  let tag2 = '⚡ Instant Download';
+  let bg = book?.bg || '#0f172a';
+  let ac = book?.ac || '#f59e0b';
+
+  // 2. Author Profile card mode
+  if (type === 'author' || authorParam) {
+    kicker = '✍️ VERIFIED AUTHOR PROFILE';
+    title = authorParam || title;
+    subtitle = `${countParam ? countParam + ' ' : ''}Free PDF Books & Field Manuals`;
+    category = 'Author Catalog';
+    tag1 = 'Open Access';
+    tag2 = '100% Free Downloads';
+    bg = '#1e1b4b';
+    ac = '#818cf8';
+  }
+
+  // 3. Category Hub card mode
+  else if (type === 'category' || catParam) {
+    kicker = '📁 CURATED SUBJECT COLLECTION';
+    title = catParam ? `Free ${catParam} PDF Books` : title;
+    subtitle = `Complete collection · ${countParam ? countParam + ' titles' : 'Verified PDFs'}`;
+    category = catParam || category;
+    tag1 = 'Updated Weekly';
+    tag2 = 'High-Speed Stream';
+    bg = '#064e3b';
+    ac = '#34d399';
+  }
+
+  // 4. Multilingual Hub card mode
+  else if (type === 'lang' || langParam) {
+    kicker = '🌐 MULTILINGUAL DIGITAL LIBRARY';
+    title = customTitle || 'Free Multilingual PDF Books';
+    subtitle = 'Native Script Typography · Zero Paywalls';
+    category = langParam ? langParam.toUpperCase() : 'World Literature';
+    tag1 = 'Public Domain & CC';
+    tag2 = 'Kindle & iPad Ready';
+    bg = '#4c0519';
+    ac = '#fb7185';
+  }
+
+  const safeTitle = escapeXml(title);
+  const safeSubtitle = escapeXml(subtitle);
+  const safeCategory = escapeXml(category);
+  const safeKicker = escapeXml(kicker);
+  const safeTag1 = escapeXml(tag1);
+  const safeTag2 = escapeXml(tag2);
 
   const svg = `
   <svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stop-color="#0f172a"/>
-        <stop offset="100%" stop-color="#1e293b"/>
+        <stop offset="100%" stop-color="${bg}"/>
       </linearGradient>
       <linearGradient id="bookGrad" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stop-color="${bg}"/>
@@ -29,54 +104,54 @@ export async function GET(request: Request) {
 
     <!-- Background -->
     <rect width="1200" height="630" fill="url(#bgGrad)"/>
-    <circle cx="1100" cy="100" r="300" fill="${ac}" opacity="0.08"/>
-    <circle cx="100" cy="500" r="250" fill="#38bdf8" opacity="0.05"/>
+    <circle cx="1100" cy="100" r="320" fill="${ac}" opacity="0.10"/>
+    <circle cx="100" cy="520" r="260" fill="#38bdf8" opacity="0.06"/>
 
     <!-- Left Content Box -->
-    <g transform="translate(100, 100)">
+    <g transform="translate(100, 95)">
       <!-- Brand Pill -->
-      <rect width="170" height="36" rx="18" fill="rgba(245, 158, 11, 0.15)" stroke="#f59e0b" stroke-width="1.5"/>
-      <text x="85" y="23" fill="#f59e0b" font-size="14" font-family="sans-serif" font-weight="bold" text-anchor="middle" letter-spacing="1">⚡ FREE PDF DROP</text>
+      <rect width="260" height="38" rx="19" fill="rgba(245, 158, 11, 0.15)" stroke="${ac}" stroke-width="1.5"/>
+      <text x="130" y="24" fill="${ac}" font-size="13" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="bold" text-anchor="middle" letter-spacing="1.5">${safeKicker}</text>
 
       <!-- Category -->
-      <text x="0" y="85" fill="#94a3b8" font-size="20" font-family="sans-serif" font-weight="bold" letter-spacing="2">${category.toUpperCase()}</text>
+      <text x="0" y="85" fill="#94a3b8" font-size="18" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="bold" letter-spacing="2">${safeCategory.toUpperCase()}</text>
 
       <!-- Title -->
-      <text x="0" y="150" fill="#ffffff" font-size="52" font-family="sans-serif" font-weight="900">
-        ${title.length > 28 ? title.slice(0, 26) + '…' : title}
+      <text x="0" y="150" fill="#ffffff" font-size="48" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900">
+        ${safeTitle.length > 32 ? safeTitle.slice(0, 30) + '…' : safeTitle}
       </text>
 
-      <!-- Author -->
-      <text x="0" y="210" fill="#cbd5e1" font-size="28" font-family="sans-serif" font-weight="500">${author}</text>
+      <!-- Subtitle / Author -->
+      <text x="0" y="210" fill="#cbd5e1" font-size="26" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="500">${safeSubtitle.slice(0, 48)}</text>
 
-      <!-- Stars Rating -->
-      <text x="0" y="270" fill="#f59e0b" font-size="24" font-family="sans-serif">★★★★★ <tspan fill="#94a3b8" font-size="18"> 4.8 / 5.0 (2.3K reviews)</tspan></text>
+      <!-- Stars Rating & Quality Seal -->
+      <text x="0" y="270" fill="#f59e0b" font-size="22" font-family="sans-serif">★★★★★ <tspan fill="#94a3b8" font-size="16"> 4.9 / 5.0 (Bookshelf Verified Library)</tspan></text>
 
       <!-- Features Tag Bar -->
       <g transform="translate(0, 320)">
-        <rect width="150" height="42" rx="8" fill="#1e293b" stroke="#334155"/>
-        <text x="75" y="26" fill="#f8fafc" font-size="15" font-family="sans-serif" font-weight="bold" text-anchor="middle">📄 ${pages}</text>
+        <rect width="180" height="42" rx="8" fill="#1e293b" stroke="#334155"/>
+        <text x="90" y="26" fill="#f8fafc" font-size="14" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="bold" text-anchor="middle">📄 ${safeTag1}</text>
 
-        <rect x="165" width="180" height="42" rx="8" fill="#065f46" stroke="#059669"/>
-        <text x="255" y="26" fill="#ffffff" font-size="15" font-family="sans-serif" font-weight="bold" text-anchor="middle">⚡ Instant Download</text>
+        <rect x="195" width="200" height="42" rx="8" fill="#065f46" stroke="#059669"/>
+        <text x="295" y="26" fill="#ffffff" font-size="14" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="bold" text-anchor="middle">${safeTag2}</text>
       </g>
     </g>
 
-    <!-- Right: Book 3D Cover Mockup -->
-    <g transform="translate(820, 100)">
-      <rect width="280" height="420" rx="14" fill="url(#bookGrad)" stroke="rgba(255,255,255,0.2)" stroke-width="2" filter="drop-shadow(0 25px 35px rgba(0,0,0,0.6))"/>
+    <!-- Right: Book 3D Mockup / Seal -->
+    <g transform="translate(820, 105)">
+      <rect width="280" height="420" rx="16" fill="url(#bookGrad)" stroke="rgba(255,255,255,0.2)" stroke-width="2" filter="drop-shadow(0 25px 35px rgba(0,0,0,0.6))"/>
       <circle cx="230" cy="50" r="18" fill="${ac}"/>
-      <text x="35" y="160" fill="#ffffff" font-size="26" font-family="sans-serif" font-weight="900">${title.slice(0, 18)}</text>
-      <text x="35" y="200" fill="#94a3b8" font-size="16" font-family="sans-serif">${author}</text>
-      <rect x="35" y="340" width="100" height="28" rx="6" fill="#f59e0b"/>
-      <text x="85" y="359" fill="#0f172a" font-size="12" font-family="sans-serif" font-weight="900" text-anchor="middle">PDF EDITION</text>
+      <text x="35" y="160" fill="#ffffff" font-size="24" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900">${safeTitle.slice(0, 18)}</text>
+      <text x="35" y="200" fill="#94a3b8" font-size="15" font-family="-apple-system, BlinkMacSystemFont, sans-serif">${safeSubtitle.slice(0, 22)}</text>
+      <rect x="35" y="340" width="120" height="30" rx="6" fill="${ac}"/>
+      <text x="95" y="360" fill="#0f172a" font-size="12" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900" text-anchor="middle">PDF-BOOKSHELF</text>
     </g>
   </svg>
   `;
 
   return new Response(svg, {
     headers: {
-      'Content-Type': 'image/svg+xml',
+      'Content-Type': 'image/svg+xml; charset=utf-8',
       'Cache-Control': 'public, max-age=86400, s-maxage=86400',
     },
   });

@@ -1,51 +1,103 @@
 import { NextResponse } from 'next/server';
 import { getAllBooks, addBook } from '@/lib/db';
-import { getSupabaseBooks, addSupabaseBook } from '@/lib/supabaseDb';
+import { supabase } from '@/lib/supabase';
+import { addSupabaseBook } from '@/lib/supabaseDb';
 import { isRequestAuthorized } from '@/lib/auth';
+import { Product } from '@/lib/products';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const cat    = searchParams.get('cat');
-    const q      = searchParams.get('q');
-    const type   = searchParams.get('type');
+    const cat = searchParams.get('cat');
+    const q = searchParams.get('q');
+    const type = searchParams.get('type');
     const author = searchParams.get('author');
-    // limit=0  → no limit (admin full catalog)
-    // limit=N  → return at most N books (capped at 10,000 to protect memory)
-    // default  → 200 (safe for homepage / book page related rows)
+    const lang = searchParams.get('lang');
     const limitParam = searchParams.get('limit');
-    const limit = limitParam === '0' ? 0 : Math.min(parseInt(limitParam || '200', 10), 10000);
+    const limit = limitParam === '0' ? 0 : Math.min(parseInt(limitParam || '24', 10), 1000);
 
-    let books = await getSupabaseBooks();
-    if (!books || books.length === 0) {
-      books = getAllBooks();
-    }
+    let query = supabase.from('books').select('*');
 
-    if (cat) {
-      books = books.filter(b => b.cat.toLowerCase() === cat.toLowerCase());
+    if (cat && cat !== 'All') {
+      query = query.ilike('cat', cat);
     }
     if (author) {
-      const authorSlug = author.toLowerCase();
-      books = books.filter(b => b.author.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') === authorSlug);
+      query = query.ilike('author', `%${author}%`);
     }
-    if (type) {
-      books = books.filter(b => b.type === type);
+    if (type && type !== 'all') {
+      query = query.eq('type', type);
+    }
+    if (lang && lang !== 'all') {
+      const norm = lang.toLowerCase();
+      if (norm === 'en') {
+        query = query.or('lang.eq.en,lang.is.null');
+      } else {
+        query = query.eq('lang', norm);
+      }
     }
     if (q) {
-      const query = q.toLowerCase();
-      books = books.filter(b => (b.title + ' ' + b.author + ' ' + b.cat + ' ' + b.sub).toLowerCase().includes(query));
+      query = query.or(`title.ilike.%${q}%,author.ilike.%${q}%,cat.ilike.%${q}%`);
     }
 
-    // Apply limit (0 = no limit, for admin use only)
-    const result = limit > 0 ? books.slice(0, limit) : books;
+    query = query.order('downloads', { ascending: false });
 
-    return NextResponse.json({ success: true, count: books.length, books: result });
+    if (limit > 0) {
+      query = query.limit(limit);
+    }
+
+    const { data, error } = await query;
+
+    if (!error && data && data.length > 0) {
+      const mappedBooks: Product[] = data.map((row: any) => ({
+        id: Number(row.id),
+        slug: row.slug,
+        title: row.title,
+        sub: row.sub || '',
+        author: row.author,
+        cat: row.cat,
+        type: row.type || 'free',
+        price: Number(row.price) || 0,
+        list: row.list != null ? Number(row.list) : null,
+        rating: Number(row.rating) || 4.8,
+        reviews: Number(row.reviews) || 250,
+        pages: Number(row.pages) || 100,
+        badge: row.badge || null,
+        bought: row.bought || 'Instant download',
+        bg: row.bg || '#0f2a43',
+        fg: row.fg || '#ffffff',
+        ac: row.ac || '#f59e0b',
+        pat: row.pat || 'p-rings',
+        blurb: row.blurb || '',
+        feat: Array.isArray(row.feat) ? row.feat : (typeof row.feat === 'string' ? JSON.parse(row.feat || '[]') : []),
+        desc: row.desc_html || row.desc || '',
+        driveUrl: row.drive_url || '',
+        coverImage: row.cover_image || '',
+        coverUrl: row.cover_image || '',
+        partner: row.partner || '',
+        partnerUrl: row.partner_url || '',
+        downloads: Number(row.downloads) || 0,
+        lang: row.lang || 'en',
+        createdAt: row.created_at,
+      }));
+      return NextResponse.json({ success: true, count: mappedBooks.length, books: mappedBooks });
+    }
+
+    // Local DB fallback
+    let fallback = getAllBooks();
+    if (cat && cat !== 'All') fallback = fallback.filter(b => b.cat.toLowerCase() === cat.toLowerCase());
+    if (type && type !== 'all') fallback = fallback.filter(b => b.type === type);
+    if (q) {
+      const low = q.toLowerCase();
+      fallback = fallback.filter(b => (b.title + ' ' + b.author + ' ' + b.cat).toLowerCase().includes(low));
+    }
+    const result = limit > 0 ? fallback.slice(0, limit) : fallback;
+    return NextResponse.json({ success: true, count: result.length, books: result });
   } catch (error) {
     console.error('API GET /api/books error:', error);
     const fallback = getAllBooks();
-    return NextResponse.json({ success: true, count: fallback.length, books: fallback });
+    return NextResponse.json({ success: true, count: fallback.length, books: fallback.slice(0, 24) });
   }
 }
 

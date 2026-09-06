@@ -53,6 +53,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     ],
     alternates: {
       canonical: canonicalUrl,
+      languages: {
+        'en': `${getBaseUrl()}/books/english`,
+        'bn': `${getBaseUrl()}/books/bangla`,
+        'hi': `${getBaseUrl()}/books/hindi`,
+        'ur': `${getBaseUrl()}/books/urdu`,
+        'es': `${getBaseUrl()}/books/spanish`,
+        'zh': `${getBaseUrl()}/books/chinese`,
+        'x-default': `${getBaseUrl()}/books/english`,
+      },
     },
     openGraph: {
       title: cfg.seoTitle,

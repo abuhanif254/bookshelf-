@@ -21,6 +21,7 @@ import { useCurrency } from '@/lib/currency';
 import WriteReviewModal from '@/components/WriteReviewModal';
 import { BookReview } from '@/lib/db';
 import BookEeatMetadata from '@/components/BookEeatMetadata';
+import BookTableOfContents from '@/components/BookTableOfContents';
 
 function normalizeSlug(str: string): string {
   return str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
@@ -373,6 +374,9 @@ export default function ProductClient({
         {/* Ambient Soundscape & Pace Calculator */}
         <AmbientSoundPlayer />
         <ReadingPaceCalculator book={p} />
+
+        {/* Google Sitelinks Structured Table of Contents */}
+        <BookTableOfContents book={p} />
 
         {/* E-E-A-T Academic Citations & Document Telemetry */}
         <BookEeatMetadata book={p} />
