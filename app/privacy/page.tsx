@@ -2,23 +2,26 @@ import React from 'react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { BreadcrumbJsonLd } from '@/components/JsonLd';
+import { getBaseUrl } from '@/lib/url';
+
+const baseUrl = getBaseUrl();
 
 export const metadata: Metadata = {
   title: 'Privacy Policy & Cookie Disclosures | Bookshelf Free PDFs',
   description:
     'Official Privacy Policy and Cookie Disclosures for Bookshelf. Learn how we protect reader data, manage ad network cookies, and respect GDPR and CCPA privacy rights.',
   alternates: {
-    canonical: 'https://www.pdf-bookshelf.com/privacy',
+    canonical: `${baseUrl}/privacy`,
   },
   openGraph: {
     title: 'Privacy Policy & Cookie Disclosures | Bookshelf',
     description:
       'Learn how Bookshelf protects your privacy, manages advertising cookies, and complies with GDPR and CCPA data rights.',
-    url: 'https://www.pdf-bookshelf.com/privacy',
+    url: `${baseUrl}/privacy`,
     type: 'website',
     images: [
       {
-        url: 'https://www.pdf-bookshelf.com/api/og?title=Privacy+Policy&sub=Data+Protection+%26+Cookie+Disclosures',
+        url: `${baseUrl}/api/og?title=Privacy+Policy&sub=Data+Protection+%26+Cookie+Disclosures`,
         width: 1200,
         height: 630,
         alt: 'Bookshelf Privacy Policy',
@@ -29,7 +32,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Privacy Policy | Bookshelf',
     description: 'Official Privacy Policy, cookie disclosures, and data protection guidelines.',
-    images: ['https://www.pdf-bookshelf.com/api/og?title=Privacy+Policy&sub=Data+Protection+%26+Cookie+Disclosures'],
+    images: [`${baseUrl}/api/og?title=Privacy+Policy&sub=Data+Protection+%26+Cookie+Disclosures`],
   },
 };
 
@@ -41,19 +44,19 @@ export default function PrivacyPage() {
     '@type': 'WebPage',
     name: 'Privacy Policy & Cookie Disclosures',
     description: 'Official Privacy Policy, cookie usage, and data rights for Bookshelf.',
-    url: 'https://www.pdf-bookshelf.com/privacy',
+    url: `${baseUrl}/privacy`,
     dateModified: '2026-01-01',
     inLanguage: 'en-US',
     publisher: {
       '@type': 'Organization',
       name: 'Bookshelf Inc.',
-      url: 'https://www.pdf-bookshelf.com',
+      url: baseUrl,
     },
   };
 
   const breadcrumbs = [
-    { name: 'Home', url: 'https://www.pdf-bookshelf.com' },
-    { name: 'Privacy Policy', url: 'https://www.pdf-bookshelf.com/privacy' },
+    { name: 'Home', url: baseUrl },
+    { name: 'Privacy Policy', url: `${baseUrl}/privacy` },
   ];
 
   return (

@@ -3,11 +3,12 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getAllBooks } from '@/lib/db';
 import { getSupabaseBooks } from '@/lib/supabaseDb';
-import { BreadcrumbJsonLd, PersonJsonLd } from '@/components/JsonLd';
+import { BreadcrumbJsonLd, PersonJsonLd, ItemListJsonLd } from '@/components/JsonLd';
+import { getBaseUrl } from '@/lib/url';
 import AuthorClient from './AuthorClient';
 
 // Cache author profile pages at the CDN edge for 24 hours (ISR).
-// Author pages won't change frequently â€” revalidation background
+// Author pages won't change frequently — revalidation background
 // refresh ensures new books by that author appear within 24h.
 export const revalidate = 86400;
 
@@ -17,6 +18,27 @@ interface Props {
 
 function normalizeSlug(str: string): string {
   return str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+}
+
+export async function generateStaticParams() {
+  const supaBooks = await getSupabaseBooks();
+  const allBooks = supaBooks && supaBooks.length > 0 ? supaBooks : getAllBooks();
+  const authorCounts = new Map<string, number>();
+
+  for (const book of allBooks) {
+    if (book.author) {
+      const slug = normalizeSlug(book.author);
+      if (slug) {
+        authorCounts.set(slug, (authorCounts.get(slug) || 0) + 1);
+      }
+    }
+  }
+
+  // Pre-render top 100 most prolific authors at build time; others served via ISR
+  return Array.from(authorCounts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 100)
+    .map(([slug]) => ({ slug }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -36,10 +58,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   const authorName = authorBooks[0].author;
-  const canonicalUrl = `https://www.pdf-bookshelf.com/author/${resolved.slug.toLowerCase()}`;
+  const canonicalUrl = `${getBaseUrl()}/author/${resolved.slug.toLowerCase()}`;
 
   return {
-    title: `PDF Books by ${authorName} â€” Free Download | Bookshelf`,
+    title: `PDF Books by ${authorName} — Free Download | Bookshelf`,
     description: `Browse and download all free PDF books, playbooks, and guides written by ${authorName}. Verified 1-click Google Drive downloads.`,
     keywords: [
       `${authorName} books pdf`,
@@ -87,12 +109,13 @@ export default async function AuthorPage({ params }: Props) {
     notFound();
   }
 
+  const baseUrl = getBaseUrl();
   const authorName = authorBooks[0].author;
-  const authorUrl = `https://www.pdf-bookshelf.com/author/${slug}`;
+  const authorUrl = `${baseUrl}/author/${slug}`;
 
   const breadcrumbs = [
-    { name: 'Home', url: 'https://www.pdf-bookshelf.com' },
-    { name: 'Authors', url: 'https://www.pdf-bookshelf.com/library' },
+    { name: 'Home', url: baseUrl },
+    { name: 'Authors', url: `${baseUrl}/library` },
     { name: authorName, url: authorUrl },
   ];
 
@@ -100,11 +123,21 @@ export default async function AuthorPage({ params }: Props) {
     <>
       <BreadcrumbJsonLd items={breadcrumbs} />
       <PersonJsonLd name={authorName} booksCount={authorBooks.length} url={authorUrl} />
+      <ItemListJsonLd
+        title={`Books by ${authorName}`}
+        description={`Download free PDF books written by ${authorName}.`}
+        url={authorUrl}
+        items={authorBooks.slice(0, 20).map((b, i) => ({
+          name: b.title,
+          url: `${baseUrl}/pdf/${b.slug}`,
+          position: i + 1,
+        }))}
+      />
 
       <div className="wrap" style={{ padding: '20px 20px 60px' }}>
         {/* Breadcrumb */}
         <div className="crumb">
-          <Link href="/">Home</Link> â€º <Link href="/library">Authors</Link> â€º <span>{authorName}</span>
+          <Link href="/">Home</Link> › <Link href="/library">Authors</Link> › <span>{authorName}</span>
         </div>
 
         {/* Author Header */}
@@ -117,7 +150,7 @@ export default async function AuthorPage({ params }: Props) {
               Verified Author &amp; Creator
             </span>
             <h1 style={{ fontSize: 26, fontWeight: 900, color: 'var(--ink)', margin: '4px 0 2px' }}>{authorName}</h1>
-            <p style={{ fontSize: 14, color: 'var(--muted)', margin: 0 }}>{authorBooks.length} Published PDF Titles on Bookshelf Â· 100% Free Downloads</p>
+            <p style={{ fontSize: 14, color: 'var(--muted)', margin: 0 }}>{authorBooks.length} Published PDF Titles on Bookshelf · 100% Free Downloads</p>
           </div>
         </div>
 

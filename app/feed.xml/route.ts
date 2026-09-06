@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server';
 import { getAllBooks } from '@/lib/db';
+import { getSupabaseBooks } from '@/lib/supabaseDb';
 import { escapeHtml } from '@/lib/security';
+import { getBaseUrl } from '@/lib/url';
 
 export async function GET() {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.pdf-bookshelf.com';
-  const books = getAllBooks();
+  const baseUrl = getBaseUrl();
+  const supaBooks = await getSupabaseBooks();
+  const books = supaBooks && supaBooks.length > 0 ? supaBooks : getAllBooks();
 
   const itemsXml = books
     .map(book => {

@@ -33,6 +33,7 @@ function mapDbRowToProduct(row: any): Product {
     partner: row.partner || '',
     partnerUrl: row.partner_url || '',
     downloads: Number(row.downloads) || 0,
+    lang: row.lang || 'en',
     createdAt: row.created_at,
   };
 }
@@ -66,6 +67,7 @@ function mapProductToDbRow(p: Partial<Product>): any {
   if (p.partner !== undefined) row.partner = p.partner;
   if (p.partnerUrl !== undefined) row.partner_url = p.partnerUrl;
   if (p.downloads !== undefined) row.downloads = p.downloads;
+  if (p.lang !== undefined) row.lang = p.lang;
   return row;
 }
 

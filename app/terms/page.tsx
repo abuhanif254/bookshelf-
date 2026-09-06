@@ -2,23 +2,26 @@ import React from 'react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { BreadcrumbJsonLd } from '@/components/JsonLd';
+import { getBaseUrl } from '@/lib/url';
+
+const baseUrl = getBaseUrl();
 
 export const metadata: Metadata = {
   title: 'Terms of Service & Licensing Policy | Bookshelf Free PDFs',
   description:
     'Official Terms of Service, DMCA copyright policy, licensing guidelines, and advertising disclosures for Bookshelf free digital PDF library.',
   alternates: {
-    canonical: 'https://www.pdf-bookshelf.com/terms',
+    canonical: `${baseUrl}/terms`,
   },
   openGraph: {
     title: 'Terms of Service & Licensing Policy | Bookshelf',
     description:
       'Official Terms of Service, DMCA copyright compliance, and advertising disclosures for Bookshelf free PDF library.',
-    url: 'https://www.pdf-bookshelf.com/terms',
+    url: `${baseUrl}/terms`,
     type: 'website',
     images: [
       {
-        url: 'https://www.pdf-bookshelf.com/api/og?title=Terms+of+Service&sub=Legal+Policies+%26+Copyright+Compliance',
+        url: `${baseUrl}/api/og?title=Terms+of+Service&sub=Legal+Policies+%26+Copyright+Compliance`,
         width: 1200,
         height: 630,
         alt: 'Bookshelf Terms of Service',
@@ -29,7 +32,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Terms of Service | Bookshelf',
     description: 'Official Terms of Service, DMCA copyright policy, and advertising disclosures.',
-    images: ['https://www.pdf-bookshelf.com/api/og?title=Terms+of+Service&sub=Legal+Policies+%26+Copyright+Compliance'],
+    images: [`${baseUrl}/api/og?title=Terms+of+Service&sub=Legal+Policies+%26+Copyright+Compliance`],
   },
 };
 
@@ -41,19 +44,19 @@ export default function TermsPage() {
     '@type': 'WebPage',
     name: 'Terms of Service & Licensing Policy',
     description: 'Official Terms of Service, DMCA copyright compliance, and monetization disclosures for Bookshelf.',
-    url: 'https://www.pdf-bookshelf.com/terms',
+    url: `${baseUrl}/terms`,
     dateModified: '2026-01-01',
     inLanguage: 'en-US',
     publisher: {
       '@type': 'Organization',
       name: 'Bookshelf Inc.',
-      url: 'https://www.pdf-bookshelf.com',
+      url: baseUrl,
     },
   };
 
   const breadcrumbs = [
-    { name: 'Home', url: 'https://www.pdf-bookshelf.com' },
-    { name: 'Terms of Service', url: 'https://www.pdf-bookshelf.com/terms' },
+    { name: 'Home', url: baseUrl },
+    { name: 'Terms of Service', url: `${baseUrl}/terms` },
   ];
 
   return (

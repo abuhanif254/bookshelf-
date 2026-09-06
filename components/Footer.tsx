@@ -42,9 +42,27 @@ export default function Footer() {
           <div>
             <h4>Creators &amp; Admin</h4>
             <Link href="/publish">🚀 Publish Your PDF Book</Link>
-            <Link href="/account/library">Your Offline Library</Link>
-            <Link href="/cart">Your Cart</Link>
-            <Link href="/admin">⚙️ Admin Dashboard</Link>
+            <Link href="/account/library" rel="nofollow">Your Offline Library</Link>
+            <Link href="/cart" rel="nofollow">Your Cart</Link>
+            <Link href="/admin" rel="nofollow">⚙️ Admin Dashboard</Link>
+          </div>
+        </div>
+        <div style={{ maxWidth: 1080, margin: '0 auto', padding: '0 20px 24px', borderTop: '1px solid #334155', paddingTop: 20 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10 }}>
+            Global Multilingual PDF Libraries (300,000+ Books):
+          </div>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+            <Link href="/books/bangla" style={{ color: '#e2e8f0', fontSize: 13, textDecoration: 'none' }}>বাংলা বই (Bangla)</Link>
+            <span style={{ color: '#475569' }}>·</span>
+            <Link href="/books/hindi" style={{ color: '#e2e8f0', fontSize: 13, textDecoration: 'none' }}>हिन्दी किताबें (Hindi)</Link>
+            <span style={{ color: '#475569' }}>·</span>
+            <Link href="/books/urdu" style={{ color: '#e2e8f0', fontSize: 13, textDecoration: 'none' }}>اردو کتب (Urdu)</Link>
+            <span style={{ color: '#475569' }}>·</span>
+            <Link href="/books/spanish" style={{ color: '#e2e8f0', fontSize: 13, textDecoration: 'none' }}>Libros en Español</Link>
+            <span style={{ color: '#475569' }}>·</span>
+            <Link href="/books/chinese" style={{ color: '#e2e8f0', fontSize: 13, textDecoration: 'none' }}>中文电子书 (Chinese)</Link>
+            <span style={{ color: '#475569' }}>·</span>
+            <Link href="/books/english" style={{ color: '#e2e8f0', fontSize: 13, textDecoration: 'none' }}>English PDF Library</Link>
           </div>
         </div>
         <div className="ft-bot">

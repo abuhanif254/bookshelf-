@@ -28,6 +28,7 @@ export interface Product {
   driveUrl?: string;
   coverImage?: string;
   coverUrl?: string;
+  lang?: string; // e.g. 'en', 'bn', 'hi', 'ur', 'es', 'zh'
   createdAt?: string;
 }
 

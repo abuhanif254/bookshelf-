@@ -1,7 +1,10 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { BreadcrumbJsonLd } from '@/components/JsonLd';
+import { getBaseUrl } from '@/lib/url';
 import PublishClient from './PublishClient';
+
+const baseUrl = getBaseUrl();
 
 export const metadata: Metadata = {
   title: 'Publish & Distribute Your PDF Book | Bookshelf Creator Program',
@@ -14,16 +17,16 @@ export const metadata: Metadata = {
     'free ebook distributor',
   ],
   alternates: {
-    canonical: 'https://www.pdf-bookshelf.com/publish',
+    canonical: `${baseUrl}/publish`,
   },
   openGraph: {
     title: 'Publish & Distribute Your PDF Book to 40,000+ Readers',
     description: 'Reach engineers, founders, and creators worldwide. Upload your Google Drive link and get featured in our catalog.',
-    url: 'https://www.pdf-bookshelf.com/publish',
+    url: `${baseUrl}/publish`,
     type: 'website',
     images: [
       {
-        url: '/api/og?title=' + encodeURIComponent('Bookshelf Creator Publishing Portal'),
+        url: `${baseUrl}/api/og?title=` + encodeURIComponent('Bookshelf Creator Publishing Portal'),
         width: 1200,
         height: 630,
         alt: 'Bookshelf Creator Publishing Portal',
@@ -34,14 +37,14 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Publish & Distribute Your PDF Book | Bookshelf',
     description: 'Reach thousands of active readers. Free author distribution for high-quality PDFs.',
-    images: ['/api/og?title=' + encodeURIComponent('Bookshelf Creator Publishing Portal')],
+    images: [`${baseUrl}/api/og?title=` + encodeURIComponent('Bookshelf Creator Publishing Portal')],
   },
 };
 
 export default function PublishPage() {
   const breadcrumbs = [
-    { name: 'Home', url: 'https://www.pdf-bookshelf.com' },
-    { name: 'Creator Publishing', url: 'https://www.pdf-bookshelf.com/publish' },
+    { name: 'Home', url: baseUrl },
+    { name: 'Creator Publishing', url: `${baseUrl}/publish` },
   ];
 
   return (

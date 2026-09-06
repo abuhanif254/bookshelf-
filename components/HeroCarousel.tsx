@@ -91,7 +91,7 @@ export default function HeroCarousel({ stacks }: HeroCarouselProps) {
               </div>
               <div
                 className="stack"
-                dangerouslySetInnerHTML={{ __html: s.stack.map(id => coverHTML(getClientBooks().find(b => b.id === id)!)).join('') }}
+                dangerouslySetInnerHTML={{ __html: s.stack.map(id => coverHTML(getClientBooks().find(b => b.id === id)!, '', i === 0)).join('') }}
               />
             </div>
           </div>

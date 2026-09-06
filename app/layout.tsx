@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import Script from 'next/script';
+import { Archivo, Source_Sans_3 } from 'next/font/google';
 import './globals.css';
 import { StoreProvider } from '@/lib/store';
 import PromoBar from '@/components/PromoBar';
@@ -83,12 +83,27 @@ export const metadata: Metadata = {
   },
 };
 
+const archivo = Archivo({
+  subsets: ['latin'],
+  weight: ['500', '600', '700', '800', '900'],
+  variable: '--font-archivo',
+  display: 'swap',
+});
+
+const sourceSans3 = Source_Sans_3({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  style: ['normal', 'italic'],
+  variable: '--font-source-sans',
+  display: 'swap',
+});
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" data-scroll-behavior="smooth">
+    <html lang="en" className={`${archivo.variable} ${sourceSans3.variable}`} data-scroll-behavior="smooth">
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://wsrv.nl" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://wsrv.nl" />
         <link rel="dns-prefetch" href="https://drive.google.com" />
         <link rel="dns-prefetch" href="https://lh3.googleusercontent.com" />
         <link
@@ -96,10 +111,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           type="application/rss+xml"
           title="Bookshelf Free PDF Drops RSS Feed"
           href="/feed.xml"
-        />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Source+Sans+3:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap"
-          rel="stylesheet"
         />
         <WebSiteJsonLd />
         <OrganizationJsonLd />

@@ -11,7 +11,7 @@
   --link:#2563eb; --link-h:#1d4ed8; --price:#dc2626; --star:#f59e0b;
   --bg:#f1f5f9; --card:#fff; --line:#e2e8f0; --muted:#64748b; --green:#059669;
   --red:#e11d48; --flag:#d97706;
-  --disp:'Archivo',sans-serif; --body:'Source Sans 3',sans-serif;
+  --disp:var(--font-archivo), 'Archivo', sans-serif; --body:var(--font-source-sans), 'Source Sans 3', sans-serif;
   --shadow:0 8px 24px rgba(15,23,42,.10);
 }
 *{margin:0;padding:0;box-sizing:border-box}

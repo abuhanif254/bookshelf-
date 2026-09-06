@@ -3,7 +3,18 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getAllBooks, getBookBySlug } from '@/lib/db';
 import { BreadcrumbJsonLd, FAQJsonLd } from '@/components/JsonLd';
+import { getBaseUrl } from '@/lib/url';
 import CompareClient from './CompareClient';
+
+export const revalidate = 86400;
+
+export async function generateStaticParams() {
+  return [
+    { slug: 'deep-focus-vs-morning-reset' },
+    { slug: 'indie-founder-playbook-vs-zero-to-launch' },
+    { slug: 'javascript-patterns-2e-vs-design-systems-handbook' },
+  ];
+}
 
 interface Props {
   params: Promise<{ slug: string }> | { slug: string };
@@ -28,7 +39,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const title = `${bookA.title} vs ${bookB.title} — Which PDF Should You Read? (2026)`;
   const desc = `Detailed side-by-side comparison of "${bookA.title}" by ${bookA.author} vs "${bookB.title}" by ${bookB.author}. Compare page count, difficulty, key takeaways, and free PDF download links.`;
-  const canonicalUrl = `https://www.pdf-bookshelf.com/compare/${resolved.slug}`;
+  const canonicalUrl = `${getBaseUrl()}/compare/${resolved.slug}`;
 
   return {
     title,
@@ -82,10 +93,11 @@ export default async function ComparePage({ params }: Props) {
     notFound();
   }
 
+  const baseUrl = getBaseUrl();
   const breadcrumbs = [
-    { name: 'Home', url: 'https://www.pdf-bookshelf.com' },
-    { name: 'Comparisons', url: 'https://www.pdf-bookshelf.com/library' },
-    { name: `${bookA.title} vs ${bookB.title}`, url: `https://www.pdf-bookshelf.com/compare/${resolved.slug}` },
+    { name: 'Home', url: baseUrl },
+    { name: 'Comparisons', url: `${baseUrl}/library` },
+    { name: `${bookA.title} vs ${bookB.title}`, url: `${baseUrl}/compare/${resolved.slug}` },
   ];
 
   const compareFaqs = [

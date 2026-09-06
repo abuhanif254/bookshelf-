@@ -3,7 +3,8 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getAllBooks } from '@/lib/db';
 import { getSupabaseBooks } from '@/lib/supabaseDb';
-import { BreadcrumbJsonLd, CollectionPageJsonLd, FAQJsonLd } from '@/components/JsonLd';
+import { BreadcrumbJsonLd, CollectionPageJsonLd, FAQJsonLd, ItemListJsonLd } from '@/components/JsonLd';
+import { getBaseUrl } from '@/lib/url';
 import TopicClient from './TopicClient';
 
 interface Props {
@@ -61,6 +62,12 @@ const TOPICS: Record<string, { title: string; h1: string; desc: string; keywords
   },
 };
 
+export const revalidate = 86400;
+
+export async function generateStaticParams() {
+  return Object.keys(TOPICS).map(tag => ({ tag }));
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const resolved = typeof (params as Promise<{ tag: string }>)?.then === 'function'
     ? await (params as Promise<{ tag: string }>)
@@ -73,7 +80,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return { title: 'Topic Library | Bookshelf' };
   }
 
-  const canonicalUrl = `https://www.pdf-bookshelf.com/topic/${tag}`;
+  const canonicalUrl = `${getBaseUrl()}/topic/${tag}`;
 
   return {
     title: `${info.title} | Bookshelf`,
@@ -117,6 +124,7 @@ export default async function TopicPage({ params }: Props) {
     notFound();
   }
 
+  const baseUrl = getBaseUrl();
   const supaBooks = await getSupabaseBooks();
   const allBooks = supaBooks && supaBooks.length > 0 ? supaBooks : getAllBooks();
   const matched = allBooks.filter(b => {
@@ -127,9 +135,9 @@ export default async function TopicPage({ params }: Props) {
   const displayBooks = matched.length > 0 ? matched : allBooks.slice(0, 4);
 
   const breadcrumbs = [
-    { name: 'Home', url: 'https://www.pdf-bookshelf.com' },
-    { name: 'Topics', url: 'https://www.pdf-bookshelf.com/library' },
-    { name: info.h1, url: `https://www.pdf-bookshelf.com/topic/${tag}` },
+    { name: 'Home', url: baseUrl },
+    { name: 'Topics', url: `${baseUrl}/library` },
+    { name: info.h1, url: `${baseUrl}/topic/${tag}` },
   ];
 
   const topicFaqs = [
@@ -145,8 +153,18 @@ export default async function TopicPage({ params }: Props) {
       <CollectionPageJsonLd
         name={info.h1}
         description={info.desc}
-        url={`https://www.pdf-bookshelf.com/topic/${tag}`}
+        url={`${baseUrl}/topic/${tag}`}
         count={displayBooks.length}
+      />
+      <ItemListJsonLd
+        title={info.h1}
+        description={info.desc}
+        url={`${baseUrl}/topic/${tag}`}
+        items={displayBooks.slice(0, 20).map((b, i) => ({
+          name: b.title,
+          url: `${baseUrl}/pdf/${b.slug}`,
+          position: i + 1,
+        }))}
       />
       <FAQJsonLd faqs={topicFaqs} />
 

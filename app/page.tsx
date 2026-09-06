@@ -8,8 +8,10 @@ import { P, Product } from '@/lib/products';
 import { cardHTML, coverHTML, stars } from '@/lib/helpers';
 import HeroCarousel from '@/components/HeroCarousel';
 import ScrollSection from '@/components/ScrollSection';
+import { FAQJsonLd } from '@/components/JsonLd';
 import { BUNDLES } from '@/lib/bundles';
 import { getClientBooks, saveClientBooks } from '@/lib/customBooks';
+import { getBaseUrl } from '@/lib/url';
 
 const dealEnd = Date.now() + (7 * 3600 + 42 * 60 + 15) * 1000;
 
@@ -159,14 +161,15 @@ export default function HomePage() {
     }
   };
 
+  const baseUrl = getBaseUrl();
   const websiteSchema = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: 'Bookshelf',
-    url: 'https://www.pdf-bookshelf.com',
+    url: baseUrl,
     potentialAction: {
       '@type': 'SearchAction',
-      target: 'https://www.pdf-bookshelf.com/library?q={search_term_string}',
+      target: `${baseUrl}/library?q={search_term_string}`,
       'query-input': 'required name=search_term_string',
     },
   };
@@ -198,6 +201,36 @@ export default function HomePage() {
       <HeroCarousel stacks={[[1, 5, 12], [7, 11, 18], [3, 9, 13], [20, 6, 12]]} />
 
       <div className="wrap">
+        {/* Multilingual Library Bar */}
+        <div style={{
+          background: '#fff',
+          borderRadius: 12,
+          padding: '16px 20px',
+          border: '1px solid #e2e8f0',
+          margin: '0 0 20px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: 12,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: 20 }}>🌐</span>
+            <div>
+              <strong style={{ fontSize: 14, color: '#0f172a', display: 'block' }}>Global PDF Libraries (300,000+ Books)</strong>
+              <span style={{ fontSize: 12, color: '#64748b' }}>Read in your native language with instant free downloads</span>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <Link href="/books/bangla" style={{ fontSize: 13, fontWeight: 700, padding: '5px 12px', borderRadius: 20, background: '#f1f5f9', color: '#0f172a', textDecoration: 'none' }}>বাংলা (Bangla)</Link>
+            <Link href="/books/hindi" style={{ fontSize: 13, fontWeight: 700, padding: '5px 12px', borderRadius: 20, background: '#f1f5f9', color: '#0f172a', textDecoration: 'none' }}>हिन्दी (Hindi)</Link>
+            <Link href="/books/urdu" style={{ fontSize: 13, fontWeight: 700, padding: '5px 12px', borderRadius: 20, background: '#f1f5f9', color: '#0f172a', textDecoration: 'none' }}>اردو (Urdu)</Link>
+            <Link href="/books/spanish" style={{ fontSize: 13, fontWeight: 700, padding: '5px 12px', borderRadius: 20, background: '#f1f5f9', color: '#0f172a', textDecoration: 'none' }}>Español</Link>
+            <Link href="/books/chinese" style={{ fontSize: 13, fontWeight: 700, padding: '5px 12px', borderRadius: 20, background: '#f1f5f9', color: '#0f172a', textDecoration: 'none' }}>中文 (Chinese)</Link>
+            <Link href="/books/english" style={{ fontSize: 13, fontWeight: 700, padding: '5px 12px', borderRadius: 20, background: '#0f172a', color: '#fff', textDecoration: 'none' }}>English</Link>
+          </div>
+        </div>
+
         {/* Quad category cards */}
         <div className="quad">
           {quadCards.map((q, i) => (
@@ -390,6 +423,7 @@ export default function HomePage() {
         </section>
 
         {/* Interactive FAQ Section with Google FAQPage Schema */}
+        <FAQJsonLd faqs={faqs.map(f => ({ question: f.q, answer: f.a }))} />
         <section className="sec rv" style={{ marginTop: 40, marginBottom: 40 }}>
           <div style={{ textAlign: 'center', marginBottom: 28 }}>
             <span style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', background: 'rgba(56, 189, 248, 0.15)', color: '#0284c7', padding: '4px 12px', borderRadius: 20, display: 'inline-block', marginBottom: 8 }}>

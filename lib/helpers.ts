@@ -40,7 +40,7 @@ export const getFallbackDesign = (title: string = '') => {
   };
 };
 
-export const coverHTML = (p: Product, size: string = ''): string => {
+export const coverHTML = (p: Product, size: string = '', priority: boolean = false): string => {
   const img = (p.coverImage || p.coverUrl || '').trim();
   const safeTitle = escapeHtml(p.title);
   const safeAuthor = escapeHtml(p.author);
@@ -71,9 +71,12 @@ export const coverHTML = (p: Product, size: string = ''): string => {
     }
     if (isValidHttpUrl(resolvedImg)) {
       const cleanImgUrl = resolvedImg.replace('&source=gbs_api', '');
-      const proxiedUrl = `https://wsrv.nl/?url=${encodeURIComponent(cleanImgUrl)}&w=400&output=webp`;
+      const width = safeSize === 'lg' ? 600 : safeSize === 'sm' ? 140 : 400;
+      const height = safeSize === 'lg' ? 840 : safeSize === 'sm' ? 196 : 560;
+      const proxiedUrl = `https://wsrv.nl/?url=${encodeURIComponent(cleanImgUrl)}&w=${width}&output=webp`;
       const safeImgUrl = escapeHtml(proxiedUrl);
-      imgHTML = `<img src="${safeImgUrl}" alt="${safeTitle}" crossorigin="anonymous" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;z-index:10;" loading="lazy" onerror="this.style.display='none';" />`;
+      const isLcp = priority || safeSize === 'lg';
+      imgHTML = `<img src="${safeImgUrl}" alt="${safeTitle}" width="${width}" height="${height}" crossorigin="anonymous" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;z-index:10;" ${isLcp ? 'loading="eager" fetchpriority="high"' : 'loading="lazy" decoding="async"'} onerror="this.style.display='none';" />`;
     }
   }
 

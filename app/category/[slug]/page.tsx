@@ -5,13 +5,32 @@ import { getAllBooks, getCategories } from '@/lib/db';
 import { getSupabaseBooks, getSupabaseCategories } from '@/lib/supabaseDb';
 import { Product } from '@/lib/products';
 import { cardHTML } from '@/lib/helpers';
-import { BreadcrumbJsonLd, CollectionPageJsonLd, FAQJsonLd } from '@/components/JsonLd';
+import { BreadcrumbJsonLd, CollectionPageJsonLd, FAQJsonLd, ItemListJsonLd } from '@/components/JsonLd';
+import { getBaseUrl } from '@/lib/url';
 import CategoryClient from './CategoryClient';
 
 // Cache category hub pages at the CDN edge for 24 hours (ISR).
 // With 450+ categories, this prevents a Supabase full-table scan
 // on every visitor landing on any category page.
 export const revalidate = 86400;
+
+export async function generateStaticParams() {
+  const supaCats = await getSupabaseCategories();
+  const dbCats = getCategories();
+  const slugs = new Set<string>();
+
+  // Core high-intent categories
+  ['productivity', 'programming', 'business', 'design', 'marketing', 'self-help', 'technology', 'finance'].forEach(s => slugs.add(s));
+
+  if (supaCats && supaCats.length > 0) {
+    supaCats.forEach(c => { if (c.slug) slugs.add(c.slug.toLowerCase()); });
+  }
+  if (dbCats && dbCats.length > 0) {
+    dbCats.forEach(c => { if (c.slug) slugs.add(c.slug.toLowerCase()); });
+  }
+
+  return Array.from(slugs).map(slug => ({ slug }));
+}
 
 interface Props {
   params: Promise<{ slug: string }> | { slug: string };
@@ -90,7 +109,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
-  const canonicalUrl = `https://www.pdf-bookshelf.com/category/${slug}`;
+  const canonicalUrl = `${getBaseUrl()}/category/${slug}`;
 
   return {
     title: meta.title,
@@ -161,10 +180,11 @@ export default async function CategoryPage({ params }: Props) {
     intro: `Explore our collection of free ${slug} books with instant Google Drive downloads.`,
   });
 
+  const baseUrl = getBaseUrl();
   const breadcrumbs = [
-    { name: 'Home', url: 'https://www.pdf-bookshelf.com' },
-    { name: 'Categories', url: 'https://www.pdf-bookshelf.com/library' },
-    { name: catInfo.h1, url: `https://www.pdf-bookshelf.com/category/${slug}` },
+    { name: 'Home', url: baseUrl },
+    { name: 'Categories', url: `${baseUrl}/library` },
+    { name: catInfo.h1, url: `${baseUrl}/category/${slug}` },
   ];
 
   const categoryFaqs = [
@@ -188,21 +208,31 @@ export default async function CategoryPage({ params }: Props) {
       <CollectionPageJsonLd
         name={catInfo.h1}
         description={catInfo.desc}
-        url={`https://www.pdf-bookshelf.com/category/${slug}`}
+        url={`${baseUrl}/category/${slug}`}
         count={matchingBooks.length}
+      />
+      <ItemListJsonLd
+        title={catInfo.h1}
+        description={catInfo.desc}
+        url={`${baseUrl}/category/${slug}`}
+        items={matchingBooks.slice(0, 20).map((b, i) => ({
+          name: b.title,
+          url: `${baseUrl}/pdf/${b.slug}`,
+          position: i + 1,
+        }))}
       />
       <FAQJsonLd faqs={categoryFaqs} />
 
       <div className="wrap" style={{ padding: '20px 20px 60px' }}>
         {/* Breadcrumb */}
         <div className="crumb">
-          <Link href="/">Home</Link> â€º <Link href="/library">Categories</Link> â€º <span>{catInfo.h1}</span>
+          <Link href="/">Home</Link> › <Link href="/library">Categories</Link> › <span>{catInfo.h1}</span>
         </div>
 
         {/* Hero Banner */}
         <div style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', color: '#fff', padding: '36px 30px', borderRadius: 12, margin: '14px 0 28px' }}>
           <span style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--amber)' }}>
-            Category Hub Â· {matchingBooks.length} Verified PDFs
+            Category Hub · {matchingBooks.length} Verified PDFs
           </span>
           <h1 style={{ color: '#fff', fontSize: 'clamp(26px, 3.5vw, 38px)', fontWeight: 900, letterSpacing: '-0.02em', margin: '8px 0 10px' }}>
             {catInfo.h1}
@@ -210,6 +240,37 @@ export default async function CategoryPage({ params }: Props) {
           <p style={{ fontSize: 16, color: '#cbd5e1', maxWidth: 640, lineHeight: 1.5, margin: 0 }}>
             {catInfo.intro}
           </p>
+
+          {/* Related Category Silo Links */}
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 18 }}>
+            {[
+              { name: 'Productivity', slug: 'productivity' },
+              { name: 'Programming', slug: 'programming' },
+              { name: 'Business', slug: 'business' },
+              { name: 'Design', slug: 'design' },
+              { name: 'Marketing', slug: 'marketing' },
+              { name: 'Self-Help', slug: 'self-help' },
+              { name: 'Technology', slug: 'technology' },
+            ].filter(c => c.slug !== slug).map(cat => (
+              <Link
+                key={cat.slug}
+                href={`/category/${cat.slug}`}
+                style={{
+                  fontSize: 12.5,
+                  fontWeight: 600,
+                  color: '#e2e8f0',
+                  background: 'rgba(255,255,255,0.08)',
+                  padding: '4px 12px',
+                  borderRadius: 20,
+                  textDecoration: 'none',
+                  border: '1px solid rgba(255,255,255,0.12)',
+                  transition: 'background 0.15s',
+                }}
+              >
+                {cat.name} →
+              </Link>
+            ))}
+          </div>
         </div>
 
         {/* Client Interactive Grid */}

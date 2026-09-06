@@ -2,7 +2,10 @@ import { Suspense } from 'react';
 import { Metadata } from 'next';
 import { getAllBooks } from '@/lib/db';
 import { BreadcrumbJsonLd, CollectionPageJsonLd } from '@/components/JsonLd';
+import { getBaseUrl } from '@/lib/url';
 import LibraryClient from './LibraryClient';
+
+const baseUrl = getBaseUrl();
 
 export const metadata: Metadata = {
   title: 'Full Free PDF Book Library & Catalog | Bookshelf',
@@ -17,16 +20,16 @@ export const metadata: Metadata = {
     'instant google drive pdfs',
   ],
   alternates: {
-    canonical: 'https://www.pdf-bookshelf.com/library',
+    canonical: `${baseUrl}/library`,
   },
   openGraph: {
     title: 'Complete Free PDF Book Catalog | Bookshelf',
     description: 'Instant direct downloads of high-quality PDF books across 9 essential categories. Free titles every Friday.',
-    url: 'https://www.pdf-bookshelf.com/library',
+    url: `${baseUrl}/library`,
     type: 'website',
     images: [
       {
-        url: '/api/og?title=' + encodeURIComponent('Full Free PDF Library & Catalog'),
+        url: `${baseUrl}/api/og?title=` + encodeURIComponent('Full Free PDF Library & Catalog'),
         width: 1200,
         height: 630,
         alt: 'Bookshelf Full Free PDF Book Library',
@@ -37,15 +40,15 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Full Free PDF Book Library | Bookshelf',
     description: 'Download verified free PDF books and toolkits with instant direct delivery.',
-    images: ['/api/og?title=' + encodeURIComponent('Full Free PDF Library & Catalog')],
+    images: [`${baseUrl}/api/og?title=` + encodeURIComponent('Full Free PDF Library & Catalog')],
   },
 };
 
 export default function LibraryPage() {
   const books = getAllBooks();
   const breadcrumbs = [
-    { name: 'Home', url: 'https://www.pdf-bookshelf.com' },
-    { name: 'Full Library Catalog', url: 'https://www.pdf-bookshelf.com/library' },
+    { name: 'Home', url: baseUrl },
+    { name: 'Full Library Catalog', url: `${baseUrl}/library` },
   ];
 
   return (
@@ -54,7 +57,7 @@ export default function LibraryPage() {
       <CollectionPageJsonLd
         name="Bookshelf Complete PDF Book Catalog"
         description="Comprehensive collection of verified DRM-free PDF books, cheat sheets, and playbooks."
-        url="https://www.pdf-bookshelf.com/library"
+        url={`${baseUrl}/library`}
         count={books.length}
       />
       <Suspense fallback={<div className="wrap" style={{ padding: '60px 0' }}>Loading library…</div>}>

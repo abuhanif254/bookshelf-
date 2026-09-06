@@ -5,6 +5,7 @@ import { getAllBooks } from '@/lib/db';
 import { getSupabaseBooks } from '@/lib/supabaseDb';
 import { Product } from '@/lib/products';
 import { BreadcrumbJsonLd, FAQJsonLd, ItemListJsonLd } from '@/components/JsonLd';
+import { getBaseUrl } from '@/lib/url';
 import BestClient from './BestClient';
 
 interface Props {
@@ -70,6 +71,12 @@ const LISTICLES: Record<string, ListicleData> = {
   },
 };
 
+export const revalidate = 86400;
+
+export async function generateStaticParams() {
+  return Object.keys(LISTICLES).map(slug => ({ slug }));
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const resolved = typeof (params as Promise<{ slug: string }>)?.then === 'function'
     ? await (params as Promise<{ slug: string }>)
@@ -85,7 +92,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
-  const canonicalUrl = `https://www.pdf-bookshelf.com/best/${slug}`;
+  const canonicalUrl = `${getBaseUrl()}/best/${slug}`;
 
   return {
     title: listicle.metaTitle,
@@ -134,19 +141,20 @@ export default async function BestOfPage({ params }: Props) {
     notFound();
   }
 
+  const baseUrl = getBaseUrl();
   const supaBooks = await getSupabaseBooks();
   const allBooks = supaBooks && supaBooks.length > 0 ? supaBooks : getAllBooks();
   const filteredBooks = allBooks.filter(b => listicle.categories.some(cat => cat.toLowerCase() === b.cat.toLowerCase())).slice(0, 7);
 
   const breadcrumbs = [
-    { name: 'Home', url: 'https://www.pdf-bookshelf.com' },
-    { name: 'Best Of 2026', url: 'https://www.pdf-bookshelf.com/library' },
-    { name: listicle.title, url: `https://www.pdf-bookshelf.com/best/${slug}` },
+    { name: 'Home', url: baseUrl },
+    { name: 'Best Of 2026', url: `${baseUrl}/library` },
+    { name: listicle.title, url: `${baseUrl}/best/${slug}` },
   ];
 
   const itemList = filteredBooks.map((b, idx) => ({
     name: `${b.title} by ${b.author}`,
-    url: `https://www.pdf-bookshelf.com/pdf/${b.slug}`,
+    url: `${baseUrl}/pdf/${b.slug}`,
     position: idx + 1,
   }));
 
@@ -167,7 +175,7 @@ export default async function BestOfPage({ params }: Props) {
       <ItemListJsonLd
         title={listicle.title}
         description={listicle.metaDesc}
-        url={`https://www.pdf-bookshelf.com/best/${slug}`}
+        url={`${baseUrl}/best/${slug}`}
         items={itemList}
       />
       <FAQJsonLd faqs={listicleFaqs} />

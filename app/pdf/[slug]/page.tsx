@@ -3,6 +3,11 @@ import { notFound } from 'next/navigation';
 import { getBookBySlug, getAllBooks } from '@/lib/db';
 import { getSupabaseBooks } from '@/lib/supabaseDb';
 import { BookJsonLd, BreadcrumbJsonLd, FAQJsonLd } from '@/components/JsonLd';
+import {
+  getLanguageConfig,
+  normalizeLanguageCode,
+  getLocalizedFaqs,
+} from '@/lib/languages';
 import ProductClient from './ProductClient';
 import DynamicBookFallback from './DynamicBookFallback';
 import { getBaseUrl } from '@/lib/url';
@@ -48,14 +53,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!book) {
     const formattedTitle = resolvedParams.slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
     return {
-      title: `${formattedTitle} â€” Download Free PDF | Bookshelf`,
+      title: `${formattedTitle} — Download Free PDF | Bookshelf`,
       description: `Download ${formattedTitle} PDF book with high-speed Google Drive download.`,
     };
   }
 
-  const title = `${book.title} by ${book.author} â€” Download Free PDF (${book.pages} Pages)`;
+  const bookLang = normalizeLanguageCode(book.lang);
+  const langCfg = getLanguageConfig(bookLang);
+
+  const title = `${book.title} by ${book.author} — Download Free PDF (${book.pages} Pages)`;
   const description = `Download "${book.title}" PDF book by ${book.author}. ${book.blurb || book.sub} 100% free direct Google Drive download. DRM-free for personal use.`;
   const canonicalUrl = `${getBaseUrl()}/pdf/${book.slug}`;
+
+  const langKeywords = langCfg && langCfg.code !== 'en'
+    ? [`${book.title} ${langCfg.name.toLowerCase()}`, `${book.title} ${langCfg.nativeName}`, `${langCfg.nativeName} pdf download`]
+    : [];
 
   return {
     title,
@@ -68,12 +80,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       `${book.cat.toLowerCase()} pdf books`,
       'free pdf book',
       'google drive pdf download',
+      ...langKeywords,
     ],
     alternates: {
       canonical: canonicalUrl,
     },
     openGraph: {
-      title: `${book.title} by ${book.author} â€” Free PDF Download`,
+      title: `${book.title} by ${book.author} — Free PDF Download`,
       description,
       url: canonicalUrl,
       type: 'book',
@@ -110,34 +123,46 @@ export default async function ProductPage({ params }: Props) {
     return <DynamicBookFallback slug={resolvedParams.slug} />;
   }
 
+  const baseUrl = getBaseUrl();
   const catSlug = normalizeSlug(book.cat);
+  const authorSlug = normalizeSlug(book.author);
+
+  const bookLang = normalizeLanguageCode(book.lang);
+  const langCfg = getLanguageConfig(bookLang);
+  const isRtl = langCfg?.isRtl || bookLang === 'ur';
+
+  // Server-rendered related books (same category) and author books for crawlable deep links
+  const relatedBooks = allBooks
+    .filter(b => b.id !== book.id && (b.cat?.toLowerCase() === book.cat?.toLowerCase()))
+    .slice(0, 6);
+
+  const authorBooks = allBooks
+    .filter(b => b.id !== book.id && normalizeSlug(b.author) === authorSlug)
+    .slice(0, 6);
+
   const breadcrumbs = [
-    { name: 'Home', url: 'https://www.pdf-bookshelf.com' },
-    { name: book.cat, url: `https://www.pdf-bookshelf.com/category/${catSlug}` },
-    { name: book.title, url: `https://www.pdf-bookshelf.com/pdf/${book.slug}` },
+    { name: 'Home', url: baseUrl },
+    ...(langCfg && langCfg.code !== 'en' ? [{ name: `${langCfg.name} Books`, url: `${baseUrl}/books/${langCfg.slug}` }] : []),
+    { name: book.cat, url: `${baseUrl}/category/${catSlug}` },
+    { name: book.title, url: `${baseUrl}/pdf/${book.slug}` },
   ];
 
-  const bookFaqs = [
-    {
-      question: `How can I download "${book.title}" in PDF format?`,
-      answer: `Click the "Download Free PDF" button above. After a quick 8-second sponsor message, your high-speed Google Drive direct download link will activate immediately.`,
-    },
-    {
-      question: `Is "${book.title}" by ${book.author} completely free?`,
-      answer: `Yes! "${book.title}" is 100% free to download on Bookshelf with no subscription fees, registration, or credit card required.`,
-    },
-    {
-      question: `Can I open this PDF on mobile, iPad, and Kindle?`,
-      answer: `Yes. This ${book.pages}-page edition is formatted as a standard, high-resolution PDF with searchable text, compatible with all PDF readers, iPads, Apple Books, and Kindle devices.`,
-    },
-  ];
+  const bookFaqs = getLocalizedFaqs(bookLang, book.title, book.author, Number(book.pages) || 80);
 
   return (
     <>
       <BookJsonLd book={book} />
       <BreadcrumbJsonLd items={breadcrumbs} />
       <FAQJsonLd faqs={bookFaqs} />
-      <ProductClient p={book} faqs={bookFaqs} />
+      <ProductClient
+        p={book}
+        faqs={bookFaqs}
+        initialRelated={relatedBooks}
+        initialAuthorBooks={authorBooks}
+        isRtl={isRtl}
+        langSlug={langCfg?.slug}
+        langName={langCfg ? `${langCfg.name} (${langCfg.nativeName})` : undefined}
+      />
     </>
   );
 }

@@ -25,7 +25,23 @@ function normalizeSlug(str: string): string {
   return str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
 }
 
-export default function ProductClient({ p, faqs }: { p: Product; faqs?: FAQItem[] }) {
+export default function ProductClient({
+  p,
+  faqs,
+  initialRelated = [],
+  initialAuthorBooks = [],
+  isRtl = false,
+  langSlug,
+  langName,
+}: {
+  p: Product;
+  faqs?: FAQItem[];
+  initialRelated?: Product[];
+  initialAuthorBooks?: Product[];
+  isRtl?: boolean;
+  langSlug?: string;
+  langName?: string;
+}) {
   const { state, dispatch, addToCart, downloadFree, openPartner, toast } = useStore();
   const { openReader } = usePdfReader();
   const { formatPrice } = useCurrency();
@@ -39,8 +55,8 @@ export default function ProductClient({ p, faqs }: { p: Product; faqs?: FAQItem[
   const [currentRating, setCurrentRating] = useState(p.rating);
   const [totalReviewsCount, setTotalReviewsCount] = useState(p.reviews);
 
-  const [allBooks, setAllBooks] = useState<Product[]>(P);
-  const [authorBooks, setAuthorBooks] = useState<Product[]>([]);
+  const [allBooks, setAllBooks] = useState<Product[]>(initialRelated.length > 0 ? initialRelated : P);
+  const [authorBooks, setAuthorBooks] = useState<Product[]>(initialAuthorBooks);
 
   // Fetch real reviews for this book
   React.useEffect(() => {
@@ -54,37 +70,42 @@ export default function ProductClient({ p, faqs }: { p: Product; faqs?: FAQItem[
       .catch(() => {});
   }, [p.id]);
 
-  // Fetch only same-category books (for "Related") and same-author books â€”
-  // NOT the full library. This keeps the payload tiny at any catalog size.
+  // Fetch dynamic fallbacks only if server-provided initial data was empty
   React.useEffect(() => {
+    if (initialRelated.length > 0 && initialAuthorBooks.length > 0) return;
+
     const catParam = encodeURIComponent(p.cat);
     const authorSlug = p.author.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
 
     // Same-category books for the "Customers who viewed this also viewed" row
-    fetch(`/api/books?cat=${catParam}&limit=24`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.success && Array.isArray(data.books) && data.books.length > 0) {
-          setAllBooks(data.books);
-        }
-      })
-      .catch(() => {});
+    if (initialRelated.length === 0) {
+      fetch(`/api/books?cat=${catParam}&limit=24`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && Array.isArray(data.books) && data.books.length > 0) {
+            setAllBooks(data.books);
+          }
+        })
+        .catch(() => {});
+    }
 
     // Same-author books for the "More by [Author]" row
-    fetch(`/api/books?author=${authorSlug}&limit=12`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.success && Array.isArray(data.books) && data.books.length > 1) {
-          setAuthorBooks(data.books.filter((b: Product) => b.id !== p.id));
-        }
-      })
-      .catch(() => {});
-  }, [p.id, p.cat, p.author]);
+    if (initialAuthorBooks.length === 0) {
+      fetch(`/api/books?author=${authorSlug}&limit=12`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && Array.isArray(data.books) && data.books.length > 1) {
+            setAuthorBooks(data.books.filter((b: Product) => b.id !== p.id));
+          }
+        })
+        .catch(() => {});
+    }
+  }, [p.id, p.cat, p.author, initialRelated.length, initialAuthorBooks.length]);
 
   const handleReviewSubmitted = (newReview: BookReview) => {
     setReviewsList(prev => [newReview, ...prev]);
     setTotalReviewsCount(prev => prev + 1);
-    toast('Review Submitted! â­', 'Your review is now live.');
+    toast('Review Submitted! ⭐', 'Your review is now live.');
   };
 
   const handleVoteHelpful = async (reviewId: string) => {
@@ -105,14 +126,14 @@ export default function ProductClient({ p, faqs }: { p: Product; faqs?: FAQItem[
   const isFree = p.type === 'free';
   const save = p.list ? Math.round((1 - p.price / p.list) * 100) : 0;
   // Filter same-category books for the "Related" row (exclude current book)
-  const related = allBooks.filter(x => x.id !== p.id).slice(0, 6);
+  const related = (initialRelated.length > 0 ? initialRelated : allBooks).filter(x => x.id !== p.id).slice(0, 6);
 
   const hist = [72, 17, 6, 3, 2];
   const names: [string, string][] = [['Sofia M.', '#e8590c'], ['James T.', '#0b7285'], ['Aisha B.', '#5f3dc4']];
   const revs = [
-    { t: 'Worth 10Ã— the price', b: "I finished it in one evening and applied the framework the next morning. The printable extras alone justify it. This is the kind of PDF you actually keep.", d: 'July 22, 2026' },
+    { t: 'Worth 10× the price', b: "I finished it in one evening and applied the framework the next morning. The printable extras alone justify it. This is the kind of PDF you actually keep.", d: 'July 22, 2026' },
     { t: 'Practical, zero fluff', b: "Every chapter ends with something to do, not something to ponder. I've bought three copies for my team and we run the playbook weekly.", d: 'July 9, 2026' },
-    { t: 'Great â€” with one caveat', b: "Excellent structure and beautiful layout on both tablet and print. Wish there were more advanced examples in chapter 8, but the author replies to emails, which is rare.", d: 'June 28, 2026' },
+    { t: 'Great — with one caveat', b: "Excellent structure and beautiful layout on both tablet and print. Wish there were more advanced examples in chapter 8, but the author replies to emails, which is rare.", d: 'June 28, 2026' },
   ];
 
   const authorSlug = normalizeSlug(p.author);
@@ -128,7 +149,7 @@ export default function ProductClient({ p, faqs }: { p: Product; faqs?: FAQItem[
     <ul key="details" className="feat">
       <li><b>Format:</b> High-Res PDF (Searchable, DRM-Free)</li>
       <li><b>Page Count:</b> {p.pages} Pages</li>
-      <li><b>Language:</b> English</li>
+      <li><b>Language:</b> {langName || (p.lang ? p.lang.toUpperCase() : 'English')}</li>
       <li><b>File Size:</b> {(p.pages * 0.09).toFixed(1)} MB</li>
       <li><b>Hosting &amp; Stream:</b> High-Speed Google Drive Direct Stream</li>
       <li><b>Compatibility:</b> iPhone, Android, iPad, Kindle, macOS, Windows, Linux</li>
@@ -149,7 +170,7 @@ export default function ProductClient({ p, faqs }: { p: Product; faqs?: FAQItem[
     if (btn.dataset.wish) {
       const id = +btn.dataset.wish;
       dispatch({ type: 'TOGGLE_WISHLIST', id });
-      toast(state.wishlist.has(id) ? 'Removed from Wishlist' : 'Added to Wishlist â™¡');
+      toast(state.wishlist.has(id) ? 'Removed from Wishlist' : 'Added to Wishlist ♡');
     }
   };
 
@@ -167,10 +188,10 @@ export default function ProductClient({ p, faqs }: { p: Product; faqs?: FAQItem[
         />
       )}
 
-      <div className="wrap" onClick={handleAction}>
+      <div className="wrap" onClick={handleAction} dir={isRtl ? 'rtl' : 'ltr'}>
         {/* Breadcrumbs */}
         <div className="crumb">
-          <Link href="/">Home</Link> â€º <Link href={`/category/${catSlug}`}>{p.cat}</Link> â€º <span style={{ color: '#0f1111' }}>{p.title}</span>
+          <Link href="/">Home</Link> › {langSlug && langName && <><Link href={`/books/${langSlug}`}>{langName}</Link> › </>}<Link href={`/category/${catSlug}`}>{p.cat}</Link> › <span style={{ color: '#0f1111' }}>{p.title}</span>
         </div>
 
         <div className="pd">
@@ -178,7 +199,7 @@ export default function ProductClient({ p, faqs }: { p: Product; faqs?: FAQItem[
           <div className="pd-cover">
             <div className="coverwrap" onClick={() => openReader(p)} style={{ cursor: 'pointer' }}>
               <div dangerouslySetInnerHTML={{ __html: coverHTML(p, 'lg') }} />
-              <div className="look">ðŸ” Look inside<span style={{ fontWeight: 400, fontSize: 12.5 }}>Sample chapter PDF</span></div>
+              <div className="look">🔍 Look inside<span style={{ fontWeight: 400, fontSize: 12.5 }}>Sample chapter PDF</span></div>
             </div>
             <div className="thumbs">
               {['p.1', 'p.14', 'p.37', 'TOC'].map(lbl => (
@@ -192,7 +213,7 @@ export default function ProductClient({ p, faqs }: { p: Product; faqs?: FAQItem[
             {p.badge && <span className={`flag ${flagCls(p.badge)}`} style={{ position: 'static', display: 'inline-block', marginBottom: 10 }}>{p.badge}</span>}
             <h1>{p.title}</h1>
             <div className="byline">
-              by <Link href={`/author/${authorSlug}`} style={{ fontWeight: 700, color: 'var(--link)' }}>{p.author}</Link> (Author) Â· <span style={{ color: 'var(--muted)' }}>{p.pages} pages Â· <Link href={`/category/${catSlug}`} style={{ color: 'var(--muted)' }}>{p.cat}</Link> Â· Updated July 2026</span>
+              by <Link href={`/author/${authorSlug}`} style={{ fontWeight: 700, color: 'var(--link)' }}>{p.author}</Link> (Author) · <span style={{ color: 'var(--muted)' }}>{p.pages} pages · <Link href={`/category/${catSlug}`} style={{ color: 'var(--muted)' }}>{p.cat}</Link> · Updated July 2026</span>
             </div>
             <div className="rate">
               <span className="big">{p.rating}</span>
@@ -229,6 +250,64 @@ export default function ProductClient({ p, faqs }: { p: Product; faqs?: FAQItem[
 
             <p style={{ fontSize: 15, color: '#333', marginTop: 6 }}>{p.blurb}</p>
             <ul className="feat">{p.feat.map((f, i) => <li key={i}>{f}</li>)}</ul>
+
+            {/* Contextual SEO Navigation Tags */}
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', margin: '12px 0 16px' }}>
+              <Link
+                href={`/category/${catSlug}`}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  fontSize: 12.5,
+                  fontWeight: 700,
+                  color: 'var(--ink)',
+                  background: '#f1f5f9',
+                  padding: '4px 10px',
+                  borderRadius: 6,
+                  border: '1px solid #e2e8f0',
+                  textDecoration: 'none',
+                }}
+              >
+                📁 {p.cat}
+              </Link>
+              <Link
+                href={`/author/${authorSlug}`}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  fontSize: 12.5,
+                  fontWeight: 700,
+                  color: 'var(--ink)',
+                  background: '#f1f5f9',
+                  padding: '4px 10px',
+                  borderRadius: 6,
+                  border: '1px solid #e2e8f0',
+                  textDecoration: 'none',
+                }}
+              >
+                ✍️ {p.author}
+              </Link>
+              <Link
+                href="/library?preset=free"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  fontSize: 12.5,
+                  fontWeight: 700,
+                  color: '#059669',
+                  background: '#ecfdf5',
+                  padding: '4px 10px',
+                  borderRadius: 6,
+                  border: '1px solid #a7f3d0',
+                  textDecoration: 'none',
+                }}
+              >
+                ⚡ Free PDF Library
+              </Link>
+            </div>
 
             {/* Interactive Study Hub Tabs */}
             <div className="tabs" style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4 }}>
@@ -267,17 +346,17 @@ export default function ProductClient({ p, faqs }: { p: Product; faqs?: FAQItem[
             ) : (
               <>
                 <div className="bb-price">${p.price.toFixed(2)}</div>
-                <div className="inst">âš¡ Instant download after purchase</div>
+                <div className="inst">⚡ Instant download after purchase</div>
                 <div className="note">Delivered by email + your Library. Free lifetime updates.</div>
                 <div className="qty">
-                  <button onClick={() => setQty(q => Math.max(1, q - 1))}>âˆ’</button>
+                  <button onClick={() => setQty(q => Math.max(1, q - 1))}>−</button>
                   <span>{qty}</span>
                   <button onClick={() => setQty(q => Math.min(9, q + 1))}>+</button>
                 </div>
                 <button className="bb-btn bb-cart" data-add={p.id}>Add to Cart</button>
-                <button className="bb-btn bb-buy" onClick={() => { addToCart(p.id, qty, true); toast('Redirecting to secure checkoutâ€¦', 'Stripe Â· 256-bit encrypted', true); setTimeout(() => router.push('/cart'), 900); }}>Buy Now</button>
-                <button className="bb-btn" style={{ background: '#fff', border: '1.5px solid var(--line)' }} data-toast="Free sample chapter sent to your inbox ðŸ“¬">ðŸ“„ Read free sample chapter</button>
-                <button className="bb-wish" data-wish={p.id}>â™¡ Add to Wishlist</button>
+                <button className="bb-btn bb-buy" onClick={() => { addToCart(p.id, qty, true); toast('Redirecting to secure checkout…', 'Stripe · 256-bit encrypted', true); setTimeout(() => router.push('/cart'), 900); }}>Buy Now</button>
+                <button className="bb-btn" style={{ background: '#fff', border: '1.5px solid var(--line)' }} data-toast="Free sample chapter sent to your inbox 📬">📄 Read free sample chapter</button>
+                <button className="bb-wish" data-wish={p.id}>♡ Add to Wishlist</button>
                 <div className="bb-sec">
                   <svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
                   <span><b>Secure transaction.</b> Sold by PDF-Bookshelf.com. 30-day money-back guarantee.</span>
@@ -297,7 +376,7 @@ export default function ProductClient({ p, faqs }: { p: Product; faqs?: FAQItem[
         {/* SEO Key Takeaways & Chapter Breakdown */}
         <div style={{ background: '#fff', borderRadius: 12, padding: 28, border: '1px solid #e2e8f0', margin: '24px 0' }}>
           <h2 style={{ fontSize: 20, fontWeight: 800, color: 'var(--ink)', marginBottom: 12 }}>
-            ðŸ“– Key Chapters &amp; Takeaways in &ldquo;{p.title}&rdquo;
+            📖 Key Chapters &amp; Takeaways in &ldquo;{p.title}&rdquo;
           </h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 14 }}>
             <div style={{ background: '#f8fafc', padding: 16, borderRadius: 8, border: '1px solid #e2e8f0' }}>
@@ -330,7 +409,7 @@ export default function ProductClient({ p, faqs }: { p: Product; faqs?: FAQItem[
                 </div>
               ))}
             </div>
-            <button className="write-rev" onClick={() => setShowReviewModal(true)}>âœï¸ Write a customer review</button>
+            <button className="write-rev" onClick={() => setShowReviewModal(true)}>✍️ Write a customer review</button>
           </div>
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
@@ -360,7 +439,7 @@ export default function ProductClient({ p, faqs }: { p: Product; faqs?: FAQItem[
                   </span>
                   <div className="who">
                     <b>{r.userName || 'Reader'}</b>
-                    {r.verified && <div className="vp">âœ“ Verified Reader</div>}
+                    {r.verified && <div className="vp">✓ Verified Reader</div>}
                   </div>
                 </div>
                 <span dangerouslySetInnerHTML={{ __html: stars(r.rating, 14) }} />
@@ -419,7 +498,7 @@ export default function ProductClient({ p, faqs }: { p: Product; faqs?: FAQItem[
                     >
                       <span>{faq.question}</span>
                       <span style={{ fontSize: 16, color: 'var(--muted)', transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
-                        â–¾
+                        ▾
                       </span>
                     </button>
                     {isOpen && (
@@ -440,14 +519,14 @@ export default function ProductClient({ p, faqs }: { p: Product; faqs?: FAQItem[
             <div className="sec-hd">
               <h2>More by {p.author}</h2>
               <a href={`/author/${authorSlug}`} style={{ fontSize: 13, color: 'var(--link)', fontWeight: 600 }}>
-                See all â†’
+                See all →
               </a>
             </div>
             <ScrollSection id="sc-author" html={authorBooksHTML} onAction={handleAction} />
           </div>
         )}
 
-        {/* Related â€” same category */}
+        {/* Related — same category */}
         <div className="sec" style={{ paddingBottom: 60 }}>
           <div className="sec-hd"><h2>Customers who viewed this also viewed</h2></div>
           <ScrollSection id="sc-rel" html={relatedHTML} onAction={handleAction} />
