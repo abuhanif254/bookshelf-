@@ -36,6 +36,41 @@ async function inspect() {
   // Test inserting 1 row with explicit high ID or without ID
   const maxId = topId && topId[0] ? topId[0].id : 0;
   console.log('Max existing ID:', maxId);
+
+  const { count: catCount } = await supabase
+    .from('categories')
+    .select('*', { count: 'exact', head: true });
+  console.log('Total categories in DB:', catCount);
+
+  const { count: bnCount } = await supabase
+    .from('books')
+    .select('*', { count: 'exact', head: true })
+    .eq('lang', 'bn');
+  console.log('Total Bangla (bn) books in DB:', bnCount);
+
+  const { count: hiCount } = await supabase
+    .from('books')
+    .select('*', { count: 'exact', head: true })
+    .eq('lang', 'hi');
+  console.log('Total Hindi (hi) books in DB:', hiCount);
+
+  const { count: enCount } = await supabase
+    .from('books')
+    .select('*', { count: 'exact', head: true })
+    .eq('lang', 'en');
+  console.log('Total English (en) books in DB:', enCount);
+
+  const { count: commonsFilePathCount } = await supabase
+    .from('books')
+    .select('*', { count: 'exact', head: true })
+    .ilike('drive_url', '%commons.wikimedia.org/wiki/Special:FilePath%');
+  console.log('Books with commons Special:FilePath in drive_url:', commonsFilePathCount);
+
+  const { count: commonsCoverCount } = await supabase
+    .from('books')
+    .select('*', { count: 'exact', head: true })
+    .ilike('cover_image', '%commons.wikimedia.org/wiki/Special:FilePath%');
+  console.log('Books with commons Special:FilePath in cover_image:', commonsCoverCount);
 }
 
 inspect();

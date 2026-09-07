@@ -162,7 +162,7 @@ export default function AdUnlockModal() {
         body: JSON.stringify({ bookId: activeBook.id }),
       });
       const data = await res.json();
-      const directUrl = data.success ? data.downloadUrl : getDirectDownloadUrl(activeBook.driveUrl || '');
+      const directUrl = data.success ? data.downloadUrl : `/api/download/file/${activeBook.id}`;
       triggerDirectDownload(activeBook.id, directUrl, activeBook.title);
       dispatch({ type: 'SET_AD_UNLOCK', id: null });
       setTimeout(() => {
@@ -171,7 +171,7 @@ export default function AdUnlockModal() {
         }
       }, 1400);
     } catch {
-      triggerDirectDownload(activeBook.id, getDirectDownloadUrl(activeBook?.driveUrl || ''), activeBook.title);
+      triggerDirectDownload(activeBook.id, `/api/download/file/${activeBook.id}`, activeBook.title);
       dispatch({ type: 'SET_AD_UNLOCK', id: null });
       setTimeout(() => {
         if (typeof window !== 'undefined') {
@@ -322,7 +322,7 @@ export default function AdUnlockModal() {
             {isUnlocked ? (
               <div style={{ textAlign: 'center', padding: '10px 0' }}>
                 <div style={{ fontSize: 14, color: 'var(--green)', fontWeight: 800, marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                  <span style={{ fontSize: 20 }}>✅</span> PDF Ready for Instant Google Drive Download!
+                  <span style={{ fontSize: 20 }}>✅</span> PDF Ready for Instant 1-Click Download!
                 </div>
                 <button
                   onClick={handleExecuteDownload}
@@ -342,7 +342,7 @@ export default function AdUnlockModal() {
                     transform: 'scale(1.01)',
                   }}
                 >
-                  {downloading ? '⏳ Connecting to Google Drive…' : '⤓ Click to Download PDF Now (Google Drive)'}
+                  {downloading ? '⏳ Starting PDF Download…' : '⤓ Click to Download PDF Now'}
                 </button>
               </div>
             ) : isWatching ? (
@@ -389,7 +389,7 @@ export default function AdUnlockModal() {
                 </button>
                 <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginTop: 12, fontSize: 12, color: 'var(--muted)' }}>
                   <span>🔒 Virus-checked &amp; Clean</span>
-                  <span>⚡ Instant Google Drive Stream</span>
+                  <span>⚡ Instant PDF Stream</span>
                   <span>📱 Mobile &amp; PC Ready</span>
                 </div>
               </div>

@@ -134,14 +134,18 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     // Increment download counter
     fetch(`/api/books/${id}/download`, { method: 'POST' }).catch(() => {});
 
-    const targetUrl = customUrl || (p?.driveUrl ? p.driveUrl : `https://drive.google.com/uc?export=download&id=SAMPLE_${p?.slug || id}`);
+    const targetUrl = customUrl || (p?.driveUrl ? `/api/download/file/${id}` : `/api/download/file/${id}`);
 
-    // If Google Drive link, format correctly or open direct download
+    // Direct download trigger with clean no-referrer security
     if (typeof window !== 'undefined' && targetUrl) {
       const link = document.createElement('a');
       link.href = targetUrl;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
+      link.setAttribute('download', `${title}.pdf`);
+      link.referrerPolicy = 'no-referrer';
+      link.rel = 'noreferrer noopener';
+      if (!targetUrl.startsWith('/api/')) {
+        link.target = '_blank';
+      }
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);

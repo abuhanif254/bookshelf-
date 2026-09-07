@@ -197,16 +197,22 @@ function rowToCSV(row) {
   return CSV_COLUMNS.map(col => escapeCSV(row[col] ?? '')).join(',');
 }
 
-async function fetchPage(page, retries = 4) {
+async function fetchPage(page, retries = 5) {
   const url = `https://gutendex.com/books/?page=${page}`;
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
-      const res = await fetch(url, { signal: AbortSignal.timeout(12000) });
+      const res = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36 BookshelfBot/1.0',
+          'Accept': 'application/json',
+        },
+        signal: AbortSignal.timeout(25000),
+      });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return await res.json();
     } catch (e) {
       if (attempt === retries) throw e;
-      await sleep(1500 * attempt);
+      await sleep(2000 * attempt);
     }
   }
 }
@@ -225,7 +231,24 @@ async function main() {
 
   const seenTitles = new Set();
   let collectedCount = 0;
-  let startPage = 1;
+  let startPage = parseInt(getArg('--start', '1'), 10);
+
+  // Load existing primary collection if outputting to a new batch file to avoid duplicates
+  const primaryCsv = path.join('data', 'books_5000_collection.csv');
+  if (fs.existsSync(primaryCsv) && path.resolve(primaryCsv) !== path.resolve(OUT_FILE)) {
+    const pLines = fs.readFileSync(primaryCsv, 'utf8').split('\n');
+    for (let i = 1; i < pLines.length; i++) {
+      const line = pLines[i].trim();
+      if (line) {
+        const firstComma = line.indexOf(',');
+        if (firstComma !== -1) {
+          const t = line.substring(0, firstComma).replace(/^"|"$/g, '').toLowerCase().trim();
+          if (t) seenTitles.add(t);
+        }
+      }
+    }
+    console.log(`Loaded ${seenTitles.size} previous English books into deduplication filter.`);
+  }
 
   if (fs.existsSync(STATE_FILE)) {
     try {
@@ -251,7 +274,7 @@ async function main() {
           collectedCount++;
         }
       }
-      console.log(`📁 Resuming from page ${startPage}. Existing books found: ${collectedCount}`);
+      console.log(`📁 Resuming from page ${startPage}. Existing books in this batch: ${collectedCount}`);
     }
   } else {
     fs.writeFileSync(OUT_FILE, CSV_COLUMNS.join(',') + '\n', 'utf8');

@@ -38,10 +38,8 @@ export async function POST(request: Request) {
       updateBook(id, { downloads: (book.downloads || 0) + 1 });
     } catch {}
 
-    // Determine target download link
-    const downloadUrl = book.driveUrl
-      ? getDirectDownloadUrl(book.driveUrl)
-      : `https://drive.google.com/uc?export=download&id=SAMPLE_${book.slug}`;
+    // Determine target download link: route through our secure streaming download endpoint
+    const downloadUrl = `/api/download/file/${book.id}`;
 
     // Clean filename while preserving Bengali, Arabic/Urdu, Devanagari, CJK, and standard characters
     const safeFileName = `${book.title.replace(/[^\w\s\u0600-\u06FF\u0980-\u09FF\u0900-\u097F\u4e00-\u9fa5-]/g, '_').trim().slice(0, 80)}.pdf`;
@@ -55,4 +53,13 @@ export async function POST(request: Request) {
   } catch (error) {
     return NextResponse.json({ success: false, message: 'Failed to process download link' }, { status: 500 });
   }
+}
+
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get('id') || searchParams.get('bookId');
+  if (!id) {
+    return NextResponse.json({ success: false, message: 'Missing book ID' }, { status: 400 });
+  }
+  return NextResponse.redirect(new URL(`/api/download/file/${id}`, request.url));
 }
